@@ -1,8 +1,10 @@
 import { Box, Typography, Paper, Alert } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
+import { PlanningWrapper } from '../../planning';
 
 export function ChatView() {
   return (
+    <PlanningWrapper elementId="view-chat">
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
         <ChatIcon sx={{ fontSize: 32, color: 'primary.main' }} />
@@ -28,5 +30,6 @@ export function ChatView() {
         </Typography>
       </Paper>
     </Box>
+    </PlanningWrapper>
   );
 }

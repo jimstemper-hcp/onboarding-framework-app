@@ -50,6 +50,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { useOnboarding } from '../../context';
 import { onboardingItems } from '../../data';
+import { PlanningWrapper } from '../../planning';
 import type {
   Feature,
   CalendlyLink,
@@ -3417,6 +3418,7 @@ export function AdminView() {
   };
 
   return (
+    <PlanningWrapper elementId="view-admin">
     <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 120px)' }}>
       {/* Sidebar */}
       <Paper
@@ -3473,5 +3475,6 @@ export function AdminView() {
         {renderPage()}
       </Box>
     </Box>
+    </PlanningWrapper>
   );
 }

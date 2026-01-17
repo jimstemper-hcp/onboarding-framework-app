@@ -36,6 +36,7 @@ import ComputerIcon from '@mui/icons-material/Computer';
 import * as MuiIcons from '@mui/icons-material';
 import { useOnboarding } from '../../context';
 import { onboardingItems as allOnboardingItems } from '../../data';
+import { PlanningWrapper } from '../../planning';
 import type { Feature, AdoptionStage, FeatureId, ProAccount, OnboardingItemAssignment } from '../../types';
 
 // =============================================================================
@@ -674,6 +675,7 @@ export function FrontlineView() {
   };
 
   return (
+    <PlanningWrapper elementId="view-frontline">
     <Box>
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 3 }}>
@@ -769,5 +771,6 @@ export function FrontlineView() {
         </Paper>
       )}
     </Box>
+    </PlanningWrapper>
   );
 }

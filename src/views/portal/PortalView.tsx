@@ -30,6 +30,7 @@ import * as MuiIcons from '@mui/icons-material';
 import { useState } from 'react';
 import { useOnboarding, useActivePro } from '../../context';
 import { onboardingItems as allOnboardingItems } from '../../data';
+import { PlanningWrapper } from '../../planning';
 import type { Feature, FeatureStatus, ProAccount, OnboardingItemAssignment } from '../../types';
 
 // =============================================================================
@@ -829,6 +830,7 @@ export function PortalView() {
     : `${activePro.companyName.replace(/\s+(LLC|Inc|Co\.|Corp|Ltd)\.?$/i, '')} Efficiency Plan`;
 
   return (
+    <PlanningWrapper elementId="view-portal">
     <Box sx={{ maxWidth: 720, mx: 'auto' }}>
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 4 }}>
@@ -970,5 +972,6 @@ export function PortalView() {
         </Card>
       )}
     </Box>
+    </PlanningWrapper>
   );
 }
