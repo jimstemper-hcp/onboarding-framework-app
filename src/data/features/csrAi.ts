@@ -29,13 +29,13 @@ export const csrAiFeature: Feature = {
           name: 'AI Voice Pricing',
           description: 'Self-serve page for AI voice agent pricing and plans',
           url: '/pricing/ai-voice',
-          navigationType: 'hcp_sell_page',
+          navigationType: 'hcp_external',
         },
         {
           name: 'AI Voice Agent Overview',
           description: 'Help article explaining how the AI voice agent works',
           url: 'https://help.housecallpro.com/ai-voice',
-          navigationType: 'hcp_help_article',
+          navigationType: 'hcp_help',
         },
         {
           name: 'Hear the AI in Action',

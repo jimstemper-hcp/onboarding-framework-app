@@ -35,13 +35,13 @@ export const invoicingFeature: Feature = {
           name: 'Invoicing Pricing',
           description: 'Self-serve page where pros can learn about invoicing pricing and upgrade',
           url: '/pricing/invoicing',
-          navigationType: 'hcp_sell_page',
+          navigationType: 'hcp_external',
         },
         {
           name: 'How Invoicing Helps You Get Paid Faster',
           description: 'Overview article explaining the invoicing feature benefits',
           url: 'https://help.housecallpro.com/invoicing-overview',
-          navigationType: 'hcp_help_article',
+          navigationType: 'hcp_help',
         },
         {
           name: 'Invoicing Feature Tour',
@@ -53,7 +53,7 @@ export const invoicingFeature: Feature = {
           name: 'Invoicing Best Practices Guide',
           description: 'Training article with tips for getting paid faster with invoicing',
           url: 'https://help.housecallpro.com/invoicing-best-practices',
-          navigationType: 'hcp_training_article',
+          navigationType: 'hcp_help',
         },
       ],
 

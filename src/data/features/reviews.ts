@@ -29,13 +29,13 @@ export const reviewsFeature: Feature = {
           name: 'Reviews Pricing',
           description: 'Self-serve page for reviews management pricing',
           url: '/pricing/reviews',
-          navigationType: 'hcp_sell_page',
+          navigationType: 'hcp_external',
         },
         {
           name: 'Reviews Management Guide',
           description: 'Guide explaining how to collect and manage customer reviews',
           url: 'https://help.housecallpro.com/reviews',
-          navigationType: 'hcp_training_article',
+          navigationType: 'hcp_help',
         },
       ],
       calendlyTypes: [

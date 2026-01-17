@@ -29,13 +29,13 @@ export const schedulingFeature: Feature = {
           name: 'Scheduling Pricing',
           description: 'Self-serve page for scheduling and dispatching pricing',
           url: '/pricing/scheduling',
-          navigationType: 'hcp_sell_page',
+          navigationType: 'hcp_external',
         },
         {
           name: 'Scheduling Overview',
           description: 'Help article explaining the scheduling and dispatching features',
           url: 'https://help.housecallpro.com/scheduling',
-          navigationType: 'hcp_help_article',
+          navigationType: 'hcp_help',
         },
       ],
       calendlyTypes: [

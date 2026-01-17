@@ -29,13 +29,13 @@ export const estimatesFeature: Feature = {
           name: 'Estimates Pricing',
           description: 'Self-serve page for estimates feature pricing',
           url: '/pricing/estimates',
-          navigationType: 'hcp_sell_page',
+          navigationType: 'hcp_external',
         },
         {
           name: 'Estimates Overview',
           description: 'Help article explaining how to create and send estimates',
           url: 'https://help.housecallpro.com/estimates',
-          navigationType: 'hcp_help_article',
+          navigationType: 'hcp_help',
         },
       ],
       calendlyTypes: [

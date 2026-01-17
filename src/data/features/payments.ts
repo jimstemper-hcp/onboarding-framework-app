@@ -29,13 +29,13 @@ export const paymentsFeature: Feature = {
           name: 'Payments Pricing',
           description: 'Self-serve page where pros can learn about payment processing pricing',
           url: '/pricing/payments',
-          navigationType: 'hcp_sell_page',
+          navigationType: 'hcp_external',
         },
         {
           name: 'Payment Processing Overview',
           description: 'Help article explaining how payment processing works',
           url: 'https://help.housecallpro.com/payments',
-          navigationType: 'hcp_help_article',
+          navigationType: 'hcp_help',
         },
       ],
       calendlyTypes: [
@@ -76,7 +76,7 @@ export const paymentsFeature: Feature = {
           name: 'Payments Setup Guide',
           description: 'Step-by-step guide for setting up payments',
           url: 'https://help.housecallpro.com/payments-setup',
-          navigationType: 'hcp_help_article',
+          navigationType: 'hcp_help',
         },
       ],
       calendlyTypes: [

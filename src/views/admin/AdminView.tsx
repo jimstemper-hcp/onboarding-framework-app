@@ -57,6 +57,8 @@ import type {
   AccessConditionRule,
   NavigationItem,
   NavigationType,
+  NavigationStatus,
+  NavigationTypeData,
   ContextSnippet,
   OnboardingItemAssignment,
   OnboardingItemDefinition,
@@ -95,15 +97,19 @@ const stageKeys: StageKey[] = ['notAttached', 'attached', 'activated', 'engaged'
 
 type AdminPage = 'features' | 'navigation' | 'calls' | 'onboarding-items' | 'tools';
 
-const navigationTypes: { value: NavigationType; label: string }[] = [
-  { value: 'hcp_sell_page', label: 'Sell Page' },
-  { value: 'hcp_navigate', label: 'Navigate' },
-  { value: 'hcp_tours', label: 'Tours' },
-  { value: 'hcp_help_article', label: 'Help Article' },
-  { value: 'hcp_video', label: 'Video' },
-  { value: 'hcp_modal', label: 'Modal' },
-  { value: 'hcp_section_header', label: 'Section Header' },
-  { value: 'hcp_training_article', label: 'Training Article' },
+const navigationTypes: { value: NavigationType; label: string; description: string }[] = [
+  { value: 'hcp_navigate', label: 'Page Navigation', description: 'Navigate to a page path in the product' },
+  { value: 'hcp_modal', label: 'Modal', description: 'Open a modal in the product' },
+  { value: 'hcp_video', label: 'Video', description: 'Embed a video in the chat' },
+  { value: 'hcp_help', label: 'Help Article', description: 'Link to a help center article' },
+  { value: 'hcp_external', label: 'External URL', description: 'Link to an external website' },
+  { value: 'hcp_tour', label: 'Product Tour', description: 'Launch an Appcue product tour' },
+];
+
+const navigationStatusOptions: { value: NavigationStatus; label: string; color: string }[] = [
+  { value: 'published', label: 'Published', color: palette.success },
+  { value: 'draft', label: 'Draft', color: palette.warning },
+  { value: 'archived', label: 'Archived', color: palette.grey[600] },
 ];
 
 // =============================================================================
@@ -678,17 +684,42 @@ function QuickAddNavigationDialog({
   onClose: () => void;
   onAdd: (nav: NavigationItem) => void;
 }) {
-  const [nav, setNav] = useState<NavigationItem>({
-    name: '',
-    description: '',
-    url: '',
-    navigationType: 'hcp_help_article',
-  });
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [url, setUrl] = useState('');
+  const [navType, setNavType] = useState<NavigationType>('hcp_help');
 
   const handleAdd = () => {
-    if (nav.name && nav.url) {
+    if (name && url) {
+      const slugId = generateSlugId(name);
+      const nav: NavigationItem = {
+        slugId,
+        name,
+        status: 'draft',
+        navigationType: navType,
+        typeData: getTypeDataFromUrl(navType, url),
+        contextSnippets: [{ id: 'llm-desc', title: 'LLM Description', content: description }],
+        description,
+        url,
+      };
       onAdd(nav);
-      setNav({ name: '', description: '', url: '', navigationType: 'hcp_help_article' });
+      setName('');
+      setDescription('');
+      setUrl('');
+      setNavType('hcp_help');
+    }
+  };
+
+  // Helper to populate typeData based on nav type and URL
+  const getTypeDataFromUrl = (type: NavigationType, urlValue: string): NavigationTypeData => {
+    switch (type) {
+      case 'hcp_navigate': return { pagePath: urlValue };
+      case 'hcp_modal': return { modalPath: urlValue };
+      case 'hcp_video': return { videoUrl: urlValue };
+      case 'hcp_help': return { helpArticleUrl: urlValue };
+      case 'hcp_external': return { externalUrl: urlValue };
+      case 'hcp_tour': return { appcueId: urlValue };
+      default: return {};
     }
   };
 
@@ -701,41 +732,46 @@ function QuickAddNavigationDialog({
             size="small"
             label="Name"
             fullWidth
-            value={nav.name}
-            onChange={(e) => setNav({ ...nav, name: e.target.value })}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
           <TextField
             size="small"
-            label="Description"
+            label="Description (for AI)"
             fullWidth
             multiline
             rows={2}
-            value={nav.description}
-            onChange={(e) => setNav({ ...nav, description: e.target.value })}
-          />
-          <TextField
-            size="small"
-            label="URL"
-            fullWidth
-            value={nav.url}
-            onChange={(e) => setNav({ ...nav, url: e.target.value })}
-            inputProps={{ style: { fontFamily: 'monospace' } }}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
           <FormControl size="small" fullWidth>
             <Select
-              value={nav.navigationType}
-              onChange={(e) => setNav({ ...nav, navigationType: e.target.value as NavigationType })}
+              value={navType}
+              onChange={(e) => setNavType(e.target.value as NavigationType)}
             >
               {navigationTypes.map((type) => (
                 <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
               ))}
             </Select>
           </FormControl>
+          <TextField
+            size="small"
+            label={navType === 'hcp_tour' ? 'Appcue ID' : 'URL / Path'}
+            fullWidth
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+            placeholder={
+              navType === 'hcp_navigate' ? '/settings/invoicing' :
+              navType === 'hcp_tour' ? 'abc123-def456' :
+              'https://...'
+            }
+          />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleAdd} disabled={!nav.name || !nav.url}>Add</Button>
+        <Button variant="contained" onClick={handleAdd} disabled={!name || !url}>Add</Button>
       </DialogActions>
     </Dialog>
   );
@@ -1061,34 +1097,716 @@ function FeatureManagementPage({ onNavigateToPage }: { onNavigateToPage: (page: 
 // NAVIGATION MANAGEMENT PAGE
 // =============================================================================
 
-function NavigationManagementPage() {
-  const { features } = useOnboarding();
+// Helper to generate slugId from name
+function generateSlugId(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
 
-  // Collect all unique navigation items across all features/stages
-  const allNavItems: { featureName: string; stageName: string; item: NavigationItem }[] = [];
+// Helper to get URL from navigation item
+function getNavigationUrl(item: NavigationItem): string {
+  if (item.url) return item.url;
+  const td = item.typeData || {};
+  switch (item.navigationType) {
+    case 'hcp_navigate': return td.pagePath || '';
+    case 'hcp_modal': return td.modalPath || td.modalId || '';
+    case 'hcp_video': return td.videoUrl || '';
+    case 'hcp_help': return td.helpArticleUrl || '';
+    case 'hcp_external': return td.externalUrl || '';
+    case 'hcp_tour': return td.appcueId || '';
+    default: return '';
+  }
+}
+
+// Create default navigation item
+function createDefaultNavigationItem(): NavigationItem {
+  return {
+    slugId: '',
+    name: '',
+    status: 'draft',
+    navigationType: 'hcp_navigate',
+    typeData: {},
+    contextSnippets: [{ id: 'llm-desc', title: 'LLM Description', content: '' }],
+    prompt: '',
+    tools: [],
+    description: '',
+    url: '',
+  };
+}
+
+// Type-specific form fields component
+function NavigationTypeFields({
+  navigationType,
+  typeData,
+  onChange,
+}: {
+  navigationType: NavigationType;
+  typeData: NavigationTypeData;
+  onChange: (typeData: NavigationTypeData) => void;
+}) {
+  switch (navigationType) {
+    case 'hcp_navigate':
+      return (
+        <TextField
+          size="small"
+          fullWidth
+          label="Page Path"
+          placeholder="/settings/invoicing"
+          value={typeData.pagePath || ''}
+          onChange={(e) => onChange({ ...typeData, pagePath: e.target.value })}
+          inputProps={{ style: { fontFamily: 'monospace' } }}
+          helperText="The path in the product to navigate to"
+        />
+      );
+
+    case 'hcp_modal':
+      return (
+        <Stack spacing={2}>
+          <TextField
+            size="small"
+            fullWidth
+            label="Modal Path (optional)"
+            placeholder="/settings/invoicing?modal=create"
+            value={typeData.modalPath || ''}
+            onChange={(e) => onChange({ ...typeData, modalPath: e.target.value })}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+            helperText="URL path that opens this modal"
+          />
+          <TextField
+            size="small"
+            fullWidth
+            label="Modal ID"
+            placeholder="create-invoice-modal"
+            value={typeData.modalId || ''}
+            onChange={(e) => onChange({ ...typeData, modalId: e.target.value })}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+            helperText="Programmatic ID for opening the modal directly"
+          />
+        </Stack>
+      );
+
+    case 'hcp_video':
+      return (
+        <Stack spacing={2}>
+          <TextField
+            size="small"
+            fullWidth
+            label="Video URL"
+            placeholder="https://youtube.com/watch?v=..."
+            value={typeData.videoUrl || ''}
+            onChange={(e) => onChange({ ...typeData, videoUrl: e.target.value })}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+            helperText="YouTube, Vimeo, or other embeddable video URL"
+          />
+          <Stack direction="row" spacing={2}>
+            <TextField
+              size="small"
+              label="Duration (seconds)"
+              type="number"
+              value={typeData.videoDurationSeconds || ''}
+              onChange={(e) => onChange({ ...typeData, videoDurationSeconds: parseInt(e.target.value) || undefined })}
+              sx={{ width: 150 }}
+            />
+            <TextField
+              size="small"
+              fullWidth
+              label="Thumbnail URL (optional)"
+              placeholder="https://..."
+              value={typeData.videoThumbnail || ''}
+              onChange={(e) => onChange({ ...typeData, videoThumbnail: e.target.value })}
+            />
+          </Stack>
+        </Stack>
+      );
+
+    case 'hcp_help':
+      return (
+        <Stack spacing={2}>
+          <TextField
+            size="small"
+            fullWidth
+            label="Help Article URL"
+            placeholder="https://help.housecallpro.com/article/..."
+            value={typeData.helpArticleUrl || ''}
+            onChange={(e) => onChange({ ...typeData, helpArticleUrl: e.target.value })}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+          />
+          <TextField
+            size="small"
+            fullWidth
+            label="Article ID (optional)"
+            placeholder="12345"
+            value={typeData.helpArticleId || ''}
+            onChange={(e) => onChange({ ...typeData, helpArticleId: e.target.value })}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+            helperText="Internal article ID for tracking"
+          />
+        </Stack>
+      );
+
+    case 'hcp_external':
+      return (
+        <TextField
+          size="small"
+          fullWidth
+          label="External URL"
+          placeholder="https://example.com/..."
+          value={typeData.externalUrl || ''}
+          onChange={(e) => onChange({ ...typeData, externalUrl: e.target.value })}
+          inputProps={{ style: { fontFamily: 'monospace' } }}
+          helperText="Full URL to an external website"
+        />
+      );
+
+    case 'hcp_tour':
+      return (
+        <Stack spacing={2}>
+          <TextField
+            size="small"
+            fullWidth
+            label="Appcue Flow ID"
+            placeholder="abc123-def456"
+            value={typeData.appcueId || ''}
+            onChange={(e) => onChange({ ...typeData, appcueId: e.target.value })}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+            helperText="The Appcue flow/tour ID to launch"
+          />
+          <TextField
+            size="small"
+            fullWidth
+            label="Tour Name (optional)"
+            placeholder="Invoice Setup Tour"
+            value={typeData.tourName || ''}
+            onChange={(e) => onChange({ ...typeData, tourName: e.target.value })}
+            helperText="Human-readable name for reference"
+          />
+        </Stack>
+      );
+
+    default:
+      return null;
+  }
+}
+
+// Navigation edit modal
+function NavigationEditModal({
+  item,
+  open,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  item: NavigationItem | null;
+  open: boolean;
+  onClose: () => void;
+  onSave: (item: NavigationItem) => void;
+  onDelete?: () => void;
+}) {
+  const [editedItem, setEditedItem] = useState<NavigationItem>(createDefaultNavigationItem());
+  const [activeTab, setActiveTab] = useState(0);
+
+  useEffect(() => {
+    if (item) {
+      // Ensure contextSnippets has at least the LLM Description
+      const snippets = item.contextSnippets?.length > 0
+        ? item.contextSnippets
+        : [{ id: 'llm-desc', title: 'LLM Description', content: item.description || '' }];
+      setEditedItem({
+        ...createDefaultNavigationItem(),
+        ...item,
+        contextSnippets: snippets,
+        typeData: item.typeData || {},
+      });
+    } else {
+      setEditedItem(createDefaultNavigationItem());
+    }
+    setActiveTab(0);
+  }, [item, open]);
+
+  // Auto-generate slugId from name if empty
+  const handleNameChange = (name: string) => {
+    const updates: Partial<NavigationItem> = { name };
+    if (!editedItem.slugId || editedItem.slugId === generateSlugId(editedItem.name)) {
+      updates.slugId = generateSlugId(name);
+    }
+    setEditedItem({ ...editedItem, ...updates });
+  };
+
+  // Update context snippets
+  const handleSnippetChange = (index: number, field: 'title' | 'content', value: string) => {
+    const updated = [...editedItem.contextSnippets];
+    updated[index] = { ...updated[index], [field]: value };
+    // Also update description from first snippet
+    const newDesc = index === 0 && field === 'content' ? value : editedItem.description;
+    setEditedItem({ ...editedItem, contextSnippets: updated, description: newDesc });
+  };
+
+  const handleAddSnippet = () => {
+    const newId = `snippet-${Date.now()}`;
+    setEditedItem({
+      ...editedItem,
+      contextSnippets: [...editedItem.contextSnippets, { id: newId, title: 'New Context', content: '' }],
+    });
+  };
+
+  const handleRemoveSnippet = (index: number) => {
+    if (index === 0) return; // Can't remove LLM Description
+    setEditedItem({
+      ...editedItem,
+      contextSnippets: editedItem.contextSnippets.filter((_, i) => i !== index),
+    });
+  };
+
+  // Build JSON payload
+  const buildJsonPayload = () => {
+    const payload: Record<string, unknown> = {
+      slugId: editedItem.slugId,
+      name: editedItem.name,
+      status: editedItem.status,
+      type: editedItem.navigationType,
+      typeData: editedItem.typeData,
+      context: editedItem.contextSnippets,
+    };
+    if (editedItem.prompt) payload.prompt = editedItem.prompt;
+    if (editedItem.tools?.length) payload.tools = editedItem.tools;
+    return payload;
+  };
+
+  const handleSave = () => {
+    // Derive url from typeData
+    const url = getNavigationUrl(editedItem);
+    onSave({ ...editedItem, url, description: editedItem.contextSnippets[0]?.content || '' });
+    onClose();
+  };
+
+  if (!open) return null;
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
+      <DialogTitle sx={{ pb: 0 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Typography variant="h6">
+              {item ? 'Edit Navigation Resource' : 'New Navigation Resource'}
+            </Typography>
+            {editedItem.status && (
+              <Chip
+                label={navigationStatusOptions.find((s) => s.value === editedItem.status)?.label || editedItem.status}
+                size="small"
+                sx={{
+                  bgcolor: alpha(
+                    navigationStatusOptions.find((s) => s.value === editedItem.status)?.color || palette.grey[600],
+                    0.1
+                  ),
+                  color: navigationStatusOptions.find((s) => s.value === editedItem.status)?.color || palette.grey[600],
+                }}
+              />
+            )}
+          </Stack>
+          {onDelete && (
+            <Button
+              color="error"
+              size="small"
+              startIcon={<DeleteIcon />}
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete this navigation resource?')) {
+                  onDelete();
+                  onClose();
+                }
+              }}
+            >
+              Delete
+            </Button>
+          )}
+        </Stack>
+      </DialogTitle>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3, pt: 1 }}>
+        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+          <Tab label="Basic Info" />
+          <Tab label="Important Context" />
+          <Tab label="AI Config" />
+          <Tab label="JSON Payload" />
+        </Tabs>
+      </Box>
+
+      <DialogContent sx={{ p: 3, bgcolor: palette.grey[50] }}>
+        {/* Tab 0: Basic Info */}
+        {activeTab === 0 && (
+          <Stack spacing={3}>
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<LinkIcon />} title="Identity" />
+              <Stack spacing={2}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Name"
+                  value={editedItem.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  placeholder="e.g., Invoice Settings Page"
+                />
+                <Stack direction="row" spacing={2}>
+                  <TextField
+                    size="small"
+                    label="Slug ID"
+                    value={editedItem.slugId}
+                    onChange={(e) => setEditedItem({ ...editedItem, slugId: e.target.value })}
+                    placeholder="invoice-settings-page"
+                    inputProps={{ style: { fontFamily: 'monospace' } }}
+                    helperText="Unique identifier (auto-generated from name)"
+                    sx={{ flex: 1 }}
+                  />
+                  <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <Select
+                      value={editedItem.status}
+                      onChange={(e) => setEditedItem({ ...editedItem, status: e.target.value as NavigationStatus })}
+                    >
+                      {navigationStatusOptions.map((opt) => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <Box
+                              sx={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: '50%',
+                                bgcolor: opt.color,
+                              }}
+                            />
+                            <span>{opt.label}</span>
+                          </Stack>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Stack>
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<CategoryIcon />} title="Type & Configuration" />
+              <Stack spacing={3}>
+                <FormControl fullWidth size="small">
+                  <Select
+                    value={editedItem.navigationType}
+                    onChange={(e) => setEditedItem({
+                      ...editedItem,
+                      navigationType: e.target.value as NavigationType,
+                      typeData: {}, // Reset type data when type changes
+                    })}
+                  >
+                    {navigationTypes.map((type) => (
+                      <MenuItem key={type.value} value={type.value}>
+                        <Stack>
+                          <Typography variant="body2" fontWeight={500}>{type.label}</Typography>
+                          <Typography variant="caption" color="text.secondary">{type.description}</Typography>
+                        </Stack>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <Box sx={{ pl: 2, borderLeft: 3, borderColor: palette.primary }}>
+                  <NavigationTypeFields
+                    navigationType={editedItem.navigationType}
+                    typeData={editedItem.typeData || {}}
+                    onChange={(typeData) => setEditedItem({ ...editedItem, typeData })}
+                  />
+                </Box>
+              </Stack>
+            </Paper>
+          </Stack>
+        )}
+
+        {/* Tab 1: Important Context */}
+        {activeTab === 1 && (
+          <Paper sx={{ p: 3 }}>
+            <SectionHeader icon={<TextSnippetIcon />} title="Important Context" count={editedItem.contextSnippets.length} />
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Context snippets help the AI understand when and how to use this navigation resource.
+            </Typography>
+            <Stack spacing={2}>
+              {editedItem.contextSnippets.map((snippet, index) => (
+                <Paper key={snippet.id} variant="outlined" sx={{ p: 2 }}>
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <TextField
+                        size="small"
+                        label="Title"
+                        value={snippet.title}
+                        onChange={(e) => handleSnippetChange(index, 'title', e.target.value)}
+                        sx={{ flex: 1 }}
+                        disabled={index === 0}
+                      />
+                      {index === 0 && (
+                        <Chip label="Required" size="small" color="primary" variant="outlined" />
+                      )}
+                      {index > 0 && (
+                        <IconButton size="small" onClick={() => handleRemoveSnippet(index)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </Stack>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      multiline
+                      rows={3}
+                      placeholder={index === 0 ? "Describe this resource for the AI..." : "Additional context..."}
+                      value={snippet.content}
+                      onChange={(e) => handleSnippetChange(index, 'content', e.target.value)}
+                    />
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
+            <Button startIcon={<AddIcon />} size="small" onClick={handleAddSnippet} sx={{ mt: 2 }}>
+              Add Context Snippet
+            </Button>
+          </Paper>
+        )}
+
+        {/* Tab 2: AI Config */}
+        {activeTab === 2 && (
+          <Stack spacing={3}>
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<SmartToyIcon />} title="Prompt" />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Additional instructions for the AI when this navigation resource is relevant.
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                value={editedItem.prompt || ''}
+                onChange={(e) => setEditedItem({ ...editedItem, prompt: e.target.value })}
+                placeholder="e.g., When the user asks about invoice settings, guide them to this page and explain the key options available..."
+              />
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<BuildIcon />} title="Tools" count={editedItem.tools?.length || 0} />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                MCP tools that can be used with this navigation resource.
+              </Typography>
+              {(editedItem.tools?.length || 0) === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                  No tools configured
+                </Typography>
+              ) : (
+                <Stack spacing={1}>
+                  {editedItem.tools?.map((tool, i) => (
+                    <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" fontWeight={500} sx={{ fontFamily: 'monospace' }}>
+                            {tool.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {tool.description}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size="small"
+                          onClick={() => setEditedItem({
+                            ...editedItem,
+                            tools: editedItem.tools?.filter((_, idx) => idx !== i),
+                          })}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
+              <Button
+                startIcon={<AddIcon />}
+                size="small"
+                sx={{ mt: 1 }}
+                onClick={() => {
+                  const toolName = window.prompt('Enter tool name:');
+                  if (toolName) {
+                    const toolDesc = window.prompt('Enter tool description:') || '';
+                    setEditedItem({
+                      ...editedItem,
+                      tools: [...(editedItem.tools || []), { name: toolName, description: toolDesc, parameters: {} }],
+                    });
+                  }
+                }}
+              >
+                Add Tool
+              </Button>
+            </Paper>
+          </Stack>
+        )}
+
+        {/* Tab 3: JSON Payload */}
+        {activeTab === 3 && (
+          <Paper sx={{ p: 3 }}>
+            <SectionHeader icon={<TextSnippetIcon />} title="JSON Payload" />
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              This is the complete JSON representation of this navigation resource.
+            </Typography>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2,
+                bgcolor: palette.grey[800],
+                color: '#fff',
+                fontFamily: 'monospace',
+                fontSize: '0.85rem',
+                overflow: 'auto',
+                maxHeight: 500,
+              }}
+            >
+              <pre style={{ margin: 0 }}>
+                {JSON.stringify(buildJsonPayload(), null, 2)}
+              </pre>
+            </Paper>
+          </Paper>
+        )}
+      </DialogContent>
+
+      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          disabled={!editedItem.name || !editedItem.slugId}
+        >
+          Save Changes
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function NavigationManagementPage() {
+  const { features, updateFeature } = useOnboarding();
+  const [selectedItem, setSelectedItem] = useState<{
+    item: NavigationItem;
+    featureId: string;
+    stageKey: StageKey;
+    index: number;
+  } | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Collect all navigation items across all features/stages
+  const allNavItems: {
+    featureId: string;
+    featureName: string;
+    stageKey: StageKey;
+    stageName: string;
+    item: NavigationItem;
+    index: number;
+  }[] = [];
+
   features.forEach((feature) => {
     stageKeys.forEach((stageKey) => {
       const stage = feature.stages[stageKey];
-      (stage.navigation || []).forEach((nav) => {
+      (stage.navigation || []).forEach((nav, index) => {
         allNavItems.push({
+          featureId: feature.id,
           featureName: feature.name,
+          stageKey,
           stageName: stageConfig[stageKey].label,
           item: nav,
+          index,
         });
       });
     });
   });
 
+  const handleEdit = (entry: typeof allNavItems[0]) => {
+    setSelectedItem({
+      item: entry.item,
+      featureId: entry.featureId,
+      stageKey: entry.stageKey,
+      index: entry.index,
+    });
+    setIsCreating(false);
+    setEditorOpen(true);
+  };
+
+  const handleDelete = (entry: typeof allNavItems[0]) => {
+    if (!window.confirm(`Delete "${entry.item.name}"?`)) return;
+
+    const feature = features.find((f) => f.id === entry.featureId);
+    if (!feature) return;
+
+    const updatedFeature = {
+      ...feature,
+      stages: {
+        ...feature.stages,
+        [entry.stageKey]: {
+          ...feature.stages[entry.stageKey],
+          navigation: feature.stages[entry.stageKey].navigation.filter((_, i) => i !== entry.index),
+        },
+      },
+    };
+    updateFeature(updatedFeature);
+  };
+
+  const handleSave = (updatedItem: NavigationItem) => {
+    if (!selectedItem) return;
+
+    const feature = features.find((f) => f.id === selectedItem.featureId);
+    if (!feature) return;
+
+    const currentNav = [...feature.stages[selectedItem.stageKey].navigation];
+    currentNav[selectedItem.index] = updatedItem;
+
+    const updatedFeature = {
+      ...feature,
+      stages: {
+        ...feature.stages,
+        [selectedItem.stageKey]: {
+          ...feature.stages[selectedItem.stageKey],
+          navigation: currentNav,
+        },
+      },
+    };
+    updateFeature(updatedFeature);
+    setSelectedItem(null);
+  };
+
+  const handleDeleteFromModal = () => {
+    if (!selectedItem) return;
+
+    const feature = features.find((f) => f.id === selectedItem.featureId);
+    if (!feature) return;
+
+    const updatedFeature = {
+      ...feature,
+      stages: {
+        ...feature.stages,
+        [selectedItem.stageKey]: {
+          ...feature.stages[selectedItem.stageKey],
+          navigation: feature.stages[selectedItem.stageKey].navigation.filter((_, i) => i !== selectedItem.index),
+        },
+      },
+    };
+    updateFeature(updatedFeature);
+    setSelectedItem(null);
+  };
+
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight={600}>Navigation</Typography>
+          <Typography variant="h5" fontWeight={600}>Navigation Resources</Typography>
           <Typography variant="body2" color="text.secondary">
-            Manage navigation items, links, and resources
+            Manage navigation items, links, and resources used across features
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} disabled>Add Navigation</Button>
+        <Button variant="contained" startIcon={<AddIcon />} disabled>
+          Add Navigation
+        </Button>
       </Stack>
 
       <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
@@ -1097,39 +1815,106 @@ function NavigationManagementPage() {
             <TableRow sx={{ bgcolor: palette.grey[50] }}>
               <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>URL</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>URL / ID</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Used In</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {allNavItems.map((entry, i) => (
-              <TableRow key={i} hover>
-                <TableCell><Typography fontWeight={500}>{entry.item.name}</Typography></TableCell>
-                <TableCell>
-                  <Chip
-                    label={navigationTypes.find((t) => t.value === entry.item.navigationType)?.label || entry.item.navigationType}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                    {entry.item.url}
+            {allNavItems.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                    No navigation resources defined
                   </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {entry.featureName} → {entry.stageName}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton size="small" disabled><EditIcon fontSize="small" /></IconButton>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              allNavItems.map((entry, i) => (
+                <TableRow key={i} hover>
+                  <TableCell>
+                    <Stack>
+                      <Typography fontWeight={500}>{entry.item.name}</Typography>
+                      {entry.item.slugId && (
+                        <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                          {entry.item.slugId}
+                        </Typography>
+                      )}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={navigationTypes.find((t) => t.value === entry.item.navigationType)?.label || entry.item.navigationType}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={navigationStatusOptions.find((s) => s.value === entry.item.status)?.label || entry.item.status || 'Draft'}
+                      size="small"
+                      sx={{
+                        bgcolor: alpha(
+                          navigationStatusOptions.find((s) => s.value === entry.item.status)?.color || palette.warning,
+                          0.1
+                        ),
+                        color: navigationStatusOptions.find((s) => s.value === entry.item.status)?.color || palette.warning,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontFamily: 'monospace',
+                        fontSize: '0.8rem',
+                        maxWidth: 200,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {getNavigationUrl(entry.item) || entry.item.url || '—'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {entry.featureName} → {entry.stageName}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEdit(entry)}
+                      sx={{ color: palette.primary }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(entry)}
+                      sx={{ color: palette.error }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <NavigationEditModal
+        item={selectedItem?.item || null}
+        open={editorOpen}
+        onClose={() => {
+          setEditorOpen(false);
+          setSelectedItem(null);
+        }}
+        onSave={handleSave}
+        onDelete={selectedItem ? handleDeleteFromModal : undefined}
+      />
     </Box>
   );
 }

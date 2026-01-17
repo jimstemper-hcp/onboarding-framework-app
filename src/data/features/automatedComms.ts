@@ -29,13 +29,13 @@ export const automatedCommsFeature: Feature = {
           name: 'Communications Pricing',
           description: 'Self-serve page for automated communications pricing and upgrade',
           url: '/pricing/communications',
-          navigationType: 'hcp_sell_page',
+          navigationType: 'hcp_external',
         },
         {
           name: 'Automated Communications Guide',
           description: 'Comprehensive guide explaining automated messaging features',
           url: 'https://help.housecallpro.com/auto-comms',
-          navigationType: 'hcp_training_article',
+          navigationType: 'hcp_help',
         },
       ],
       calendlyTypes: [

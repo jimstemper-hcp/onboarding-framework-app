@@ -33,20 +33,66 @@ export interface Resource {
 
 // Navigation types for the admin UI
 export type NavigationType =
-  | 'hcp_sell_page'
-  | 'hcp_navigate'
-  | 'hcp_tours'
-  | 'hcp_help_article'
-  | 'hcp_video'
-  | 'hcp_modal'
-  | 'hcp_section_header'
-  | 'hcp_training_article';
+  | 'hcp_navigate'  // Page paths in the web product
+  | 'hcp_modal'     // Modals in the product (path or modal ID)
+  | 'hcp_video'     // Video links for embedding in chat
+  | 'hcp_help'      // Help articles
+  | 'hcp_external'  // External URLs
+  | 'hcp_tour';     // Appcue tour IDs
 
+export type NavigationStatus = 'published' | 'archived' | 'draft';
+
+/**
+ * Type-specific data for navigation items.
+ * Different navigation types require different data.
+ */
+export interface NavigationTypeData {
+  // hcp_navigate - page path in the product
+  pagePath?: string;
+
+  // hcp_modal - modal configuration
+  modalPath?: string;      // Optional path that opens the modal
+  modalId?: string;        // Modal identifier for programmatic opening
+
+  // hcp_video - video embed
+  videoUrl?: string;
+  videoDurationSeconds?: number;
+  videoThumbnail?: string;
+
+  // hcp_help - help article
+  helpArticleUrl?: string;
+  helpArticleId?: string;
+
+  // hcp_external - external URL
+  externalUrl?: string;
+
+  // hcp_tour - Appcue tour
+  appcueId?: string;
+  tourName?: string;
+}
+
+/**
+ * A navigation resource that can be used across features and stages.
+ * These are centralized and referenced by features.
+ */
 export interface NavigationItem {
+  // Core identity
+  slugId?: string;          // Unique ID (lowercase, hyphenated from name)
   name: string;
-  description: string; // LLM description
-  url: string;
+  status?: NavigationStatus;
+
+  // Type and type-specific data
   navigationType: NavigationType;
+  typeData?: NavigationTypeData;
+
+  // Context for AI/LLM
+  contextSnippets?: ContextSnippet[];  // First one defaults to "LLM Description"
+  prompt?: string;
+  tools?: McpTool[];
+
+  // Legacy fields for backward compatibility
+  description: string;      // LLM description (duplicates first contextSnippet)
+  url: string;              // Primary URL (derived from typeData)
 }
 
 // Context snippets for Important Context section
