@@ -1,35 +1,29 @@
-import { Box, Typography, Paper, Alert } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
-import { PlanningWrapper } from '../../planning';
+import { PlanningWrapper, PlanningInfoButton } from '../../planning';
+import { ChatContainer } from '../../chat';
 
 export function ChatView() {
   return (
     <PlanningWrapper elementId="view-chat">
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <ChatIcon sx={{ fontSize: 32, color: 'primary.main' }} />
-        <Box>
-          <Typography variant="h4">AI Chat Assistant</Typography>
-          <Typography variant="subtitle2">
-            Contextual AI help powered by onboarding data
-          </Typography>
+      <Box>
+        {/* Header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+          <ChatIcon sx={{ fontSize: 32, color: 'primary.main' }} />
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="h4">AI Chat Assistant</Typography>
+              <PlanningInfoButton elementId="view-chat" />
+            </Box>
+            <Typography variant="subtitle2" color="text.secondary">
+              Contextual AI help powered by onboarding data
+            </Typography>
+          </Box>
         </Box>
+
+        {/* Chat Container */}
+        <ChatContainer />
       </Box>
-
-      <Alert severity="info" sx={{ mb: 3 }}>
-        This AI assistant knows which features the pro has and their current stage.
-        It provides contextual help and can guide them through onboarding.
-      </Alert>
-
-      <Paper sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
-        <Typography variant="h6" gutterBottom>
-          Coming Soon
-        </Typography>
-        <Typography>
-          Chat interface, feature detection, and stage-aware responses will appear here.
-        </Typography>
-      </Paper>
-    </Box>
     </PlanningWrapper>
   );
 }
