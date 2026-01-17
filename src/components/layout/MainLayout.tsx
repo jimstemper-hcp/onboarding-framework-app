@@ -1,6 +1,7 @@
 import { Box, AppBar, Toolbar, Typography, Container } from '@mui/material';
 import { ViewSwitcher } from './ViewSwitcher';
 import { ConnectionIndicator } from './ConnectionIndicator';
+import { PlanningModeToggle } from '../../planning';
 import type { ReactNode } from 'react';
 
 interface MainLayoutProps {
@@ -40,9 +41,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             </Box>
           </Box>
 
-          <Typography variant="caption" sx={{ opacity: 0.7 }}>
-            Demo Mode
-          </Typography>
+          <PlanningModeToggle />
         </Toolbar>
       </AppBar>
 

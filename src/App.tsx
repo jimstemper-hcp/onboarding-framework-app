@@ -2,6 +2,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { theme } from './theme/theme';
 import { OnboardingProvider, useOnboarding } from './context';
+import { PlanningModeProvider, PlanningModal } from './planning';
 import { MainLayout } from './components/layout';
 import { AdminView } from './views/admin';
 import { FrontlineView } from './views/frontline';
@@ -30,11 +31,14 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <OnboardingProvider>
-        <MainLayout>
-          <ViewRouter />
-        </MainLayout>
-      </OnboardingProvider>
+      <PlanningModeProvider>
+        <OnboardingProvider>
+          <MainLayout>
+            <ViewRouter />
+          </MainLayout>
+          <PlanningModal />
+        </OnboardingProvider>
+      </PlanningModeProvider>
     </ThemeProvider>
   );
 }
