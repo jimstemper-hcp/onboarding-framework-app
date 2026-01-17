@@ -9,25 +9,39 @@ export const estimatesFeature: Feature = {
 
   stages: {
     notAttached: {
-      conditions: [
-        'Pro does not have Estimates feature in their current plan',
-        'Pro has not purchased Estimates as an add-on',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.estimates', negated: true },
+          { variable: 'addons.estimates', negated: true },
+        ],
+      },
+      contextSnippets: [
+        {
+          id: 'value-prop',
+          title: 'Value Proposition',
+          content: 'Win more jobs with professional estimates. Send beautiful quotes that customers can approve with one click.',
+        },
       ],
-      valueProp: 'Win more jobs with professional estimates. Send beautiful quotes that customers can approve with one click.',
-      sellPageUrl: '/pricing/estimates',
-      learnMoreResources: [
-        { title: 'Estimates Overview', url: 'https://help.housecallpro.com/estimates', type: 'article' },
+      navigation: [
+        {
+          name: 'Estimates Pricing',
+          description: 'Self-serve page for estimates feature pricing',
+          url: '/pricing/estimates',
+          navigationType: 'hcp_sell_page',
+        },
+        {
+          name: 'Estimates Overview',
+          description: 'Help article explaining how to create and send estimates',
+          url: 'https://help.housecallpro.com/estimates',
+          navigationType: 'hcp_help_article',
+        },
       ],
       calendlyTypes: [
         { name: 'Estimates Demo', url: 'https://calendly.com/hcp-sales/estimates', team: 'sales', description: 'See how estimates work' },
       ],
-      upgradeTools: [],
       upgradePrompt: 'Help the pro understand how professional estimates can help them win more jobs.',
-      repTalkingPoints: [
-        'Professional estimates help you win more jobs',
-        'Customers can approve estimates with one click',
-        'Approved estimates convert directly to jobs',
-      ],
+      upgradeTools: [],
     },
     attached: {
       conditions: [

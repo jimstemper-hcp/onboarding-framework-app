@@ -9,25 +9,39 @@ export const reviewsFeature: Feature = {
 
   stages: {
     notAttached: {
-      conditions: [
-        'Pro does not have Reviews feature in their current plan',
-        'Pro has not purchased Reviews as an add-on',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.reviews', negated: true },
+          { variable: 'addons.reviews', negated: true },
+        ],
+      },
+      contextSnippets: [
+        {
+          id: 'value-prop',
+          title: 'Value Proposition',
+          content: 'Build your online reputation automatically. Request reviews after every job and watch your ratings grow.',
+        },
       ],
-      valueProp: 'Build your online reputation automatically. Request reviews after every job and watch your ratings grow.',
-      sellPageUrl: '/pricing/reviews',
-      learnMoreResources: [
-        { title: 'Reviews Management Guide', url: 'https://help.housecallpro.com/reviews', type: 'guide' },
+      navigation: [
+        {
+          name: 'Reviews Pricing',
+          description: 'Self-serve page for reviews management pricing',
+          url: '/pricing/reviews',
+          navigationType: 'hcp_sell_page',
+        },
+        {
+          name: 'Reviews Management Guide',
+          description: 'Guide explaining how to collect and manage customer reviews',
+          url: 'https://help.housecallpro.com/reviews',
+          navigationType: 'hcp_training_article',
+        },
       ],
       calendlyTypes: [
         { name: 'Reviews Demo', url: 'https://calendly.com/hcp-sales/reviews', team: 'sales', description: 'See the reviews features' },
       ],
-      upgradeTools: [],
       upgradePrompt: 'Help the pro understand how automated review collection can build their online reputation.',
-      repTalkingPoints: [
-        '90% of customers read reviews before hiring a pro',
-        'Automated review requests make it easy to collect positive feedback',
-        'Respond to reviews directly from Housecall Pro',
-      ],
+      upgradeTools: [],
     },
     attached: {
       conditions: [

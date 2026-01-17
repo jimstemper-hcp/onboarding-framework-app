@@ -12,31 +12,46 @@ export const invoicingFeature: Feature = {
     // NOT ATTACHED - Pro doesn't have access to invoicing
     // =========================================================================
     notAttached: {
-      conditions: [
-        'Pro does not have Invoicing feature in their current plan',
-        'Pro has not purchased Invoicing as an add-on',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.invoicing', negated: true },
+          { variable: 'addons.invoicing', negated: true },
+        ],
+      },
+
+      contextSnippets: [
+        {
+          id: 'value-prop',
+          title: 'Value Proposition',
+          content: 'Look professional to your customers and automate your invoice reminders to ensure you get paid.',
+        },
       ],
 
-      valueProp:
-        'Look professional to your customers and automate your invoice reminders to ensure you get paid.',
-
-      sellPageUrl: '/pricing/invoicing',
-
-      learnMoreResources: [
+      navigation: [
         {
-          title: 'How Invoicing Helps You Get Paid Faster',
+          name: 'Invoicing Pricing',
+          description: 'Self-serve page where pros can learn about invoicing pricing and upgrade',
+          url: '/pricing/invoicing',
+          navigationType: 'hcp_sell_page',
+        },
+        {
+          name: 'How Invoicing Helps You Get Paid Faster',
+          description: 'Overview article explaining the invoicing feature benefits',
           url: 'https://help.housecallpro.com/invoicing-overview',
-          type: 'article',
+          navigationType: 'hcp_help_article',
         },
         {
-          title: 'Invoicing Feature Tour',
+          name: 'Invoicing Feature Tour',
+          description: 'Video walkthrough of invoicing features and workflow',
           url: 'https://www.youtube.com/watch?v=hcp-invoicing-tour',
-          type: 'video',
+          navigationType: 'hcp_video',
         },
         {
-          title: 'Invoicing Best Practices Guide',
+          name: 'Invoicing Best Practices Guide',
+          description: 'Training article with tips for getting paid faster with invoicing',
           url: 'https://help.housecallpro.com/invoicing-best-practices',
-          type: 'guide',
+          navigationType: 'hcp_training_article',
         },
       ],
 
@@ -48,6 +63,20 @@ export const invoicingFeature: Feature = {
           description: 'Learn how invoicing can help your business get paid faster',
         },
       ],
+
+      upgradePrompt: `You are helping a home service professional understand the value of Housecall Pro's invoicing feature.
+
+Key value proposition: "Look professional to your customers and automate your invoice reminders to ensure you get paid."
+
+When discussing invoicing:
+1. Emphasize the professional appearance it gives their business
+2. Highlight automated payment reminders that reduce chasing customers
+3. Mention faster payment collection (average 2x faster than paper invoices)
+4. Offer to check their plan eligibility using the check_plan_eligibility tool
+5. If they're interested, use get_upgrade_options to show them their options
+6. Guide them through the upgrade with initiate_upgrade when ready
+
+Be conversational and helpful, not pushy. Focus on solving their payment collection challenges.`,
 
       upgradeTools: [
         {
@@ -72,28 +101,6 @@ export const invoicingFeature: Feature = {
             targetPlan: { type: 'string', description: 'The plan to upgrade to', required: true },
           },
         },
-      ],
-
-      upgradePrompt: `You are helping a home service professional understand the value of Housecall Pro's invoicing feature.
-
-Key value proposition: "Look professional to your customers and automate your invoice reminders to ensure you get paid."
-
-When discussing invoicing:
-1. Emphasize the professional appearance it gives their business
-2. Highlight automated payment reminders that reduce chasing customers
-3. Mention faster payment collection (average 2x faster than paper invoices)
-4. Offer to check their plan eligibility using the check_plan_eligibility tool
-5. If they're interested, use get_upgrade_options to show them their options
-6. Guide them through the upgrade with initiate_upgrade when ready
-
-Be conversational and helpful, not pushy. Focus on solving their payment collection challenges.`,
-
-      repTalkingPoints: [
-        'Invoicing lets you look professional and get paid faster with automated reminders',
-        'Pros using our invoicing get paid 2x faster on average',
-        'You can customize invoices with your logo and branding',
-        'Automated reminders mean you spend less time chasing payments',
-        'Would you like me to show you how to add invoicing to your account?',
       ],
     },
 

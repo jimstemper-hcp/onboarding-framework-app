@@ -31,6 +31,31 @@ export interface Resource {
   type: 'article' | 'video' | 'guide' | 'help-center';
 }
 
+// Navigation types for the admin UI
+export type NavigationType =
+  | 'hcp_sell_page'
+  | 'hcp_navigate'
+  | 'hcp_tours'
+  | 'hcp_help_article'
+  | 'hcp_video'
+  | 'hcp_modal'
+  | 'hcp_section_header'
+  | 'hcp_training_article';
+
+export interface NavigationItem {
+  name: string;
+  description: string; // LLM description
+  url: string;
+  navigationType: NavigationType;
+}
+
+// Context snippets for Important Context section
+export interface ContextSnippet {
+  id: string;
+  title: string;
+  content: string;
+}
+
 export interface CalendlyLink {
   name: string;
   url: string;
@@ -78,15 +103,28 @@ export interface OnboardingTask {
  * Context for when a Pro does NOT have access to the feature.
  * Focus: Help them understand value and upgrade their plan.
  */
+export interface AccessCondition {
+  variable: string; // e.g., "jobs.invoicing", "payments.processing"
+  negated: boolean; // true = "does NOT have access", false = "has access"
+}
+
+export interface AccessConditionRule {
+  operator: 'AND' | 'OR';
+  conditions: AccessCondition[];
+}
+
 export interface NotAttachedContext {
-  conditions: string[];
-  valueProp: string;
-  sellPageUrl: string;
-  learnMoreResources: Resource[];
+  accessConditions: AccessConditionRule;
+  // Important context - value prop is always first, additional snippets can be added
+  contextSnippets: ContextSnippet[];
+  // Navigation combines sell page and learn more resources
+  navigation: NavigationItem[];
+  // Calendly event types
   calendlyTypes: CalendlyLink[];
-  upgradeTools: McpTool[];
+  // AI prompt for upgrade flow
   upgradePrompt: string;
-  repTalkingPoints: string[];
+  // MCP tools for upgrade actions
+  upgradeTools: McpTool[];
 }
 
 /**

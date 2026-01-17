@@ -20,7 +20,6 @@ import {
   TextField,
   Stack,
   Chip,
-  Divider,
   Accordion,
   AccordionSummary,
   AccordionDetails,
@@ -29,7 +28,6 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel,
   alpha,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
@@ -45,15 +43,23 @@ import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import WebIcon from '@mui/icons-material/Web';
 import FlagRoundedIcon from '@mui/icons-material/FlagRounded';
 import { useOnboarding } from '../../context';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import TextSnippetIcon from '@mui/icons-material/TextSnippet';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import type {
   Feature,
   AdoptionStage,
   OnboardingTask,
-  Resource,
   CalendlyLink,
   McpTool,
   Video,
   ProductPage,
+  AccessConditionRule,
+  NavigationItem,
+  NavigationType,
+  ContextSnippet,
 } from '../../types';
 
 // Palette for consistent styling
@@ -82,6 +88,18 @@ const stageConfig: Record<AdoptionStage, { label: string; color: string }> = {
 };
 
 const stageKeys: AdoptionStage[] = ['not_attached', 'attached', 'activated', 'engaged'];
+
+// Navigation type options
+const navigationTypes: { value: NavigationType; label: string }[] = [
+  { value: 'hcp_sell_page', label: 'Sell Page' },
+  { value: 'hcp_navigate', label: 'Navigate' },
+  { value: 'hcp_tours', label: 'Tours' },
+  { value: 'hcp_help_article', label: 'Help Article' },
+  { value: 'hcp_video', label: 'Video' },
+  { value: 'hcp_modal', label: 'Modal' },
+  { value: 'hcp_section_header', label: 'Section Header' },
+  { value: 'hcp_training_article', label: 'Training Article' },
+];
 
 // Section header component
 function SectionHeader({ icon, title, count }: { icon: React.ReactNode; title: string; count?: number }) {
@@ -263,74 +281,182 @@ function TaskEditor({
   );
 }
 
-// Resource editor component
-function ResourceEditor({
-  resources,
+// Context snippets editor (for Important Context section)
+function ContextSnippetsEditor({
+  snippets,
   onChange,
 }: {
-  resources: Resource[];
-  onChange: (resources: Resource[]) => void;
+  snippets: ContextSnippet[];
+  onChange: (snippets: ContextSnippet[]) => void;
 }) {
-  const handleResourceChange = (index: number, field: keyof Resource, value: string) => {
-    const updated = [...resources];
+  const handleSnippetChange = (index: number, field: keyof ContextSnippet, value: string) => {
+    const updated = [...snippets];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);
   };
 
-  const handleAddResource = () => {
-    onChange([...resources, { title: '', url: '', type: 'article' }]);
+  const handleAddSnippet = () => {
+    const newId = `snippet-${Date.now()}`;
+    onChange([...snippets, { id: newId, title: 'New Context', content: '' }]);
   };
 
-  const handleRemoveResource = (index: number) => {
-    onChange(resources.filter((_, i) => i !== index));
+  const handleRemoveSnippet = (index: number) => {
+    // Don't allow removing the value prop (first item)
+    if (index === 0) return;
+    onChange(snippets.filter((_, i) => i !== index));
   };
 
   return (
     <Box>
-      <List dense>
-        {resources.map((resource, index) => (
-          <ListItem key={index} sx={{ px: 0 }}>
-            <Stack direction="row" spacing={1} sx={{ flex: 1 }} alignItems="center">
+      <Stack spacing={2}>
+        {snippets.map((snippet, index) => (
+          <Paper key={snippet.id} variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <TextField
+                  size="small"
+                  label="Title"
+                  value={snippet.title}
+                  onChange={(e) => handleSnippetChange(index, 'title', e.target.value)}
+                  sx={{ flex: 1 }}
+                  disabled={index === 0} // Value prop title is fixed
+                />
+                {index > 0 && (
+                  <IconButton size="small" onClick={() => handleRemoveSnippet(index)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                )}
+              </Stack>
               <TextField
                 size="small"
-                placeholder="Title"
-                value={resource.title}
-                onChange={(e) => handleResourceChange(index, 'title', e.target.value)}
-                sx={{ flex: 1 }}
+                fullWidth
+                multiline
+                rows={3}
+                placeholder="Context content..."
+                value={snippet.content}
+                onChange={(e) => handleSnippetChange(index, 'content', e.target.value)}
               />
-              <TextField
-                size="small"
-                placeholder="URL"
-                value={resource.url}
-                onChange={(e) => handleResourceChange(index, 'url', e.target.value)}
-                sx={{ flex: 2 }}
-              />
-              <FormControl size="small" sx={{ minWidth: 100 }}>
-                <Select
-                  value={resource.type}
-                  onChange={(e) => handleResourceChange(index, 'type', e.target.value)}
-                >
-                  <MenuItem value="article">Article</MenuItem>
-                  <MenuItem value="video">Video</MenuItem>
-                  <MenuItem value="guide">Guide</MenuItem>
-                  <MenuItem value="help-center">Help Center</MenuItem>
-                </Select>
-              </FormControl>
-              <IconButton size="small" onClick={() => handleRemoveResource(index)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
             </Stack>
-          </ListItem>
+          </Paper>
         ))}
-      </List>
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddResource}>
-        Add Resource
+      </Stack>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddSnippet} sx={{ mt: 1 }}>
+        Add Context Snippet
       </Button>
     </Box>
   );
 }
 
-// Calendly editor component
+// Navigation editor (table-like format)
+function NavigationEditor({
+  items,
+  onChange,
+}: {
+  items: NavigationItem[];
+  onChange: (items: NavigationItem[]) => void;
+}) {
+  const handleItemChange = (index: number, field: keyof NavigationItem, value: string) => {
+    const updated = [...items];
+    updated[index] = { ...updated[index], [field]: value };
+    onChange(updated);
+  };
+
+  const handleAddItem = () => {
+    onChange([...items, { name: '', description: '', url: '', navigationType: 'hcp_help_article' }]);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    onChange(items.filter((_, i) => i !== index));
+  };
+
+  const handleOpenUrl = (url: string) => {
+    if (url) window.open(url, '_blank');
+  };
+
+  return (
+    <Box>
+      {/* Column headers */}
+      <Stack direction="row" spacing={1} sx={{ mb: 1, px: 1 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 2 }}>
+          Name
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 3 }}>
+          LLM Description
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ width: 150 }}>
+          Navigation Type
+        </Typography>
+        <Box sx={{ width: 80 }} />
+      </Stack>
+
+      <Stack spacing={1}>
+        {items.map((item, index) => (
+          <Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
+            <Stack direction="row" spacing={1} alignItems="flex-start">
+              <TextField
+                size="small"
+                placeholder="Name"
+                value={item.name}
+                onChange={(e) => handleItemChange(index, 'name', e.target.value)}
+                sx={{ flex: 2 }}
+              />
+              <TextField
+                size="small"
+                placeholder="LLM description"
+                value={item.description}
+                onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                sx={{ flex: 3 }}
+                multiline
+                maxRows={2}
+              />
+              <FormControl size="small" sx={{ width: 150 }}>
+                <Select
+                  value={item.navigationType}
+                  onChange={(e) => handleItemChange(index, 'navigationType', e.target.value)}
+                >
+                  {navigationTypes.map((type) => (
+                    <MenuItem key={type.value} value={type.value}>
+                      {type.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Stack direction="row" spacing={0.5}>
+                <IconButton
+                  size="small"
+                  onClick={() => handleOpenUrl(item.url)}
+                  disabled={!item.url}
+                  title="Open URL"
+                >
+                  <OpenInNewIcon fontSize="small" />
+                </IconButton>
+                <IconButton size="small" onClick={() => handleRemoveItem(index)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Stack>
+            </Stack>
+            <TextField
+              size="small"
+              fullWidth
+              placeholder="URL"
+              value={item.url}
+              onChange={(e) => handleItemChange(index, 'url', e.target.value)}
+              sx={{ mt: 1 }}
+              InputProps={{
+                sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
+              }}
+            />
+          </Paper>
+        ))}
+      </Stack>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddItem} sx={{ mt: 1 }}>
+        Add Navigation
+      </Button>
+    </Box>
+  );
+}
+
+// Calendly editor component (table-like format)
 function CalendlyEditor({
   links,
   onChange,
@@ -352,60 +478,79 @@ function CalendlyEditor({
     onChange(links.filter((_, i) => i !== index));
   };
 
+  const handleOpenUrl = (url: string) => {
+    if (url) window.open(url, '_blank');
+  };
+
   return (
     <Box>
-      {links.map((link, index) => (
-        <Paper key={index} variant="outlined" sx={{ p: 2, mb: 1 }}>
-          <Stack spacing={1.5}>
-            <Stack direction="row" spacing={1}>
+      {/* Column headers */}
+      <Stack direction="row" spacing={1} sx={{ mb: 1, px: 1 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 2 }}>
+          Calendly Call Type
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 3 }}>
+          Description
+        </Typography>
+        <Box sx={{ width: 80 }} />
+      </Stack>
+
+      <Stack spacing={1}>
+        {links.map((link, index) => (
+          <Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
+            <Stack direction="row" spacing={1} alignItems="flex-start">
               <TextField
                 size="small"
-                label="Name"
+                placeholder="Call type name"
                 value={link.name}
                 onChange={(e) => handleLinkChange(index, 'name', e.target.value)}
-                sx={{ flex: 1 }}
+                sx={{ flex: 2 }}
               />
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <InputLabel>Team</InputLabel>
-                <Select
-                  label="Team"
-                  value={link.team}
-                  onChange={(e) => handleLinkChange(index, 'team', e.target.value)}
+              <TextField
+                size="small"
+                placeholder="Description"
+                value={link.description}
+                onChange={(e) => handleLinkChange(index, 'description', e.target.value)}
+                sx={{ flex: 3 }}
+                multiline
+                maxRows={2}
+              />
+              <Stack direction="row" spacing={0.5}>
+                <IconButton
+                  size="small"
+                  onClick={() => handleOpenUrl(link.url)}
+                  disabled={!link.url}
+                  title="Open URL"
                 >
-                  <MenuItem value="sales">Sales</MenuItem>
-                  <MenuItem value="onboarding">Onboarding</MenuItem>
-                  <MenuItem value="support">Support</MenuItem>
-                </Select>
-              </FormControl>
-              <IconButton size="small" onClick={() => handleRemoveLink(index)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+                  <OpenInNewIcon fontSize="small" />
+                </IconButton>
+                <IconButton size="small" onClick={() => handleRemoveLink(index)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Stack>
             </Stack>
             <TextField
               size="small"
-              label="URL"
               fullWidth
+              placeholder="Calendly URL"
               value={link.url}
               onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
+              sx={{ mt: 1 }}
+              InputProps={{
+                sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
+              }}
             />
-            <TextField
-              size="small"
-              label="Description"
-              fullWidth
-              value={link.description}
-              onChange={(e) => handleLinkChange(index, 'description', e.target.value)}
-            />
-          </Stack>
-        </Paper>
-      ))}
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddLink}>
-        Add Calendly Link
+          </Paper>
+        ))}
+      </Stack>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddLink} sx={{ mt: 1 }}>
+        Add Calendly Event Type
       </Button>
     </Box>
   );
 }
 
-// MCP Tool editor component
+// MCP Tool editor component (table-like format)
 function ToolEditor({
   tools,
   onChange,
@@ -413,6 +558,8 @@ function ToolEditor({
   tools: McpTool[];
   onChange: (tools: McpTool[]) => void;
 }) {
+  const [expandedTool, setExpandedTool] = useState<number | null>(null);
+
   const handleToolChange = (index: number, field: keyof McpTool, value: string | object) => {
     const updated = [...tools];
     updated[index] = { ...updated[index], [field]: value };
@@ -429,51 +576,83 @@ function ToolEditor({
 
   return (
     <Box>
-      {tools.map((tool, index) => (
-        <Paper key={index} variant="outlined" sx={{ p: 2, mb: 1 }}>
-          <Stack spacing={1.5}>
+      {/* Column headers */}
+      <Stack direction="row" spacing={1} sx={{ mb: 1, px: 1 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 2 }}>
+          Tool Name
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 4 }}>
+          Tool Description
+        </Typography>
+        <Box sx={{ width: 80 }} />
+      </Stack>
+
+      <Stack spacing={1}>
+        {tools.map((tool, index) => (
+          <Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
             <Stack direction="row" spacing={1} alignItems="flex-start">
               <TextField
                 size="small"
-                label="Tool Name"
+                placeholder="tool_name"
                 value={tool.name}
                 onChange={(e) => handleToolChange(index, 'name', e.target.value)}
-                sx={{ flex: 1 }}
+                sx={{ flex: 2 }}
+                InputProps={{
+                  sx: { fontFamily: 'monospace' },
+                }}
               />
-              <IconButton size="small" onClick={() => handleRemoveTool(index)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+              <TextField
+                size="small"
+                placeholder="Tool description"
+                value={tool.description}
+                onChange={(e) => handleToolChange(index, 'description', e.target.value)}
+                sx={{ flex: 4 }}
+                multiline
+                maxRows={2}
+              />
+              <Stack direction="row" spacing={0.5}>
+                <IconButton
+                  size="small"
+                  onClick={() => setExpandedTool(expandedTool === index ? null : index)}
+                  title="Edit parameters"
+                  sx={{
+                    bgcolor: expandedTool === index ? alpha(palette.primary, 0.1) : 'transparent',
+                  }}
+                >
+                  <BuildIcon fontSize="small" />
+                </IconButton>
+                <IconButton size="small" onClick={() => handleRemoveTool(index)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Stack>
             </Stack>
-            <TextField
-              size="small"
-              label="Description"
-              fullWidth
-              multiline
-              rows={2}
-              value={tool.description}
-              onChange={(e) => handleToolChange(index, 'description', e.target.value)}
-            />
-            <TextField
-              size="small"
-              label="Parameters (JSON)"
-              fullWidth
-              multiline
-              rows={3}
-              value={JSON.stringify(tool.parameters, null, 2)}
-              onChange={(e) => {
-                try {
-                  handleToolChange(index, 'parameters', JSON.parse(e.target.value));
-                } catch {
-                  // Invalid JSON, don't update
-                }
-              }}
-              helperText="JSON object defining tool parameters"
-            />
-          </Stack>
-        </Paper>
-      ))}
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddTool}>
-        Add MCP Tool
+            {expandedTool === index && (
+              <TextField
+                size="small"
+                fullWidth
+                multiline
+                rows={4}
+                placeholder='{"param": {"type": "string", "description": "..."}}'
+                value={JSON.stringify(tool.parameters, null, 2)}
+                onChange={(e) => {
+                  try {
+                    handleToolChange(index, 'parameters', JSON.parse(e.target.value));
+                  } catch {
+                    // Invalid JSON, don't update
+                  }
+                }}
+                sx={{ mt: 1 }}
+                InputProps={{
+                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
+                }}
+                helperText="JSON object defining tool parameters"
+              />
+            )}
+          </Paper>
+        ))}
+      </Stack>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddTool} sx={{ mt: 1 }}>
+        Add Tool
       </Button>
     </Box>
   );
@@ -606,7 +785,152 @@ function ProductPageEditor({
   );
 }
 
-// Stage conditions section component
+// Access conditions logic builder for Not Attached stage
+function AccessConditionsEditor({
+  rule,
+  onChange,
+}: {
+  rule: AccessConditionRule;
+  onChange: (rule: AccessConditionRule) => void;
+}) {
+  const [newVariable, setNewVariable] = useState('');
+
+  const handleAddCondition = () => {
+    if (newVariable.trim()) {
+      onChange({
+        ...rule,
+        conditions: [...rule.conditions, { variable: newVariable.trim(), negated: true }],
+      });
+      setNewVariable('');
+    }
+  };
+
+  const handleRemoveCondition = (index: number) => {
+    onChange({
+      ...rule,
+      conditions: rule.conditions.filter((_, i) => i !== index),
+    });
+  };
+
+  const handleToggleNegated = (index: number) => {
+    const updated = [...rule.conditions];
+    updated[index] = { ...updated[index], negated: !updated[index].negated };
+    onChange({ ...rule, conditions: updated });
+  };
+
+  const handleOperatorChange = (_: React.MouseEvent<HTMLElement>, newOperator: 'AND' | 'OR' | null) => {
+    if (newOperator) {
+      onChange({ ...rule, operator: newOperator });
+    }
+  };
+
+  return (
+    <Box>
+      <SectionHeader icon={<FlagRoundedIcon />} title="Access Conditions" count={rule.conditions.length} />
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Feature access controller variables that determine when a pro is in this stage.
+      </Typography>
+
+      {/* Operator selector */}
+      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+        <Typography variant="body2" fontWeight={500}>
+          Match:
+        </Typography>
+        <ToggleButtonGroup
+          value={rule.operator}
+          exclusive
+          onChange={handleOperatorChange}
+          size="small"
+        >
+          <ToggleButton value="AND" sx={{ px: 2 }}>
+            ALL (AND)
+          </ToggleButton>
+          <ToggleButton value="OR" sx={{ px: 2 }}>
+            ANY (OR)
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Stack>
+
+      {/* Conditions list */}
+      <Box sx={{ mb: 2 }}>
+        {rule.conditions.map((condition, index) => (
+          <Paper
+            key={index}
+            variant="outlined"
+            sx={{
+              p: 1.5,
+              mb: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              bgcolor: alpha(palette.grey[600], 0.02),
+            }}
+          >
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Chip
+                label={condition.negated ? 'NOT' : 'HAS'}
+                size="small"
+                onClick={() => handleToggleNegated(index)}
+                sx={{
+                  bgcolor: condition.negated ? alpha(palette.error, 0.1) : alpha(palette.success, 0.1),
+                  color: condition.negated ? palette.error : palette.success,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: condition.negated ? alpha(palette.error, 0.2) : alpha(palette.success, 0.2),
+                  },
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  fontFamily: 'monospace',
+                  bgcolor: alpha(palette.primary, 0.08),
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 1,
+                  color: palette.grey[800],
+                }}
+              >
+                {condition.variable}
+              </Typography>
+            </Stack>
+            <IconButton size="small" onClick={() => handleRemoveCondition(index)}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Paper>
+        ))}
+        {rule.conditions.length > 1 && (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', textAlign: 'center', my: 1 }}
+          >
+            {rule.operator === 'AND' ? 'All conditions must be true' : 'At least one condition must be true'}
+          </Typography>
+        )}
+      </Box>
+
+      {/* Add new condition */}
+      <Stack direction="row" spacing={1}>
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="e.g., billing.plan.invoicing"
+          value={newVariable}
+          onChange={(e) => setNewVariable(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleAddCondition()}
+          inputProps={{ style: { fontFamily: 'monospace' } }}
+        />
+        <Button variant="outlined" size="small" onClick={handleAddCondition}>
+          Add
+        </Button>
+      </Stack>
+    </Box>
+  );
+}
+
+// Stage conditions section component (for Attached, Activated, Engaged)
 function StageConditionsSection({
   conditions,
   onChange,
@@ -651,96 +975,77 @@ function NotAttachedEditor({
 
   return (
     <Stack spacing={3}>
-      <StageConditionsSection
-        conditions={context.conditions}
-        onChange={(conditions) => updateContext({ conditions })}
-      />
-
-      <Divider />
-
-      <Box>
-        <SectionHeader icon={<TipsAndUpdatesIcon />} title="Value Proposition" />
-        <TextField
-          fullWidth
-          multiline
-          rows={3}
-          value={context.valueProp}
-          onChange={(e) => updateContext({ valueProp: e.target.value })}
-          placeholder="Why should the pro get this feature?"
+      {/* Access Conditions Section */}
+      <Paper sx={{ p: 3 }}>
+        <AccessConditionsEditor
+          rule={context.accessConditions}
+          onChange={(accessConditions) => updateContext({ accessConditions })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <SectionHeader icon={<LinkIcon />} title="Sell Page" />
-        <TextField
-          fullWidth
-          size="small"
-          label="Sell Page URL"
-          value={context.sellPageUrl}
-          onChange={(e) => updateContext({ sellPageUrl: e.target.value })}
+      {/* Important Context Section */}
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<TextSnippetIcon />} title="Important Context" count={context.contextSnippets.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Context snippets that help describe this feature and its value. Value Proposition is always visible first.
+        </Typography>
+        <ContextSnippetsEditor
+          snippets={context.contextSnippets}
+          onChange={(snippets) => updateContext({ contextSnippets: snippets })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <SectionHeader icon={<LinkIcon />} title="Learn More Resources" count={context.learnMoreResources.length} />
-        <ResourceEditor
-          resources={context.learnMoreResources}
-          onChange={(resources) => updateContext({ learnMoreResources: resources })}
+      {/* Navigation Section */}
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<LinkIcon />} title="Navigation" count={context.navigation.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Links to pages, articles, videos, and other resources for this feature.
+        </Typography>
+        <NavigationEditor
+          items={context.navigation}
+          onChange={(items) => updateContext({ navigation: items })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Links" count={context.calendlyTypes.length} />
+      {/* Calendly Event Types Section */}
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Event Types" count={context.calendlyTypes.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Calendly call types that can be booked for this feature.
+        </Typography>
         <CalendlyEditor
           links={context.calendlyTypes}
           onChange={(links) => updateContext({ calendlyTypes: links })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <SectionHeader icon={<BuildIcon />} title="Upgrade Tools (MCP)" count={context.upgradeTools.length} />
-        <ToolEditor
-          tools={context.upgradeTools}
-          onChange={(tools) => updateContext({ upgradeTools: tools })}
-        />
-      </Box>
-
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Upgrade Prompt (for AI)
+      {/* Prompt Section */}
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<SmartToyIcon />} title="Prompt" />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          AI prompt for helping users understand and upgrade to get this feature.
         </Typography>
         <TextField
           fullWidth
           multiline
-          rows={4}
+          rows={6}
           value={context.upgradePrompt}
           onChange={(e) => updateContext({ upgradePrompt: e.target.value })}
           placeholder="AI prompt for helping user upgrade to get this feature"
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Rep Talking Points
+      {/* Tools Section */}
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<BuildIcon />} title="Tools" count={context.upgradeTools.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          MCP tools that the AI can use to help with upgrades.
         </Typography>
-        <EditableStringList
-          items={context.repTalkingPoints}
-          onChange={(points) => updateContext({ repTalkingPoints: points })}
-          placeholder="Add a talking point..."
+        <ToolEditor
+          tools={context.upgradeTools}
+          onChange={(tools) => updateContext({ upgradeTools: tools })}
         />
-      </Box>
+      </Paper>
     </Stack>
   );
 }
@@ -767,89 +1072,76 @@ function AttachedEditor({
 
   return (
     <Stack spacing={3}>
-      <StageConditionsSection
-        conditions={context.conditions}
-        onChange={(conditions) => updateContext({ conditions })}
-      />
+      <Paper sx={{ p: 3 }}>
+        <StageConditionsSection
+          conditions={context.conditions}
+          onChange={(conditions) => updateContext({ conditions })}
+        />
+      </Paper>
 
-      <Divider />
-
-      <Box>
+      <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TaskAltIcon />} title="Required Tasks" count={context.requiredTasks.length} />
         <TaskEditor
           tasks={context.requiredTasks}
           onChange={(tasks) => updateContext({ requiredTasks: tasks })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
+      <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<WebIcon />} title="Product Pages" count={context.productPages.length} />
         <ProductPageEditor
           pages={context.productPages}
           onChange={(pages) => updateContext({ productPages: pages })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
+      <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<VideoLibraryIcon />} title="Tutorial Videos" count={context.videos.length} />
         <VideoEditor
           videos={context.videos}
           onChange={(videos) => updateContext({ videos: videos })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Links" count={context.calendlyTypes.length} />
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Event Types" count={context.calendlyTypes.length} />
         <CalendlyEditor
           links={context.calendlyTypes}
           onChange={(links) => updateContext({ calendlyTypes: links })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <SectionHeader icon={<BuildIcon />} title="MCP Tools" count={context.mcpTools.length} />
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<BuildIcon />} title="Tools" count={context.mcpTools.length} />
         <ToolEditor
           tools={context.mcpTools}
           onChange={(tools) => updateContext({ mcpTools: tools })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Agentic Prompt (for AI)
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<SmartToyIcon />} title="Prompt" />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          AI prompt for guiding users through setup tasks.
         </Typography>
         <TextField
           fullWidth
           multiline
-          rows={4}
+          rows={6}
           value={context.agenticPrompt}
           onChange={(e) => updateContext({ agenticPrompt: e.target.value })}
           placeholder="AI prompt for guiding user through setup tasks"
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Rep Talking Points
-        </Typography>
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<TipsAndUpdatesIcon />} title="Rep Talking Points" count={context.repTalkingPoints.length} />
         <EditableStringList
           items={context.repTalkingPoints}
           onChange={(points) => updateContext({ repTalkingPoints: points })}
           placeholder="Add a talking point..."
         />
-      </Box>
+      </Paper>
     </Stack>
   );
 }
@@ -876,79 +1168,68 @@ function ActivatedEditor({
 
   return (
     <Stack spacing={3}>
-      <StageConditionsSection
-        conditions={context.conditions}
-        onChange={(conditions) => updateContext({ conditions })}
-      />
+      <Paper sx={{ p: 3 }}>
+        <StageConditionsSection
+          conditions={context.conditions}
+          onChange={(conditions) => updateContext({ conditions })}
+        />
+      </Paper>
 
-      <Divider />
-
-      <Box>
+      <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TaskAltIcon />} title="Optional Tasks" count={context.optionalTasks.length} />
         <TaskEditor
           tasks={context.optionalTasks}
           onChange={(tasks) => updateContext({ optionalTasks: tasks })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
+      <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<WebIcon />} title="Product Pages" count={context.productPages.length} />
         <ProductPageEditor
           pages={context.productPages}
           onChange={(pages) => updateContext({ productPages: pages })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Links" count={context.calendlyTypes.length} />
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Event Types" count={context.calendlyTypes.length} />
         <CalendlyEditor
           links={context.calendlyTypes}
           onChange={(links) => updateContext({ calendlyTypes: links })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <SectionHeader icon={<BuildIcon />} title="MCP Tools" count={context.mcpTools.length} />
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<BuildIcon />} title="Tools" count={context.mcpTools.length} />
         <ToolEditor
           tools={context.mcpTools}
           onChange={(tools) => updateContext({ mcpTools: tools })}
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Engagement Prompt (for AI)
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<SmartToyIcon />} title="Prompt" />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          AI prompt for encouraging first use of the feature.
         </Typography>
         <TextField
           fullWidth
           multiline
-          rows={4}
+          rows={6}
           value={context.engagementPrompt}
           onChange={(e) => updateContext({ engagementPrompt: e.target.value })}
           placeholder="AI prompt for encouraging first use"
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Rep Talking Points
-        </Typography>
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<TipsAndUpdatesIcon />} title="Rep Talking Points" count={context.repTalkingPoints.length} />
         <EditableStringList
           items={context.repTalkingPoints}
           onChange={(points) => updateContext({ repTalkingPoints: points })}
           placeholder="Add a talking point..."
         />
-      </Box>
+      </Paper>
     </Stack>
   );
 }
@@ -975,62 +1256,48 @@ function EngagedEditor({
 
   return (
     <Stack spacing={3}>
-      <StageConditionsSection
-        conditions={context.conditions}
-        onChange={(conditions) => updateContext({ conditions })}
-      />
+      <Paper sx={{ p: 3 }}>
+        <StageConditionsSection
+          conditions={context.conditions}
+          onChange={(conditions) => updateContext({ conditions })}
+        />
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Advanced Tips
-        </Typography>
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<TipsAndUpdatesIcon />} title="Advanced Tips" count={context.advancedTips.length} />
         <EditableStringList
           items={context.advancedTips}
           onChange={(tips) => updateContext({ advancedTips: tips })}
           placeholder="Add an advanced tip..."
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Success Metrics
-        </Typography>
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<TaskAltIcon />} title="Success Metrics" count={context.successMetrics.length} />
         <EditableStringList
           items={context.successMetrics}
           onChange={(metrics) => updateContext({ successMetrics: metrics })}
           placeholder="Add a success metric..."
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Upsell Opportunities
-        </Typography>
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<TipsAndUpdatesIcon />} title="Upsell Opportunities" count={context.upsellOpportunities.length} />
         <EditableStringList
           items={context.upsellOpportunities}
           onChange={(opportunities) => updateContext({ upsellOpportunities: opportunities })}
           placeholder="Add an upsell opportunity..."
         />
-      </Box>
+      </Paper>
 
-      <Divider />
-
-      <Box>
-        <Typography variant="subtitle2" gutterBottom fontWeight={600}>
-          Rep Talking Points
-        </Typography>
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<TipsAndUpdatesIcon />} title="Rep Talking Points" count={context.repTalkingPoints.length} />
         <EditableStringList
           items={context.repTalkingPoints}
           onChange={(points) => updateContext({ repTalkingPoints: points })}
           placeholder="Add a talking point..."
         />
-      </Box>
+      </Paper>
     </Stack>
   );
 }
@@ -1151,20 +1418,18 @@ function FeatureEditorModal({
 
       <DialogContent sx={{ p: 3, bgcolor: palette.grey[50] }}>
         {/* Stage-specific editor */}
-        <Paper sx={{ p: 3 }}>
-          {activeTab === 0 && (
-            <NotAttachedEditor feature={editedFeature} onChange={setEditedFeature} />
-          )}
-          {activeTab === 1 && (
-            <AttachedEditor feature={editedFeature} onChange={setEditedFeature} />
-          )}
-          {activeTab === 2 && (
-            <ActivatedEditor feature={editedFeature} onChange={setEditedFeature} />
-          )}
-          {activeTab === 3 && (
-            <EngagedEditor feature={editedFeature} onChange={setEditedFeature} />
-          )}
-        </Paper>
+        {activeTab === 0 && (
+          <NotAttachedEditor feature={editedFeature} onChange={setEditedFeature} />
+        )}
+        {activeTab === 1 && (
+          <AttachedEditor feature={editedFeature} onChange={setEditedFeature} />
+        )}
+        {activeTab === 2 && (
+          <ActivatedEditor feature={editedFeature} onChange={setEditedFeature} />
+        )}
+        {activeTab === 3 && (
+          <EngagedEditor feature={editedFeature} onChange={setEditedFeature} />
+        )}
       </DialogContent>
 
       <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>

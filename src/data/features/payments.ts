@@ -9,25 +9,39 @@ export const paymentsFeature: Feature = {
 
   stages: {
     notAttached: {
-      conditions: [
-        'Pro does not have Payments feature in their current plan',
-        'Pro has not purchased Payments as an add-on',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.payments', negated: true },
+          { variable: 'addons.payments', negated: true },
+        ],
+      },
+      contextSnippets: [
+        {
+          id: 'value-prop',
+          title: 'Value Proposition',
+          content: 'Accept credit cards and get paid instantly. No more chasing checks or waiting for cash.',
+        },
       ],
-      valueProp: 'Accept credit cards and get paid instantly. No more chasing checks or waiting for cash.',
-      sellPageUrl: '/pricing/payments',
-      learnMoreResources: [
-        { title: 'Payment Processing Overview', url: 'https://help.housecallpro.com/payments', type: 'article' },
+      navigation: [
+        {
+          name: 'Payments Pricing',
+          description: 'Self-serve page where pros can learn about payment processing pricing',
+          url: '/pricing/payments',
+          navigationType: 'hcp_sell_page',
+        },
+        {
+          name: 'Payment Processing Overview',
+          description: 'Help article explaining how payment processing works',
+          url: 'https://help.housecallpro.com/payments',
+          navigationType: 'hcp_help_article',
+        },
       ],
       calendlyTypes: [
         { name: 'Payments Demo', url: 'https://calendly.com/hcp-sales/payments', team: 'sales', description: 'Learn about payment processing' },
       ],
-      upgradeTools: [],
       upgradePrompt: 'Help the pro understand the value of accepting online payments.',
-      repTalkingPoints: [
-        'Online payments mean you get paid 2x faster',
-        'Customers prefer paying by card - it\'s convenient',
-        'No more chasing checks or handling cash',
-      ],
+      upgradeTools: [],
     },
     attached: {
       conditions: [

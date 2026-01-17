@@ -9,26 +9,45 @@ export const csrAiFeature: Feature = {
 
   stages: {
     notAttached: {
-      conditions: [
-        'Pro does not have AI Voice Agent in their current plan',
-        'Pro has not purchased AI Voice Agent as an add-on',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.csrAi', negated: true },
+          { variable: 'addons.csrAi', negated: true },
+        ],
+      },
+      contextSnippets: [
+        {
+          id: 'value-prop',
+          title: 'Value Proposition',
+          content: 'Never miss a call again. Our AI answers your phone 24/7, books jobs, and sounds just like a real person.',
+        },
       ],
-      valueProp: 'Never miss a call again. Our AI answers your phone 24/7, books jobs, and sounds just like a real person.',
-      sellPageUrl: '/pricing/ai-voice',
-      learnMoreResources: [
-        { title: 'AI Voice Agent Overview', url: 'https://help.housecallpro.com/ai-voice', type: 'article' },
-        { title: 'Hear the AI in Action', url: 'https://youtube.com/watch?v=hcp-ai-demo', type: 'video' },
+      navigation: [
+        {
+          name: 'AI Voice Pricing',
+          description: 'Self-serve page for AI voice agent pricing and plans',
+          url: '/pricing/ai-voice',
+          navigationType: 'hcp_sell_page',
+        },
+        {
+          name: 'AI Voice Agent Overview',
+          description: 'Help article explaining how the AI voice agent works',
+          url: 'https://help.housecallpro.com/ai-voice',
+          navigationType: 'hcp_help_article',
+        },
+        {
+          name: 'Hear the AI in Action',
+          description: 'Demo video showing the AI voice agent answering a call',
+          url: 'https://youtube.com/watch?v=hcp-ai-demo',
+          navigationType: 'hcp_video',
+        },
       ],
       calendlyTypes: [
         { name: 'AI Voice Demo', url: 'https://calendly.com/hcp-sales/ai-voice', team: 'sales', description: 'Hear the AI answer a sample call' },
       ],
-      upgradeTools: [],
       upgradePrompt: 'Help the pro understand how the AI voice agent can capture more leads and book jobs automatically.',
-      repTalkingPoints: [
-        'The AI answers calls when you can\'t - nights, weekends, when you\'re on a job',
-        'It sounds natural and can book jobs right into your calendar',
-        'Pros using AI Voice capture 30% more leads on average',
-      ],
+      upgradeTools: [],
     },
     attached: {
       conditions: [

@@ -9,25 +9,39 @@ export const schedulingFeature: Feature = {
 
   stages: {
     notAttached: {
-      conditions: [
-        'Pro does not have Scheduling feature in their current plan',
-        'Pro has not purchased Scheduling as an add-on',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.scheduling', negated: true },
+          { variable: 'addons.scheduling', negated: true },
+        ],
+      },
+      contextSnippets: [
+        {
+          id: 'value-prop',
+          title: 'Value Proposition',
+          content: 'Stop the scheduling chaos. See your whole team\'s schedule at a glance and dispatch jobs with one click.',
+        },
       ],
-      valueProp: 'Stop the scheduling chaos. See your whole team\'s schedule at a glance and dispatch jobs with one click.',
-      sellPageUrl: '/pricing/scheduling',
-      learnMoreResources: [
-        { title: 'Scheduling Overview', url: 'https://help.housecallpro.com/scheduling', type: 'article' },
+      navigation: [
+        {
+          name: 'Scheduling Pricing',
+          description: 'Self-serve page for scheduling and dispatching pricing',
+          url: '/pricing/scheduling',
+          navigationType: 'hcp_sell_page',
+        },
+        {
+          name: 'Scheduling Overview',
+          description: 'Help article explaining the scheduling and dispatching features',
+          url: 'https://help.housecallpro.com/scheduling',
+          navigationType: 'hcp_help_article',
+        },
       ],
       calendlyTypes: [
         { name: 'Scheduling Demo', url: 'https://calendly.com/hcp-sales/scheduling', team: 'sales', description: 'See the scheduling features' },
       ],
-      upgradeTools: [],
       upgradePrompt: 'Help the pro understand how scheduling and dispatching can save hours every week.',
-      repTalkingPoints: [
-        'See your whole team\'s availability in one place',
-        'Dispatch jobs with drag-and-drop simplicity',
-        'Reduce drive time with smart routing suggestions',
-      ],
+      upgradeTools: [],
     },
     attached: {
       conditions: [
