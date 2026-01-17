@@ -23,6 +23,12 @@ import {
   Select,
   MenuItem,
   FormControl,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
   alpha,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
@@ -32,15 +38,17 @@ import LinkIcon from '@mui/icons-material/Link';
 import BuildIcon from '@mui/icons-material/Build';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import FlagRoundedIcon from '@mui/icons-material/FlagRounded';
-import { useOnboarding } from '../../context';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import PersonIcon from '@mui/icons-material/Person';
 import ComputerIcon from '@mui/icons-material/Computer';
+import CategoryIcon from '@mui/icons-material/Category';
+import PhoneIcon from '@mui/icons-material/Phone';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import { useOnboarding } from '../../context';
 import { onboardingItems } from '../../data';
 import type {
   Feature,
@@ -54,7 +62,10 @@ import type {
   OnboardingItemDefinition,
 } from '../../types';
 
-// Palette for consistent styling
+// =============================================================================
+// PALETTE & CONFIG
+// =============================================================================
+
 const palette = {
   primary: '#0062FF',
   secondary: '#7C3AED',
@@ -71,10 +82,8 @@ const palette = {
   },
 };
 
-// Stage key type (matches Feature.stages keys)
 type StageKey = 'notAttached' | 'attached' | 'activated' | 'engaged';
 
-// Stage configuration
 const stageConfig: Record<StageKey, { label: string; color: string }> = {
   notAttached: { label: 'Not Attached', color: palette.grey[600] },
   attached: { label: 'Attached', color: palette.warning },
@@ -84,7 +93,8 @@ const stageConfig: Record<StageKey, { label: string; color: string }> = {
 
 const stageKeys: StageKey[] = ['notAttached', 'attached', 'activated', 'engaged'];
 
-// Navigation type options
+type AdminPage = 'features' | 'navigation' | 'calls' | 'onboarding-items' | 'tools';
+
 const navigationTypes: { value: NavigationType; label: string }[] = [
   { value: 'hcp_sell_page', label: 'Sell Page' },
   { value: 'hcp_navigate', label: 'Navigate' },
@@ -96,7 +106,10 @@ const navigationTypes: { value: NavigationType; label: string }[] = [
   { value: 'hcp_training_article', label: 'Training Article' },
 ];
 
-// Section header component
+// =============================================================================
+// SHARED COMPONENTS
+// =============================================================================
+
 function SectionHeader({ icon, title, count }: { icon: React.ReactNode; title: string; count?: number }) {
   return (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
@@ -111,7 +124,78 @@ function SectionHeader({ icon, title, count }: { icon: React.ReactNode; title: s
   );
 }
 
-// Context snippets editor (for Important Context section)
+// Simple reference table for items (used in Feature Editor)
+function ReferenceTable({
+  items,
+  onNavigate,
+  onRemove,
+  emptyMessage,
+}: {
+  items: { id: string; name: string; description: string }[];
+  onNavigate: (id: string) => void;
+  onRemove: (id: string) => void;
+  emptyMessage: string;
+}) {
+  if (items.length === 0) {
+    return (
+      <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+        {emptyMessage}
+      </Typography>
+    );
+  }
+
+  return (
+    <TableContainer>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
+            <TableCell align="right" sx={{ width: 100 }}>Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {items.map((item) => (
+            <TableRow key={item.id} hover>
+              <TableCell>
+                <Typography variant="body2" fontWeight={500}>
+                  {item.name}
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{
+                    maxWidth: 300,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {item.description}
+                </Typography>
+              </TableCell>
+              <TableCell align="right">
+                <IconButton size="small" onClick={() => onNavigate(item.id)} title="Go to item">
+                  <OpenInNewIcon fontSize="small" />
+                </IconButton>
+                <IconButton size="small" onClick={() => onRemove(item.id)} title="Remove">
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+// =============================================================================
+// CONTEXT SNIPPETS EDITOR (stays in feature editor - not centralized)
+// =============================================================================
+
 function ContextSnippetsEditor({
   snippets,
   onChange,
@@ -131,7 +215,6 @@ function ContextSnippetsEditor({
   };
 
   const handleRemoveSnippet = (index: number) => {
-    // Don't allow removing the value prop (first item)
     if (index === 0) return;
     onChange(snippets.filter((_, i) => i !== index));
   };
@@ -149,7 +232,7 @@ function ContextSnippetsEditor({
                   value={snippet.title}
                   onChange={(e) => handleSnippetChange(index, 'title', e.target.value)}
                   sx={{ flex: 1 }}
-                  disabled={index === 0} // Value prop title is fixed
+                  disabled={index === 0}
                 />
                 {index > 0 && (
                   <IconButton size="small" onClick={() => handleRemoveSnippet(index)}>
@@ -177,576 +260,10 @@ function ContextSnippetsEditor({
   );
 }
 
-// Navigation editor (stacked format for readability)
-function NavigationEditor({
-  items,
-  onChange,
-}: {
-  items: NavigationItem[];
-  onChange: (items: NavigationItem[]) => void;
-}) {
-  const handleItemChange = (index: number, field: keyof NavigationItem, value: string) => {
-    const updated = [...items];
-    updated[index] = { ...updated[index], [field]: value };
-    onChange(updated);
-  };
+// =============================================================================
+// ACCESS CONDITIONS EDITOR
+// =============================================================================
 
-  const handleAddItem = () => {
-    onChange([...items, { name: '', description: '', url: '', navigationType: 'hcp_help_article' }]);
-  };
-
-  const handleRemoveItem = (index: number) => {
-    onChange(items.filter((_, i) => i !== index));
-  };
-
-  const handleOpenUrl = (url: string) => {
-    if (url) window.open(url, '_blank');
-  };
-
-  return (
-    <Box>
-      <Stack spacing={1.5}>
-        {items.map((item, index) => (
-          <Paper key={index} variant="outlined" sx={{ p: 2 }}>
-            <Stack spacing={1.5}>
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                  Navigation Item {index + 1}
-                </Typography>
-                <Stack direction="row" spacing={0.5}>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpenUrl(item.url)}
-                    disabled={!item.url}
-                    title="Open URL"
-                  >
-                    <OpenInNewIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleRemoveItem(index)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
-              </Stack>
-              <TextField
-                size="small"
-                label="Name"
-                fullWidth
-                value={item.name}
-                onChange={(e) => handleItemChange(index, 'name', e.target.value)}
-              />
-              <TextField
-                size="small"
-                label="LLM Description"
-                fullWidth
-                multiline
-                rows={2}
-                value={item.description}
-                onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-              />
-              <TextField
-                size="small"
-                label="URL"
-                fullWidth
-                value={item.url}
-                onChange={(e) => handleItemChange(index, 'url', e.target.value)}
-                InputProps={{
-                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
-                }}
-              />
-              <FormControl size="small" fullWidth>
-                <Select
-                  value={item.navigationType}
-                  onChange={(e) => handleItemChange(index, 'navigationType', e.target.value)}
-                  displayEmpty
-                >
-                  {navigationTypes.map((type) => (
-                    <MenuItem key={type.value} value={type.value}>
-                      {type.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddItem} sx={{ mt: 1.5 }}>
-        Add Navigation
-      </Button>
-    </Box>
-  );
-}
-
-// Calendly editor component (stacked format for readability)
-function CalendlyEditor({
-  links,
-  onChange,
-}: {
-  links: CalendlyLink[];
-  onChange: (links: CalendlyLink[]) => void;
-}) {
-  const handleLinkChange = (index: number, field: keyof CalendlyLink, value: string) => {
-    const updated = [...links];
-    updated[index] = { ...updated[index], [field]: value };
-    onChange(updated);
-  };
-
-  const handleAddLink = () => {
-    onChange([...links, { name: '', url: '', team: 'onboarding', description: '' }]);
-  };
-
-  const handleRemoveLink = (index: number) => {
-    onChange(links.filter((_, i) => i !== index));
-  };
-
-  const handleOpenUrl = (url: string) => {
-    if (url) window.open(url, '_blank');
-  };
-
-  return (
-    <Box>
-      <Stack spacing={1.5}>
-        {links.map((link, index) => (
-          <Paper key={index} variant="outlined" sx={{ p: 2 }}>
-            <Stack spacing={1.5}>
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                  Calendly Event Type {index + 1}
-                </Typography>
-                <Stack direction="row" spacing={0.5}>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleOpenUrl(link.url)}
-                    disabled={!link.url}
-                    title="Open URL"
-                  >
-                    <OpenInNewIcon fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" onClick={() => handleRemoveLink(index)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
-              </Stack>
-              <TextField
-                size="small"
-                label="Call Type Name"
-                fullWidth
-                value={link.name}
-                onChange={(e) => handleLinkChange(index, 'name', e.target.value)}
-              />
-              <TextField
-                size="small"
-                label="Description"
-                fullWidth
-                multiline
-                rows={2}
-                value={link.description}
-                onChange={(e) => handleLinkChange(index, 'description', e.target.value)}
-              />
-              <TextField
-                size="small"
-                label="Calendly URL"
-                fullWidth
-                value={link.url}
-                onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                InputProps={{
-                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
-                }}
-              />
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddLink} sx={{ mt: 1.5 }}>
-        Add Calendly Event Type
-      </Button>
-    </Box>
-  );
-}
-
-// MCP Tool editor component (stacked format for readability)
-function ToolEditor({
-  tools,
-  onChange,
-}: {
-  tools: McpTool[];
-  onChange: (tools: McpTool[]) => void;
-}) {
-  const handleToolChange = (index: number, field: keyof McpTool, value: string | object) => {
-    const updated = [...tools];
-    updated[index] = { ...updated[index], [field]: value };
-    onChange(updated);
-  };
-
-  const handleAddTool = () => {
-    onChange([...tools, { name: '', description: '', parameters: {} }]);
-  };
-
-  const handleRemoveTool = (index: number) => {
-    onChange(tools.filter((_, i) => i !== index));
-  };
-
-  return (
-    <Box>
-      <Stack spacing={1.5}>
-        {tools.map((tool, index) => (
-          <Paper key={index} variant="outlined" sx={{ p: 2 }}>
-            <Stack spacing={1.5}>
-              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                  Tool {index + 1}
-                </Typography>
-                <IconButton size="small" onClick={() => handleRemoveTool(index)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-              <TextField
-                size="small"
-                label="Tool Name"
-                fullWidth
-                value={tool.name}
-                onChange={(e) => handleToolChange(index, 'name', e.target.value)}
-                InputProps={{
-                  sx: { fontFamily: 'monospace' },
-                }}
-              />
-              <TextField
-                size="small"
-                label="Tool Description"
-                fullWidth
-                multiline
-                rows={2}
-                value={tool.description}
-                onChange={(e) => handleToolChange(index, 'description', e.target.value)}
-              />
-              <TextField
-                size="small"
-                label="Parameters (JSON)"
-                fullWidth
-                multiline
-                rows={4}
-                value={JSON.stringify(tool.parameters, null, 2)}
-                onChange={(e) => {
-                  try {
-                    handleToolChange(index, 'parameters', JSON.parse(e.target.value));
-                  } catch {
-                    // Invalid JSON, don't update
-                  }
-                }}
-                InputProps={{
-                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
-                }}
-                helperText="JSON object defining tool parameters"
-              />
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddTool} sx={{ mt: 1.5 }}>
-        Add Tool
-      </Button>
-    </Box>
-  );
-}
-
-// Onboarding items editor component (for centralized onboarding items)
-function OnboardingItemsEditor({
-  assignments,
-  onChange,
-}: {
-  assignments: OnboardingItemAssignment[];
-  onChange: (assignments: OnboardingItemAssignment[]) => void;
-}) {
-  const [showAddDialog, setShowAddDialog] = useState(false);
-
-  // Get assigned item IDs
-  const assignedIds = assignments.map((a) => a.itemId);
-
-  // Get available items (not yet assigned)
-  const availableItems = onboardingItems.filter((item) => !assignedIds.includes(item.id));
-
-  const handleAddItem = (itemId: string) => {
-    onChange([...assignments, { itemId, required: true }]);
-    setShowAddDialog(false);
-  };
-
-  const handleRemoveItem = (itemId: string) => {
-    onChange(assignments.filter((a) => a.itemId !== itemId));
-  };
-
-  const handleToggleRequired = (itemId: string) => {
-    onChange(
-      assignments.map((a) =>
-        a.itemId === itemId ? { ...a, required: !a.required } : a
-      )
-    );
-  };
-
-  const handleUpdateNote = (itemId: string, note: string) => {
-    onChange(
-      assignments.map((a) =>
-        a.itemId === itemId ? { ...a, stageSpecificNote: note || undefined } : a
-      )
-    );
-  };
-
-  // Get item definition by ID
-  const getItemDef = (itemId: string): OnboardingItemDefinition | undefined => {
-    return onboardingItems.find((item) => item.id === itemId);
-  };
-
-  return (
-    <Box>
-      <Stack spacing={1.5}>
-        {assignments.map((assignment) => {
-          const itemDef = getItemDef(assignment.itemId);
-          if (!itemDef) return null;
-
-          return (
-            <Paper key={assignment.itemId} variant="outlined" sx={{ p: 2 }}>
-              <Stack spacing={1.5}>
-                {/* Header row */}
-                <Stack direction="row" spacing={1} alignItems="flex-start" justifyContent="space-between">
-                  <Box sx={{ flex: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      {itemDef.type === 'in_product' ? (
-                        <ComputerIcon fontSize="small" sx={{ color: palette.primary }} />
-                      ) : (
-                        <PersonIcon fontSize="small" sx={{ color: palette.secondary }} />
-                      )}
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        {itemDef.title}
-                      </Typography>
-                      <Chip
-                        label={itemDef.type === 'in_product' ? 'In-Product' : 'Rep-Facing'}
-                        size="small"
-                        sx={{
-                          height: 20,
-                          fontSize: '0.7rem',
-                          bgcolor:
-                            itemDef.type === 'in_product'
-                              ? alpha(palette.primary, 0.1)
-                              : alpha(palette.secondary, 0.1),
-                          color: itemDef.type === 'in_product' ? palette.primary : palette.secondary,
-                        }}
-                      />
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      {itemDef.description}
-                    </Typography>
-                  </Box>
-                  <IconButton size="small" onClick={() => handleRemoveItem(assignment.itemId)}>
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
-
-                {/* Completion API info for in_product items */}
-                {itemDef.type === 'in_product' && itemDef.completionApi && (
-                  <Box
-                    sx={{
-                      bgcolor: alpha(palette.primary, 0.04),
-                      p: 1.5,
-                      borderRadius: 1,
-                      border: `1px solid ${alpha(palette.primary, 0.1)}`,
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                      Completion Tracking
-                    </Typography>
-                    <Stack direction="row" spacing={2} sx={{ mt: 0.5 }}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontFamily: 'monospace',
-                          fontSize: '0.8rem',
-                          color: palette.grey[800],
-                        }}
-                      >
-                        Event: {itemDef.completionApi.eventName}
-                      </Typography>
-                      {itemDef.completionApi.endpoint && (
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontFamily: 'monospace',
-                            fontSize: '0.8rem',
-                            color: palette.grey[600],
-                          }}
-                        >
-                          Endpoint: {itemDef.completionApi.endpoint}
-                        </Typography>
-                      )}
-                    </Stack>
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-                      {itemDef.completionApi.description}
-                    </Typography>
-                  </Box>
-                )}
-
-                {/* Rep instructions for rep_facing items */}
-                {itemDef.type === 'rep_facing' && itemDef.repInstructions && (
-                  <Box
-                    sx={{
-                      bgcolor: alpha(palette.secondary, 0.04),
-                      p: 1.5,
-                      borderRadius: 1,
-                      border: `1px solid ${alpha(palette.secondary, 0.1)}`,
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                      Rep Instructions
-                    </Typography>
-                    <Typography variant="body2" sx={{ mt: 0.5 }}>
-                      {itemDef.repInstructions}
-                    </Typography>
-                  </Box>
-                )}
-
-                {/* Required toggle and stage-specific note */}
-                <Stack direction="row" spacing={2} alignItems="flex-start">
-                  <FormControl size="small" sx={{ minWidth: 120 }}>
-                    <Select
-                      value={assignment.required ? 'required' : 'optional'}
-                      onChange={(e) => handleToggleRequired(assignment.itemId)}
-                    >
-                      <MenuItem value="required">Required</MenuItem>
-                      <MenuItem value="optional">Optional</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    size="small"
-                    fullWidth
-                    label="Stage-specific note"
-                    placeholder="Add context for this feature's use of this item..."
-                    value={assignment.stageSpecificNote || ''}
-                    onChange={(e) => handleUpdateNote(assignment.itemId, e.target.value)}
-                  />
-                </Stack>
-
-                {/* Meta info */}
-                <Stack direction="row" spacing={2}>
-                  {itemDef.estimatedMinutes && (
-                    <Typography variant="caption" color="text.secondary">
-                      ~{itemDef.estimatedMinutes} min
-                    </Typography>
-                  )}
-                  {itemDef.actionUrl && (
-                    <Typography
-                      variant="caption"
-                      sx={{ fontFamily: 'monospace', color: palette.grey[600] }}
-                    >
-                      {itemDef.actionUrl}
-                    </Typography>
-                  )}
-                </Stack>
-              </Stack>
-            </Paper>
-          );
-        })}
-      </Stack>
-
-      {/* Add item button */}
-      <Button
-        startIcon={<AddIcon />}
-        size="small"
-        onClick={() => setShowAddDialog(true)}
-        sx={{ mt: 1.5 }}
-        disabled={availableItems.length === 0}
-      >
-        Add Onboarding Item
-      </Button>
-
-      {/* Add item dialog */}
-      <Dialog
-        open={showAddDialog}
-        onClose={() => setShowAddDialog(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Add Onboarding Item</DialogTitle>
-        <DialogContent dividers>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Select an item from the central repository to add to this feature's stage.
-          </Typography>
-          <Stack spacing={1}>
-            {availableItems.map((item) => (
-              <Paper
-                key={item.id}
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    bgcolor: alpha(palette.primary, 0.04),
-                    borderColor: palette.primary,
-                  },
-                }}
-                onClick={() => handleAddItem(item.id)}
-              >
-                <Stack direction="row" spacing={1} alignItems="flex-start">
-                  <Box sx={{ flex: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      {item.type === 'in_product' ? (
-                        <ComputerIcon fontSize="small" sx={{ color: palette.primary }} />
-                      ) : (
-                        <PersonIcon fontSize="small" sx={{ color: palette.secondary }} />
-                      )}
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        {item.title}
-                      </Typography>
-                      <Chip
-                        label={item.type === 'in_product' ? 'In-Product' : 'Rep-Facing'}
-                        size="small"
-                        sx={{
-                          height: 18,
-                          fontSize: '0.65rem',
-                          bgcolor:
-                            item.type === 'in_product'
-                              ? alpha(palette.primary, 0.1)
-                              : alpha(palette.secondary, 0.1),
-                          color: item.type === 'in_product' ? palette.primary : palette.secondary,
-                        }}
-                      />
-                    </Stack>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      {item.description}
-                    </Typography>
-                    {item.type === 'in_product' && item.completionApi && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          mt: 0.5,
-                          display: 'block',
-                          fontFamily: 'monospace',
-                          color: palette.grey[600],
-                        }}
-                      >
-                        Event: {item.completionApi.eventName}
-                      </Typography>
-                    )}
-                  </Box>
-                  <Button size="small" variant="outlined">
-                    Add
-                  </Button>
-                </Stack>
-              </Paper>
-            ))}
-            {availableItems.length === 0 && (
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                All available items have been added to this stage.
-              </Typography>
-            )}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowAddDialog(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
-  );
-}
-
-// Access conditions logic builder for Not Attached stage
 function AccessConditionsEditor({
   rule,
   onChange,
@@ -792,27 +309,14 @@ function AccessConditionsEditor({
         Feature access controller variables that determine when a pro is in this stage.
       </Typography>
 
-      {/* Operator selector */}
       <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-        <Typography variant="body2" fontWeight={500}>
-          Match:
-        </Typography>
-        <ToggleButtonGroup
-          value={rule.operator}
-          exclusive
-          onChange={handleOperatorChange}
-          size="small"
-        >
-          <ToggleButton value="AND" sx={{ px: 2 }}>
-            ALL (AND)
-          </ToggleButton>
-          <ToggleButton value="OR" sx={{ px: 2 }}>
-            ANY (OR)
-          </ToggleButton>
+        <Typography variant="body2" fontWeight={500}>Match:</Typography>
+        <ToggleButtonGroup value={rule.operator} exclusive onChange={handleOperatorChange} size="small">
+          <ToggleButton value="AND" sx={{ px: 2 }}>ALL (AND)</ToggleButton>
+          <ToggleButton value="OR" sx={{ px: 2 }}>ANY (OR)</ToggleButton>
         </ToggleButtonGroup>
       </Stack>
 
-      {/* Conditions list */}
       <Box sx={{ mb: 2 }}>
         {rule.conditions.map((condition, index) => (
           <Paper
@@ -837,9 +341,6 @@ function AccessConditionsEditor({
                   color: condition.negated ? palette.error : palette.success,
                   fontWeight: 600,
                   cursor: 'pointer',
-                  '&:hover': {
-                    bgcolor: condition.negated ? alpha(palette.error, 0.2) : alpha(palette.success, 0.2),
-                  },
                 }}
               />
               <Typography
@@ -850,7 +351,6 @@ function AccessConditionsEditor({
                   px: 1.5,
                   py: 0.5,
                   borderRadius: 1,
-                  color: palette.grey[800],
                 }}
               >
                 {condition.variable}
@@ -861,18 +361,8 @@ function AccessConditionsEditor({
             </IconButton>
           </Paper>
         ))}
-        {rule.conditions.length > 1 && (
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            sx={{ display: 'block', textAlign: 'center', my: 1 }}
-          >
-            {rule.operator === 'AND' ? 'All conditions must be true' : 'At least one condition must be true'}
-          </Typography>
-        )}
       </Box>
 
-      {/* Add new condition */}
       <Stack direction="row" spacing={1}>
         <TextField
           size="small"
@@ -883,25 +373,32 @@ function AccessConditionsEditor({
           onKeyPress={(e) => e.key === 'Enter' && handleAddCondition()}
           inputProps={{ style: { fontFamily: 'monospace' } }}
         />
-        <Button variant="outlined" size="small" onClick={handleAddCondition}>
-          Add
-        </Button>
+        <Button variant="outlined" size="small" onClick={handleAddCondition}>Add</Button>
       </Stack>
     </Box>
   );
 }
 
-// Unified stage editor - all stages share the same sections
-function StageEditor({
+// =============================================================================
+// SIMPLIFIED STAGE EDITOR (uses reference tables)
+// =============================================================================
+
+function SimplifiedStageEditor({
   feature,
   stageName,
   onChange,
+  onNavigateToPage,
 }: {
   feature: Feature;
-  stageName: 'notAttached' | 'attached' | 'activated' | 'engaged';
+  stageName: StageKey;
   onChange: (feature: Feature) => void;
+  onNavigateToPage: (page: AdminPage) => void;
 }) {
   const context = feature.stages[stageName];
+  const [showAddNavigation, setShowAddNavigation] = useState(false);
+  const [showAddCalendly, setShowAddCalendly] = useState(false);
+  const [showAddOnboardingItem, setShowAddOnboardingItem] = useState(false);
+  const [showAddTool, setShowAddTool] = useState(false);
 
   const updateContext = (updates: Partial<typeof context>) => {
     onChange({
@@ -913,9 +410,69 @@ function StageEditor({
     });
   };
 
+  // Get item definition by ID
+  const getOnboardingItemDef = (itemId: string): OnboardingItemDefinition | undefined => {
+    return onboardingItems.find((item) => item.id === itemId);
+  };
+
+  // Navigation items for reference table
+  const navigationTableItems = (context.navigation || []).map((nav, i) => ({
+    id: `nav-${i}`,
+    name: nav.name,
+    description: nav.description,
+  }));
+
+  // Calendly items for reference table
+  const calendlyTableItems = (context.calendlyTypes || []).map((cal, i) => ({
+    id: `cal-${i}`,
+    name: cal.name,
+    description: cal.description,
+  }));
+
+  // Onboarding items for reference table
+  const onboardingTableItems = (context.onboardingItems || []).map((assignment) => {
+    const def = getOnboardingItemDef(assignment.itemId);
+    return {
+      id: assignment.itemId,
+      name: def?.title || assignment.itemId,
+      description: def?.description || '',
+    };
+  });
+
+  // Tools for reference table
+  const toolsTableItems = (context.tools || []).map((tool, i) => ({
+    id: `tool-${i}`,
+    name: tool.name,
+    description: tool.description,
+  }));
+
+  // Remove handlers
+  const handleRemoveNavigation = (id: string) => {
+    const index = parseInt(id.replace('nav-', ''));
+    updateContext({ navigation: context.navigation?.filter((_, i) => i !== index) });
+  };
+
+  const handleRemoveCalendly = (id: string) => {
+    const index = parseInt(id.replace('cal-', ''));
+    updateContext({ calendlyTypes: context.calendlyTypes?.filter((_, i) => i !== index) });
+  };
+
+  const handleRemoveOnboardingItem = (itemId: string) => {
+    updateContext({ onboardingItems: context.onboardingItems?.filter((a) => a.itemId !== itemId) });
+  };
+
+  const handleRemoveTool = (id: string) => {
+    const index = parseInt(id.replace('tool-', ''));
+    updateContext({ tools: context.tools?.filter((_, i) => i !== index) });
+  };
+
+  // Get available onboarding items (not yet assigned)
+  const assignedItemIds = (context.onboardingItems || []).map((a) => a.itemId);
+  const availableOnboardingItems = onboardingItems.filter((item) => !assignedItemIds.includes(item.id));
+
   return (
     <Stack spacing={3}>
-      {/* Access Conditions Section */}
+      {/* Access Conditions */}
       <Paper sx={{ p: 3 }}>
         <AccessConditionsEditor
           rule={context.accessConditions}
@@ -923,28 +480,11 @@ function StageEditor({
         />
       </Paper>
 
-      {/* Onboarding Items Section */}
-      <Paper sx={{ p: 3 }}>
-        <SectionHeader
-          icon={<ChecklistIcon />}
-          title="Onboarding Items"
-          count={context.onboardingItems?.length || 0}
-        />
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Centralized onboarding items assigned to this feature. Items are tracked once across all features -
-          completing an item for one feature marks it complete everywhere.
-        </Typography>
-        <OnboardingItemsEditor
-          assignments={context.onboardingItems || []}
-          onChange={(items) => updateContext({ onboardingItems: items })}
-        />
-      </Paper>
-
-      {/* Important Context Section */}
+      {/* Important Context (stays editable here) */}
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TextSnippetIcon />} title="Important Context" count={context.contextSnippets?.length || 0} />
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Context snippets that help describe this feature at this stage. Add value propositions, tips, or other relevant information.
+          Context snippets specific to this feature and stage.
         </Typography>
         <ContextSnippetsEditor
           snippets={context.contextSnippets || []}
@@ -952,77 +492,401 @@ function StageEditor({
         />
       </Paper>
 
-      {/* Navigation Section */}
+      {/* Onboarding Items (reference table) */}
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<ChecklistIcon />} title="Onboarding Items" count={context.onboardingItems?.length || 0} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Centralized onboarding items assigned to this stage.
+        </Typography>
+        <ReferenceTable
+          items={onboardingTableItems}
+          onNavigate={() => onNavigateToPage('onboarding-items')}
+          onRemove={handleRemoveOnboardingItem}
+          emptyMessage="No onboarding items assigned"
+        />
+        <Button startIcon={<AddIcon />} size="small" onClick={() => setShowAddOnboardingItem(true)} sx={{ mt: 1 }}>
+          Add Onboarding Item
+        </Button>
+
+        {/* Add Onboarding Item Dialog */}
+        <Dialog open={showAddOnboardingItem} onClose={() => setShowAddOnboardingItem(false)} maxWidth="md" fullWidth>
+          <DialogTitle>Add Onboarding Item</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={1}>
+              {availableOnboardingItems.map((item) => (
+                <Paper
+                  key={item.id}
+                  variant="outlined"
+                  sx={{
+                    p: 2,
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: alpha(palette.primary, 0.04), borderColor: palette.primary },
+                  }}
+                  onClick={() => {
+                    updateContext({
+                      onboardingItems: [...(context.onboardingItems || []), { itemId: item.id, required: true }],
+                    });
+                    setShowAddOnboardingItem(false);
+                  }}
+                >
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    {item.type === 'in_product' ? (
+                      <ComputerIcon fontSize="small" sx={{ color: palette.primary }} />
+                    ) : (
+                      <PersonIcon fontSize="small" sx={{ color: palette.secondary }} />
+                    )}
+                    <Typography variant="subtitle2" fontWeight={600}>{item.title}</Typography>
+                    <Chip
+                      label={item.type === 'in_product' ? 'In-Product' : 'Rep-Facing'}
+                      size="small"
+                      sx={{
+                        height: 18,
+                        fontSize: '0.65rem',
+                        bgcolor: item.type === 'in_product' ? alpha(palette.primary, 0.1) : alpha(palette.secondary, 0.1),
+                        color: item.type === 'in_product' ? palette.primary : palette.secondary,
+                      }}
+                    />
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    {item.description}
+                  </Typography>
+                </Paper>
+              ))}
+              {availableOnboardingItems.length === 0 && (
+                <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                  All items have been added.
+                </Typography>
+              )}
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowAddOnboardingItem(false)}>Cancel</Button>
+          </DialogActions>
+        </Dialog>
+      </Paper>
+
+      {/* Navigation (reference table) */}
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<LinkIcon />} title="Navigation" count={context.navigation?.length || 0} />
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Links to pages, articles, videos, and other resources for this feature at this stage.
+          Links to pages, articles, videos, and other resources.
         </Typography>
-        <NavigationEditor
-          items={context.navigation || []}
-          onChange={(items) => updateContext({ navigation: items })}
+        <ReferenceTable
+          items={navigationTableItems}
+          onNavigate={() => onNavigateToPage('navigation')}
+          onRemove={handleRemoveNavigation}
+          emptyMessage="No navigation items"
+        />
+        <Button startIcon={<AddIcon />} size="small" onClick={() => setShowAddNavigation(true)} sx={{ mt: 1 }}>
+          Add Navigation
+        </Button>
+
+        {/* Quick Add Navigation Dialog */}
+        <QuickAddNavigationDialog
+          open={showAddNavigation}
+          onClose={() => setShowAddNavigation(false)}
+          onAdd={(nav) => {
+            updateContext({ navigation: [...(context.navigation || []), nav] });
+            setShowAddNavigation(false);
+          }}
         />
       </Paper>
 
-      {/* Calendly Event Types Section */}
+      {/* Calendly (reference table) */}
       <Paper sx={{ p: 3 }}>
-        <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Event Types" count={context.calendlyTypes?.length || 0} />
+        <SectionHeader icon={<CalendarMonthIcon />} title="Calls" count={context.calendlyTypes?.length || 0} />
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Calendly call types that can be booked for this feature at this stage.
+          Calendly event types for scheduling calls.
         </Typography>
-        <CalendlyEditor
-          links={context.calendlyTypes || []}
-          onChange={(links) => updateContext({ calendlyTypes: links })}
+        <ReferenceTable
+          items={calendlyTableItems}
+          onNavigate={() => onNavigateToPage('calls')}
+          onRemove={handleRemoveCalendly}
+          emptyMessage="No call types"
+        />
+        <Button startIcon={<AddIcon />} size="small" onClick={() => setShowAddCalendly(true)} sx={{ mt: 1 }}>
+          Add Call Type
+        </Button>
+
+        {/* Quick Add Calendly Dialog */}
+        <QuickAddCalendlyDialog
+          open={showAddCalendly}
+          onClose={() => setShowAddCalendly(false)}
+          onAdd={(cal) => {
+            updateContext({ calendlyTypes: [...(context.calendlyTypes || []), cal] });
+            setShowAddCalendly(false);
+          }}
         />
       </Paper>
 
-      {/* Prompt Section */}
+      {/* Prompt */}
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<SmartToyIcon />} title="Prompt" />
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          AI prompt for this stage. Guides how the AI should interact with pros at this point in their journey.
+          AI prompt for this stage.
         </Typography>
         <TextField
           fullWidth
           multiline
-          rows={6}
+          rows={4}
           value={context.prompt || ''}
           onChange={(e) => updateContext({ prompt: e.target.value })}
           placeholder="AI prompt for this stage..."
         />
       </Paper>
 
-      {/* Tools Section */}
+      {/* Tools (reference table) */}
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<BuildIcon />} title="Tools" count={context.tools?.length || 0} />
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          MCP tools that the AI can use at this stage to help the pro.
+          MCP tools available at this stage.
         </Typography>
-        <ToolEditor
-          tools={context.tools || []}
-          onChange={(tools) => updateContext({ tools: tools })}
+        <ReferenceTable
+          items={toolsTableItems}
+          onNavigate={() => onNavigateToPage('tools')}
+          onRemove={handleRemoveTool}
+          emptyMessage="No tools"
+        />
+        <Button startIcon={<AddIcon />} size="small" onClick={() => setShowAddTool(true)} sx={{ mt: 1 }}>
+          Add Tool
+        </Button>
+
+        {/* Quick Add Tool Dialog */}
+        <QuickAddToolDialog
+          open={showAddTool}
+          onClose={() => setShowAddTool(false)}
+          onAdd={(tool) => {
+            updateContext({ tools: [...(context.tools || []), tool] });
+            setShowAddTool(false);
+          }}
         />
       </Paper>
     </Stack>
   );
 }
 
-// Feature editor modal
+// =============================================================================
+// QUICK ADD DIALOGS
+// =============================================================================
+
+function QuickAddNavigationDialog({
+  open,
+  onClose,
+  onAdd,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (nav: NavigationItem) => void;
+}) {
+  const [nav, setNav] = useState<NavigationItem>({
+    name: '',
+    description: '',
+    url: '',
+    navigationType: 'hcp_help_article',
+  });
+
+  const handleAdd = () => {
+    if (nav.name && nav.url) {
+      onAdd(nav);
+      setNav({ name: '', description: '', url: '', navigationType: 'hcp_help_article' });
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Add Navigation Item</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <TextField
+            size="small"
+            label="Name"
+            fullWidth
+            value={nav.name}
+            onChange={(e) => setNav({ ...nav, name: e.target.value })}
+          />
+          <TextField
+            size="small"
+            label="Description"
+            fullWidth
+            multiline
+            rows={2}
+            value={nav.description}
+            onChange={(e) => setNav({ ...nav, description: e.target.value })}
+          />
+          <TextField
+            size="small"
+            label="URL"
+            fullWidth
+            value={nav.url}
+            onChange={(e) => setNav({ ...nav, url: e.target.value })}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+          />
+          <FormControl size="small" fullWidth>
+            <Select
+              value={nav.navigationType}
+              onChange={(e) => setNav({ ...nav, navigationType: e.target.value as NavigationType })}
+            >
+              {navigationTypes.map((type) => (
+                <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" onClick={handleAdd} disabled={!nav.name || !nav.url}>Add</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function QuickAddCalendlyDialog({
+  open,
+  onClose,
+  onAdd,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (cal: CalendlyLink) => void;
+}) {
+  const [cal, setCal] = useState<CalendlyLink>({
+    name: '',
+    description: '',
+    url: '',
+    team: 'onboarding',
+  });
+
+  const handleAdd = () => {
+    if (cal.name && cal.url) {
+      onAdd(cal);
+      setCal({ name: '', description: '', url: '', team: 'onboarding' });
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Add Call Type</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <TextField
+            size="small"
+            label="Name"
+            fullWidth
+            value={cal.name}
+            onChange={(e) => setCal({ ...cal, name: e.target.value })}
+          />
+          <TextField
+            size="small"
+            label="Description"
+            fullWidth
+            multiline
+            rows={2}
+            value={cal.description}
+            onChange={(e) => setCal({ ...cal, description: e.target.value })}
+          />
+          <TextField
+            size="small"
+            label="Calendly URL"
+            fullWidth
+            value={cal.url}
+            onChange={(e) => setCal({ ...cal, url: e.target.value })}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+          />
+          <FormControl size="small" fullWidth>
+            <Select
+              value={cal.team}
+              onChange={(e) => setCal({ ...cal, team: e.target.value as 'sales' | 'onboarding' | 'support' })}
+            >
+              <MenuItem value="sales">Sales</MenuItem>
+              <MenuItem value="onboarding">Onboarding</MenuItem>
+              <MenuItem value="support">Support</MenuItem>
+            </Select>
+          </FormControl>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" onClick={handleAdd} disabled={!cal.name || !cal.url}>Add</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function QuickAddToolDialog({
+  open,
+  onClose,
+  onAdd,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onAdd: (tool: McpTool) => void;
+}) {
+  const [tool, setTool] = useState<McpTool>({
+    name: '',
+    description: '',
+    parameters: {},
+  });
+
+  const handleAdd = () => {
+    if (tool.name) {
+      onAdd(tool);
+      setTool({ name: '', description: '', parameters: {} });
+    }
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>Add Tool</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <TextField
+            size="small"
+            label="Tool Name"
+            fullWidth
+            value={tool.name}
+            onChange={(e) => setTool({ ...tool, name: e.target.value })}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+          />
+          <TextField
+            size="small"
+            label="Description"
+            fullWidth
+            multiline
+            rows={2}
+            value={tool.description}
+            onChange={(e) => setTool({ ...tool, description: e.target.value })}
+          />
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" onClick={handleAdd} disabled={!tool.name}>Add</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+// =============================================================================
+// FEATURE EDITOR MODAL
+// =============================================================================
+
 function FeatureEditorModal({
   feature,
   open,
   onClose,
   onSave,
+  onNavigateToPage,
 }: {
   feature: Feature | null;
   open: boolean;
   onClose: () => void;
   onSave: (feature: Feature) => void;
+  onNavigateToPage: (page: AdminPage) => void;
 }) {
   const [editedFeature, setEditedFeature] = useState<Feature | null>(null);
   const [activeTab, setActiveTab] = useState(0);
 
-  // Update local state when feature prop changes
   useEffect(() => {
     setEditedFeature(feature ? { ...feature } : null);
     setActiveTab(0);
@@ -1038,45 +902,28 @@ function FeatureEditorModal({
   };
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{
-        sx: { height: '90vh' },
-      }}
-    >
+    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
       <DialogTitle sx={{ pb: 0 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Typography variant="h6">Edit Feature: {editedFeature.name}</Typography>
-          <Chip
-            label={editedFeature.id}
-            size="small"
-            sx={{ bgcolor: alpha(palette.primary, 0.1), color: palette.primary }}
-          />
+          <Chip label={editedFeature.id} size="small" sx={{ bgcolor: alpha(palette.primary, 0.1), color: palette.primary }} />
         </Stack>
       </DialogTitle>
 
-      {/* Feature metadata - above tabs */}
       <Box sx={{ px: 3, py: 2, borderBottom: 1, borderColor: 'divider' }}>
         <Stack direction="row" spacing={2}>
           <TextField
             size="small"
             label="Feature Name"
             value={editedFeature.name}
-            onChange={(e) =>
-              setEditedFeature({ ...editedFeature, name: e.target.value })
-            }
+            onChange={(e) => setEditedFeature({ ...editedFeature, name: e.target.value })}
             sx={{ flex: 1 }}
           />
           <TextField
             size="small"
             label="Version"
             value={editedFeature.version}
-            onChange={(e) =>
-              setEditedFeature({ ...editedFeature, version: e.target.value })
-            }
+            onChange={(e) => setEditedFeature({ ...editedFeature, version: e.target.value })}
             placeholder="1.0.0"
             sx={{ width: 120 }}
             inputProps={{ style: { fontFamily: 'monospace' } }}
@@ -1085,9 +932,7 @@ function FeatureEditorModal({
             size="small"
             label="Icon"
             value={editedFeature.icon}
-            onChange={(e) =>
-              setEditedFeature({ ...editedFeature, icon: e.target.value })
-            }
+            onChange={(e) => setEditedFeature({ ...editedFeature, icon: e.target.value })}
             sx={{ width: 150 }}
           />
         </Stack>
@@ -1098,9 +943,7 @@ function FeatureEditorModal({
           multiline
           rows={2}
           value={editedFeature.description}
-          onChange={(e) =>
-            setEditedFeature({ ...editedFeature, description: e.target.value })
-          }
+          onChange={(e) => setEditedFeature({ ...editedFeature, description: e.target.value })}
           sx={{ mt: 2 }}
         />
       </Box>
@@ -1111,70 +954,51 @@ function FeatureEditorModal({
             <Tab
               key={stage}
               label={stageConfig[stage].label}
-              sx={{
-                '&.Mui-selected': {
-                  color: stageConfig[stage].color,
-                },
-              }}
+              sx={{ '&.Mui-selected': { color: stageConfig[stage].color } }}
             />
           ))}
         </Tabs>
       </Box>
 
       <DialogContent sx={{ p: 3, bgcolor: palette.grey[50] }}>
-        {/* All stages use the same unified editor */}
-        <StageEditor
+        <SimplifiedStageEditor
           feature={editedFeature}
           stageName={stageKeys[activeTab]}
           onChange={setEditedFeature}
+          onNavigateToPage={(page) => {
+            onClose();
+            onNavigateToPage(page);
+          }}
         />
       </DialogContent>
 
       <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSave}>
-          Save Changes
-        </Button>
+        <Button variant="contained" onClick={handleSave}>Save Changes</Button>
       </DialogActions>
     </Dialog>
   );
 }
 
-// Main Admin View
-export function AdminView() {
+// =============================================================================
+// FEATURE MANAGEMENT PAGE
+// =============================================================================
+
+function FeatureManagementPage({ onNavigateToPage }: { onNavigateToPage: (page: AdminPage) => void }) {
   const { features, updateFeature } = useOnboarding();
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
 
-  const handleEditFeature = (feature: Feature) => {
-    setSelectedFeature(feature);
-    setEditorOpen(true);
-  };
-
-  const handleSaveFeature = (feature: Feature) => {
-    updateFeature(feature);
-    setSelectedFeature(null);
-  };
-
   return (
     <Box>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ mb: 3 }}
-      >
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight={600}>
-            Feature Management
-          </Typography>
+          <Typography variant="h5" fontWeight={600}>Feature Management</Typography>
           <Typography variant="body2" color="text.secondary">
             Manage onboarding content for all features and adoption stages
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} disabled>
-          Add Feature
-        </Button>
+        <Button variant="contained" startIcon={<AddIcon />} disabled>Add Feature</Button>
       </Stack>
 
       <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
@@ -1183,34 +1007,19 @@ export function AdminView() {
             <TableRow sx={{ bgcolor: palette.grey[50] }}>
               <TableCell sx={{ fontWeight: 600 }}>Feature</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
-              <TableCell sx={{ fontWeight: 600 }} align="center">
-                Version
-              </TableCell>
-              <TableCell sx={{ fontWeight: 600 }} align="right">
-                Actions
-              </TableCell>
+              <TableCell sx={{ fontWeight: 600 }} align="center">Version</TableCell>
+              <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {features.map((feature) => (
-              <TableRow
-                key={feature.id}
-                hover
-                sx={{ '&:last-child td': { border: 0 } }}
-              >
-                <TableCell>
-                  <Typography fontWeight={500}>{feature.name}</Typography>
-                </TableCell>
+              <TableRow key={feature.id} hover sx={{ '&:last-child td': { border: 0 } }}>
+                <TableCell><Typography fontWeight={500}>{feature.name}</Typography></TableCell>
                 <TableCell>
                   <Typography
                     variant="body2"
                     color="text.secondary"
-                    sx={{
-                      maxWidth: 400,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
+                    sx={{ maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                   >
                     {feature.description}
                   </Typography>
@@ -1219,18 +1028,13 @@ export function AdminView() {
                   <Chip
                     label={`v${feature.version}`}
                     size="small"
-                    sx={{
-                      bgcolor: alpha(palette.primary, 0.1),
-                      color: palette.primary,
-                      fontFamily: 'monospace',
-                      fontWeight: 500,
-                    }}
+                    sx={{ bgcolor: alpha(palette.primary, 0.1), color: palette.primary, fontFamily: 'monospace' }}
                   />
                 </TableCell>
                 <TableCell align="right">
                   <IconButton
                     size="small"
-                    onClick={() => handleEditFeature(feature)}
+                    onClick={() => { setSelectedFeature(feature); setEditorOpen(true); }}
                     sx={{ color: palette.primary }}
                   >
                     <EditIcon />
@@ -1245,12 +1049,478 @@ export function AdminView() {
       <FeatureEditorModal
         feature={selectedFeature}
         open={editorOpen}
-        onClose={() => {
-          setEditorOpen(false);
-          setSelectedFeature(null);
-        }}
-        onSave={handleSaveFeature}
+        onClose={() => { setEditorOpen(false); setSelectedFeature(null); }}
+        onSave={(f) => { updateFeature(f); setSelectedFeature(null); }}
+        onNavigateToPage={onNavigateToPage}
       />
+    </Box>
+  );
+}
+
+// =============================================================================
+// NAVIGATION MANAGEMENT PAGE
+// =============================================================================
+
+function NavigationManagementPage() {
+  const { features } = useOnboarding();
+
+  // Collect all unique navigation items across all features/stages
+  const allNavItems: { featureName: string; stageName: string; item: NavigationItem }[] = [];
+  features.forEach((feature) => {
+    stageKeys.forEach((stageKey) => {
+      const stage = feature.stages[stageKey];
+      (stage.navigation || []).forEach((nav) => {
+        allNavItems.push({
+          featureName: feature.name,
+          stageName: stageConfig[stageKey].label,
+          item: nav,
+        });
+      });
+    });
+  });
+
+  return (
+    <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>Navigation</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage navigation items, links, and resources
+          </Typography>
+        </Box>
+        <Button variant="contained" startIcon={<AddIcon />} disabled>Add Navigation</Button>
+      </Stack>
+
+      <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ bgcolor: palette.grey[50] }}>
+              <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>URL</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Used In</TableCell>
+              <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {allNavItems.map((entry, i) => (
+              <TableRow key={i} hover>
+                <TableCell><Typography fontWeight={500}>{entry.item.name}</Typography></TableCell>
+                <TableCell>
+                  <Chip
+                    label={navigationTypes.find((t) => t.value === entry.item.navigationType)?.label || entry.item.navigationType}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                    {entry.item.url}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" color="text.secondary">
+                    {entry.featureName} → {entry.stageName}
+                  </Typography>
+                </TableCell>
+                <TableCell align="right">
+                  <IconButton size="small" disabled><EditIcon fontSize="small" /></IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+}
+
+// =============================================================================
+// CALLS MANAGEMENT PAGE
+// =============================================================================
+
+function CallsManagementPage() {
+  const { features } = useOnboarding();
+
+  // Collect all unique calendly items across all features/stages
+  const allCallItems: { featureName: string; stageName: string; item: CalendlyLink }[] = [];
+  features.forEach((feature) => {
+    stageKeys.forEach((stageKey) => {
+      const stage = feature.stages[stageKey];
+      (stage.calendlyTypes || []).forEach((cal) => {
+        allCallItems.push({
+          featureName: feature.name,
+          stageName: stageConfig[stageKey].label,
+          item: cal,
+        });
+      });
+    });
+  });
+
+  return (
+    <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>Calls</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage Calendly event types and call scheduling
+          </Typography>
+        </Box>
+        <Button variant="contained" startIcon={<AddIcon />} disabled>Add Call Type</Button>
+      </Stack>
+
+      <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ bgcolor: palette.grey[50] }}>
+              <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Team</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>URL</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Used In</TableCell>
+              <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {allCallItems.map((entry, i) => (
+              <TableRow key={i} hover>
+                <TableCell><Typography fontWeight={500}>{entry.item.name}</Typography></TableCell>
+                <TableCell>
+                  <Chip
+                    label={entry.item.team.charAt(0).toUpperCase() + entry.item.team.slice(1)}
+                    size="small"
+                    color={entry.item.team === 'sales' ? 'warning' : entry.item.team === 'onboarding' ? 'primary' : 'default'}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                    {entry.item.url}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" color="text.secondary">
+                    {entry.featureName} → {entry.stageName}
+                  </Typography>
+                </TableCell>
+                <TableCell align="right">
+                  <IconButton size="small" disabled><EditIcon fontSize="small" /></IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+}
+
+// =============================================================================
+// ONBOARDING ITEMS MANAGEMENT PAGE
+// =============================================================================
+
+function OnboardingItemsManagementPage() {
+  const [selectedItem, setSelectedItem] = useState<OnboardingItemDefinition | null>(null);
+
+  return (
+    <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>Onboarding Items</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Centralized repository of onboarding tasks and actions
+          </Typography>
+        </Box>
+        <Button variant="contained" startIcon={<AddIcon />} disabled>Add Item</Button>
+      </Stack>
+
+      <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ bgcolor: palette.grey[50] }}>
+              <TableCell sx={{ fontWeight: 600 }}>Title</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Labels</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Completion Event</TableCell>
+              <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {onboardingItems.map((item) => (
+              <TableRow key={item.id} hover>
+                <TableCell>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    {item.type === 'in_product' ? (
+                      <ComputerIcon fontSize="small" sx={{ color: palette.primary }} />
+                    ) : (
+                      <PersonIcon fontSize="small" sx={{ color: palette.secondary }} />
+                    )}
+                    <Typography fontWeight={500}>{item.title}</Typography>
+                  </Stack>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={item.type === 'in_product' ? 'In-Product' : 'Rep-Facing'}
+                    size="small"
+                    sx={{
+                      bgcolor: item.type === 'in_product' ? alpha(palette.primary, 0.1) : alpha(palette.secondary, 0.1),
+                      color: item.type === 'in_product' ? palette.primary : palette.secondary,
+                    }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                    {(item.labels || []).slice(0, 3).map((label) => (
+                      <Chip key={label} label={label} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
+                    ))}
+                    {(item.labels || []).length > 3 && (
+                      <Chip label={`+${(item.labels || []).length - 3}`} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
+                    )}
+                  </Stack>
+                </TableCell>
+                <TableCell>
+                  {item.completionApi ? (
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                      {item.completionApi.eventName}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">Manual</Typography>
+                  )}
+                </TableCell>
+                <TableCell align="right">
+                  <IconButton size="small" onClick={() => setSelectedItem(item)} sx={{ color: palette.primary }}>
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Edit Item Dialog */}
+      <Dialog open={!!selectedItem} onClose={() => setSelectedItem(null)} maxWidth="md" fullWidth>
+        <DialogTitle>Edit Onboarding Item</DialogTitle>
+        <DialogContent dividers>
+          {selectedItem && (
+            <Stack spacing={2}>
+              <TextField size="small" label="Title" fullWidth value={selectedItem.title} disabled />
+              <TextField size="small" label="Description" fullWidth multiline rows={2} value={selectedItem.description} disabled />
+              <TextField size="small" label="Type" fullWidth value={selectedItem.type} disabled />
+              {selectedItem.labels && (
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Labels</Typography>
+                  <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
+                    {selectedItem.labels.map((label) => (
+                      <Chip key={label} label={label} size="small" />
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+              {selectedItem.completionApi && (
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Completion API</Typography>
+                  <Paper variant="outlined" sx={{ p: 1.5, mt: 0.5, bgcolor: palette.grey[50] }}>
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                      Event: {selectedItem.completionApi.eventName}
+                    </Typography>
+                    {selectedItem.completionApi.endpoint && (
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                        Endpoint: {selectedItem.completionApi.endpoint}
+                      </Typography>
+                    )}
+                    <Typography variant="caption" color="text.secondary">
+                      {selectedItem.completionApi.description}
+                    </Typography>
+                  </Paper>
+                </Box>
+              )}
+              {selectedItem.repInstructions && (
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Rep Instructions</Typography>
+                  <Paper variant="outlined" sx={{ p: 1.5, mt: 0.5, bgcolor: alpha(palette.secondary, 0.04) }}>
+                    <Typography variant="body2">{selectedItem.repInstructions}</Typography>
+                  </Paper>
+                </Box>
+              )}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedItem(null)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
+
+// =============================================================================
+// TOOLS MANAGEMENT PAGE
+// =============================================================================
+
+function ToolsManagementPage() {
+  const { features } = useOnboarding();
+
+  // Collect all unique tools across all features/stages
+  const allTools: { featureName: string; stageName: string; tool: McpTool }[] = [];
+  features.forEach((feature) => {
+    stageKeys.forEach((stageKey) => {
+      const stage = feature.stages[stageKey];
+      (stage.tools || []).forEach((tool) => {
+        allTools.push({
+          featureName: feature.name,
+          stageName: stageConfig[stageKey].label,
+          tool,
+        });
+      });
+    });
+  });
+
+  return (
+    <Box>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+        <Box>
+          <Typography variant="h5" fontWeight={600}>Tools</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage MCP tools available to the AI assistant
+          </Typography>
+        </Box>
+        <Button variant="contained" startIcon={<AddIcon />} disabled>Add Tool</Button>
+      </Stack>
+
+      <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ bgcolor: palette.grey[50] }}>
+              <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Used In</TableCell>
+              <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {allTools.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4}>
+                  <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                    No tools defined yet
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              allTools.map((entry, i) => (
+                <TableRow key={i} hover>
+                  <TableCell>
+                    <Typography fontWeight={500} sx={{ fontFamily: 'monospace' }}>{entry.tool.name}</Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {entry.tool.description}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {entry.featureName} → {entry.stageName}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton size="small" disabled><EditIcon fontSize="small" /></IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Box>
+  );
+}
+
+// =============================================================================
+// MAIN ADMIN VIEW WITH SIDEBAR
+// =============================================================================
+
+export function AdminView() {
+  const [currentPage, setCurrentPage] = useState<AdminPage>('features');
+
+  const menuItems: { id: AdminPage; label: string; icon: React.ReactNode }[] = [
+    { id: 'features', label: 'Features', icon: <CategoryIcon /> },
+    { id: 'navigation', label: 'Navigation', icon: <LinkIcon /> },
+    { id: 'calls', label: 'Calls', icon: <PhoneIcon /> },
+    { id: 'onboarding-items', label: 'Onboarding Items', icon: <ChecklistIcon /> },
+    { id: 'tools', label: 'Tools', icon: <BuildIcon /> },
+  ];
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'features':
+        return <FeatureManagementPage onNavigateToPage={setCurrentPage} />;
+      case 'navigation':
+        return <NavigationManagementPage />;
+      case 'calls':
+        return <CallsManagementPage />;
+      case 'onboarding-items':
+        return <OnboardingItemsManagementPage />;
+      case 'tools':
+        return <ToolsManagementPage />;
+      default:
+        return <FeatureManagementPage onNavigateToPage={setCurrentPage} />;
+    }
+  };
+
+  return (
+    <Box sx={{ display: 'flex', minHeight: 'calc(100vh - 120px)' }}>
+      {/* Sidebar */}
+      <Paper
+        elevation={0}
+        sx={{
+          width: 240,
+          flexShrink: 0,
+          borderRight: 1,
+          borderColor: 'divider',
+          bgcolor: palette.grey[50],
+        }}
+      >
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
+            ADMIN
+          </Typography>
+          <Typography variant="h6" fontWeight={600}>
+            Manage Content
+          </Typography>
+        </Box>
+        <List sx={{ p: 1 }}>
+          {menuItems.map((item) => (
+            <ListItem key={item.id} disablePadding>
+              <ListItemButton
+                selected={currentPage === item.id}
+                onClick={() => setCurrentPage(item.id)}
+                sx={{
+                  borderRadius: 1,
+                  mb: 0.5,
+                  '&.Mui-selected': {
+                    bgcolor: alpha(palette.primary, 0.08),
+                    '&:hover': { bgcolor: alpha(palette.primary, 0.12) },
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40, color: currentPage === item.id ? palette.primary : 'inherit' }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{
+                    fontWeight: currentPage === item.id ? 600 : 400,
+                    color: currentPage === item.id ? palette.primary : 'inherit',
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      </Paper>
+
+      {/* Main Content */}
+      <Box sx={{ flex: 1, p: 3 }}>
+        {renderPage()}
+      </Box>
     </Box>
   );
 }
