@@ -15,6 +15,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Create your first customer',
     description: 'Add a customer to your account to start sending invoices, estimates, and scheduling jobs.',
     type: 'in_product',
+    labels: ['getting-started', 'core', 'quick-win'],
     completionApi: {
       eventName: 'customer.created',
       endpoint: '/api/customers',
@@ -28,6 +29,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Create your first job',
     description: 'Create a job for a customer. Jobs track work, generate invoices, and feed your schedule.',
     type: 'in_product',
+    labels: ['getting-started', 'core'],
     completionApi: {
       eventName: 'job.created',
       endpoint: '/api/jobs',
@@ -41,6 +43,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Complete your first job',
     description: 'Mark a job as done to generate an invoice and track your completed work.',
     type: 'in_product',
+    labels: ['getting-started', 'core', 'milestone'],
     completionApi: {
       eventName: 'job.completed',
       endpoint: '/api/jobs/:id/complete',
@@ -54,6 +57,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Add your company logo',
     description: 'Upload your logo to appear on invoices, estimates, and customer communications.',
     type: 'in_product',
+    labels: ['branding', 'quick-win'],
     completionApi: {
       eventName: 'branding.logo_uploaded',
       endpoint: '/api/settings/branding',
@@ -67,6 +71,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Add your business address',
     description: 'Add your business address to appear on invoices and help with job routing.',
     type: 'in_product',
+    labels: ['settings', 'quick-win'],
     completionApi: {
       eventName: 'settings.address_added',
       endpoint: '/api/settings/business',
@@ -84,6 +89,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Send your first invoice',
     description: 'Send an invoice to a customer via email or SMS.',
     type: 'in_product',
+    labels: ['invoicing', 'milestone', 'revenue'],
     completionApi: {
       eventName: 'invoice.sent',
       endpoint: '/api/invoices/:id/send',
@@ -97,6 +103,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Configure payment reminders',
     description: 'Set up automatic reminders for unpaid invoices so you get paid faster.',
     type: 'in_product',
+    labels: ['invoicing', 'automation', 'revenue'],
     completionApi: {
       eventName: 'invoicing.reminders_configured',
       endpoint: '/api/settings/invoicing/reminders',
@@ -114,6 +121,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Connect your payment processor',
     description: 'Connect Stripe or another processor to accept credit card payments.',
     type: 'in_product',
+    labels: ['payments', 'integration', 'critical'],
     completionApi: {
       eventName: 'payments.processor_connected',
       endpoint: '/api/settings/payments/connect',
@@ -127,6 +135,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Collect your first payment',
     description: 'Receive a payment from a customer through the platform.',
     type: 'in_product',
+    labels: ['payments', 'milestone', 'revenue'],
     completionApi: {
       eventName: 'payment.collected',
       endpoint: '/api/payments',
@@ -140,6 +149,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Enable card on file',
     description: 'Allow customers to save their payment method for faster checkout.',
     type: 'in_product',
+    labels: ['payments', 'advanced'],
     completionApi: {
       eventName: 'payments.card_on_file_enabled',
       endpoint: '/api/settings/payments',
@@ -157,6 +167,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Set your business hours',
     description: 'Define when you\'re available so customers can book at the right times.',
     type: 'in_product',
+    labels: ['scheduling', 'settings', 'quick-win'],
     completionApi: {
       eventName: 'settings.hours_configured',
       endpoint: '/api/settings/hours',
@@ -170,6 +181,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Add a team member',
     description: 'Add employees or contractors to dispatch jobs to.',
     type: 'in_product',
+    labels: ['scheduling', 'team', 'growth'],
     completionApi: {
       eventName: 'team.member_added',
       endpoint: '/api/team',
@@ -183,6 +195,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Schedule your first job',
     description: 'Put a job on the calendar with a date and time.',
     type: 'in_product',
+    labels: ['scheduling', 'milestone', 'core'],
     completionApi: {
       eventName: 'job.scheduled',
       endpoint: '/api/jobs/:id/schedule',
@@ -196,6 +209,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Dispatch a job to a technician',
     description: 'Assign a scheduled job to a team member.',
     type: 'in_product',
+    labels: ['scheduling', 'team', 'dispatching'],
     completionApi: {
       eventName: 'job.dispatched',
       endpoint: '/api/jobs/:id/dispatch',
@@ -213,6 +227,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Add items to your price book',
     description: 'Add services and materials with prices for quick estimates.',
     type: 'in_product',
+    labels: ['estimates', 'settings', 'efficiency'],
     completionApi: {
       eventName: 'pricebook.item_added',
       endpoint: '/api/pricebook',
@@ -226,6 +241,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Create your first estimate',
     description: 'Build and send a professional estimate to a potential customer.',
     type: 'in_product',
+    labels: ['estimates', 'core', 'sales'],
     completionApi: {
       eventName: 'estimate.created',
       endpoint: '/api/estimates',
@@ -239,6 +255,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Send your first estimate',
     description: 'Send an estimate to a customer for approval.',
     type: 'in_product',
+    labels: ['estimates', 'milestone', 'sales'],
     completionApi: {
       eventName: 'estimate.sent',
       endpoint: '/api/estimates/:id/send',
@@ -256,6 +273,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Enable appointment reminders',
     description: 'Automatically remind customers before their appointments.',
     type: 'in_product',
+    labels: ['communications', 'automation', 'customer-experience'],
     completionApi: {
       eventName: 'comms.appointment_reminders_enabled',
       endpoint: '/api/settings/communications',
@@ -269,6 +287,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Enable "On my way" texts',
     description: 'Let customers know when technicians are en route.',
     type: 'in_product',
+    labels: ['communications', 'automation', 'customer-experience'],
     completionApi: {
       eventName: 'comms.on_my_way_enabled',
       endpoint: '/api/settings/communications',
@@ -282,6 +301,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Enable follow-up messages',
     description: 'Automatically follow up after jobs for feedback and reviews.',
     type: 'in_product',
+    labels: ['communications', 'automation', 'retention'],
     completionApi: {
       eventName: 'comms.follow_up_enabled',
       endpoint: '/api/settings/communications',
@@ -295,6 +315,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Customize message templates',
     description: 'Personalize the messages sent to your customers.',
     type: 'in_product',
+    labels: ['communications', 'branding', 'advanced'],
     completionApi: {
       eventName: 'comms.template_customized',
       endpoint: '/api/settings/communications/templates',
@@ -312,6 +333,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Configure your AI greeting',
     description: 'Set how the AI introduces itself and your business.',
     type: 'in_product',
+    labels: ['ai-voice', 'branding', 'critical'],
     completionApi: {
       eventName: 'ai.greeting_configured',
       endpoint: '/api/settings/ai-voice/greeting',
@@ -325,6 +347,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Tell the AI your services',
     description: 'List services so the AI can answer questions accurately.',
     type: 'in_product',
+    labels: ['ai-voice', 'settings', 'critical'],
     completionApi: {
       eventName: 'ai.services_configured',
       endpoint: '/api/settings/ai-voice/services',
@@ -338,6 +361,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Set up call forwarding',
     description: 'Forward calls to the AI when you can\'t answer.',
     type: 'in_product',
+    labels: ['ai-voice', 'integration', 'critical'],
     completionApi: {
       eventName: 'ai.forwarding_enabled',
       endpoint: '/api/settings/ai-voice/forwarding',
@@ -355,6 +379,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Connect Google Business Profile',
     description: 'Link your Google listing to manage reviews in one place.',
     type: 'in_product',
+    labels: ['reviews', 'integration', 'reputation'],
     completionApi: {
       eventName: 'reviews.google_connected',
       endpoint: '/api/settings/reviews/google',
@@ -368,6 +393,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Enable review requests',
     description: 'Automatically ask for reviews after completed jobs.',
     type: 'in_product',
+    labels: ['reviews', 'automation', 'reputation', 'growth'],
     completionApi: {
       eventName: 'reviews.requests_enabled',
       endpoint: '/api/settings/reviews/requests',
@@ -385,6 +411,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Complete intro call',
     description: 'Rep has completed the initial onboarding intro call with the pro.',
     type: 'rep_facing',
+    labels: ['rep-task', 'onboarding', 'high-touch'],
     repInstructions: 'Mark this complete after finishing the introductory call. Cover account overview, goals, and immediate next steps.',
     estimatedMinutes: 30,
   },
@@ -393,6 +420,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Schedule training session',
     description: 'Rep has scheduled a training session for the pro.',
     type: 'rep_facing',
+    labels: ['rep-task', 'training'],
     repInstructions: 'Use Calendly to schedule a training session. Choose the appropriate session type based on their plan and needs.',
     estimatedMinutes: 5,
   },
@@ -401,6 +429,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Complete training session',
     description: 'Rep has delivered the training session to the pro.',
     type: 'rep_facing',
+    labels: ['rep-task', 'training', 'high-touch'],
     repInstructions: 'Mark complete after the training session. Note any follow-up items or concerns in the account notes.',
     estimatedMinutes: 45,
   },
@@ -409,6 +438,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Review account health',
     description: 'Rep has reviewed the pro\'s account health and usage metrics.',
     type: 'rep_facing',
+    labels: ['rep-task', 'health-check'],
     repInstructions: 'Check adoption metrics, usage patterns, and identify any blockers. Document findings in account notes.',
     estimatedMinutes: 10,
   },
@@ -417,6 +447,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Document pro goals',
     description: 'Rep has documented the pro\'s business goals and success criteria.',
     type: 'rep_facing',
+    labels: ['rep-task', 'discovery'],
     repInstructions: 'Ask about their business goals, what success looks like, and update the account record with this information.',
     estimatedMinutes: 10,
   },
@@ -425,6 +456,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Send welcome resources',
     description: 'Rep has sent the welcome email with getting started resources.',
     type: 'rep_facing',
+    labels: ['rep-task', 'onboarding', 'quick-win'],
     repInstructions: 'Send the welcome email template with links to help articles, videos, and the getting started guide.',
     estimatedMinutes: 5,
   },

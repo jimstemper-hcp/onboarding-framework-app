@@ -16,6 +16,7 @@ export const automatedCommsFeature: Feature = {
           { variable: 'addons.automatedComms', negated: true },
         ],
       },
+      onboardingItems: [],
       contextSnippets: [
         {
           id: 'value-prop',
@@ -40,66 +41,122 @@ export const automatedCommsFeature: Feature = {
       calendlyTypes: [
         { name: 'Communications Demo', url: 'https://calendly.com/hcp-sales/comms', team: 'sales', description: 'See automated communications in action' },
       ],
-      upgradePrompt: 'Help the pro understand how automated communications save time and improve customer satisfaction.',
-      upgradeTools: [],
+      prompt: 'Help the pro understand how automated communications save time and improve customer satisfaction.',
+      tools: [],
     },
+
     attached: {
-      conditions: [
-        'Pro has Automated Communications in their plan',
-        'Pro has not enabled on-my-way texts or verified their phone number',
-      ],
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.automatedComms', negated: false },
+          { variable: 'comms.setup_complete', negated: true },
+        ],
+      },
       onboardingItems: [
         { itemId: 'enable-appointment-reminders', required: true },
         { itemId: 'enable-on-my-way', required: true },
         { itemId: 'customize-message-templates', required: false, stageSpecificNote: 'Personalize your messages for better engagement' },
         { itemId: 'rep-sent-welcome-resources', required: false },
       ],
-      requiredTasks: [
-        { id: 'comms-enable-otw', title: 'Enable on-my-way texts', description: 'Automatically notify customers when you\'re heading to their location', estimatedMinutes: 2, actionUrl: '/settings/communications/otw', completionEvent: 'comms.otw_enabled' },
-        { id: 'comms-verify-number', title: 'Verify your business phone', description: 'Verify your number so texts come from your business', estimatedMinutes: 3, actionUrl: '/settings/communications/verify', completionEvent: 'comms.number_verified' },
+      contextSnippets: [
+        {
+          id: 'setup-overview',
+          title: 'Setup Overview',
+          content: 'Enable on-my-way texts and appointment reminders to keep customers informed automatically.',
+        },
       ],
-      productPages: [{ name: 'Communication Settings', path: '/settings/communications', description: 'Configure automated messages' }],
-      tooltipUrls: [],
-      videos: [
-        { title: 'Setting Up Automated Texts', url: 'https://youtube.com/watch?v=hcp-auto-texts', durationSeconds: 180 },
+      navigation: [
+        {
+          name: 'Communication Settings',
+          description: 'Configure automated messages',
+          url: '/settings/communications',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Setting Up Automated Texts',
+          description: 'Video tutorial on configuring automated texts',
+          url: 'https://youtube.com/watch?v=hcp-auto-texts',
+          navigationType: 'hcp_video',
+        },
       ],
       calendlyTypes: [
         { name: 'Communications Setup', url: 'https://calendly.com/hcp-onboarding/comms', team: 'onboarding', description: 'Get help setting up automated messages' },
       ],
-      mcpTools: [],
-      agenticPrompt: 'Guide the pro through enabling on-my-way texts and verifying their business phone number.',
-      repTalkingPoints: [
-        'Let\'s get your on-my-way texts set up first - customers love these',
-        'You\'ll need to verify your phone number so texts come from your business',
-      ],
+      prompt: 'Guide the pro through enabling on-my-way texts and verifying their business phone number.',
+      tools: [],
     },
+
     activated: {
-      conditions: [
-        'Pro has enabled on-my-way texts and verified phone number',
-        'Pro has sent fewer than 20 automated messages',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'comms.setup_complete', negated: false },
+          { variable: 'comms.message_count', negated: true },
+        ],
+      },
+      onboardingItems: [
+        { itemId: 'enable-follow-up', required: false, stageSpecificNote: 'Bring customers back with automated follow-ups' },
       ],
-      optionalTasks: [
-        { id: 'comms-review-request', title: 'Set up review requests', description: 'Automatically ask for reviews after completed jobs', estimatedMinutes: 3, actionUrl: '/settings/communications/reviews', completionEvent: 'comms.review_requests_enabled' },
-        { id: 'comms-follow-up', title: 'Create follow-up campaigns', description: 'Bring customers back with automated follow-ups', estimatedMinutes: 5, actionUrl: '/settings/communications/campaigns', completionEvent: 'comms.campaigns_created' },
+      contextSnippets: [
+        {
+          id: 'ready-to-go',
+          title: 'Messages Active',
+          content: 'Your automated messages are working! Set up review requests to build your reputation.',
+        },
       ],
-      productPages: [{ name: 'Message History', path: '/communications', description: 'View sent messages' }],
+      navigation: [
+        {
+          name: 'Message History',
+          description: 'View sent messages',
+          url: '/communications',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Review Requests',
+          description: 'Set up automated review requests',
+          url: '/settings/communications/reviews',
+          navigationType: 'hcp_navigate',
+        },
+      ],
       calendlyTypes: [],
-      mcpTools: [],
-      engagementPrompt: 'Encourage the pro to set up review requests and follow-up campaigns.',
-      repTalkingPoints: [
-        'Your on-my-way texts are working great!',
-        'Want to set up automatic review requests? They really help build your reputation',
-      ],
+      prompt: 'Encourage the pro to set up review requests and follow-up campaigns.',
+      tools: [],
     },
+
     engaged: {
-      conditions: [
-        'Pro has sent 20 or more automated messages',
-        'Pro has sent automated messages within the last 14 days',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'comms.message_count', negated: false },
+          { variable: 'comms.recent_activity', negated: false },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'success',
+          title: 'Great Engagement',
+          content: 'Your customers love your automated communications! Customize templates for a personal touch.',
+        },
       ],
-      advancedTips: ['Customize your message templates for a personal touch', 'Use follow-up campaigns for seasonal services'],
-      successMetrics: ['Customer response rate over 80%', 'Review request conversion over 20%'],
-      upsellOpportunities: ['Add marketing campaigns to reach past customers'],
-      repTalkingPoints: ['Your customers are responding well to your messages!', 'Have you tried our marketing campaign features?'],
+      navigation: [
+        {
+          name: 'Message History',
+          description: 'View sent messages',
+          url: '/communications',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Marketing Campaigns',
+          description: 'Reach past customers with campaigns',
+          url: '/marketing/campaigns',
+          navigationType: 'hcp_navigate',
+        },
+      ],
+      calendlyTypes: [],
+      prompt: 'Help the experienced user optimize their messaging and explore marketing campaigns.',
+      tools: [],
     },
   },
 };

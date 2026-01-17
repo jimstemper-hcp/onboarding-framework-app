@@ -29,7 +29,8 @@ import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
 import * as MuiIcons from '@mui/icons-material';
 import { useState } from 'react';
 import { useOnboarding, useActivePro } from '../../context';
-import type { Feature, FeatureStatus, ProAccount } from '../../types';
+import { onboardingItems as allOnboardingItems } from '../../data';
+import type { Feature, FeatureStatus, ProAccount, OnboardingItemAssignment } from '../../types';
 
 // =============================================================================
 // MODERN COLOR PALETTE
@@ -64,16 +65,59 @@ const POINTS = {
   FEATURE_ENGAGED: 150,
 };
 
+// Get all onboarding items for a feature across stages
+function getFeatureOnboardingItems(feature: Feature): OnboardingItemAssignment[] {
+  const attached = feature.stages.attached.onboardingItems || [];
+  const activated = feature.stages.activated.onboardingItems || [];
+  const engaged = feature.stages.engaged.onboardingItems || [];
+
+  // Deduplicate by itemId
+  const seen = new Set<string>();
+  const items: OnboardingItemAssignment[] = [];
+
+  for (const item of [...attached, ...activated, ...engaged]) {
+    if (!seen.has(item.itemId)) {
+      seen.add(item.itemId);
+      items.push(item);
+    }
+  }
+
+  return items;
+}
+
+// Get required items for attached stage
+function getRequiredItems(feature: Feature): OnboardingItemAssignment[] {
+  return (feature.stages.attached.onboardingItems || []).filter(item => item.required);
+}
+
+// Get optional items (from activated and engaged stages or non-required attached)
+function getOptionalItems(feature: Feature): OnboardingItemAssignment[] {
+  const attached = (feature.stages.attached.onboardingItems || []).filter(item => !item.required);
+  const activated = feature.stages.activated.onboardingItems || [];
+  const engaged = feature.stages.engaged.onboardingItems || [];
+
+  // Deduplicate
+  const seen = new Set<string>();
+  const items: OnboardingItemAssignment[] = [];
+
+  for (const item of [...attached, ...activated, ...engaged]) {
+    if (!seen.has(item.itemId)) {
+      seen.add(item.itemId);
+      items.push(item);
+    }
+  }
+
+  return items;
+}
+
 function calculateFeaturePoints(feature: Feature, status: FeatureStatus) {
-  const requiredTasks = feature.stages.attached.requiredTasks;
-  const optionalTasks = feature.stages.activated.optionalTasks || [];
-  const allTasks = [...requiredTasks, ...optionalTasks];
+  const allItems = getFeatureOnboardingItems(feature);
 
   const totalPossible =
     POINTS.FEATURE_ATTACHED +
     POINTS.FEATURE_ACTIVATED +
     POINTS.FEATURE_ENGAGED +
-    (allTasks.length * POINTS.TASK_COMPLETE);
+    (allItems.length * POINTS.TASK_COMPLETE);
 
   let earned = 0;
   if (status.stage !== 'not_attached') {
@@ -125,13 +169,13 @@ function FeatureIcon({ iconName, ...props }: { iconName: string } & Record<strin
 // Timeline milestone status
 type MilestoneStatus = 'completed' | 'current' | 'upcoming' | 'locked';
 
-function getMilestoneStatus(status: FeatureStatus, requiredTasks: { id: string }[]): MilestoneStatus {
+function getMilestoneStatus(status: FeatureStatus, requiredItems: OnboardingItemAssignment[]): MilestoneStatus {
   if (status.stage === 'not_attached') return 'locked';
   if (status.stage === 'engaged' || status.stage === 'activated') return 'completed';
 
   // For attached stage, check if they've started
-  const completedCount = status.completedTasks.length;
-  const totalRequired = requiredTasks.length;
+  const completedCount = requiredItems.filter(item => status.completedTasks.includes(item.itemId)).length;
+  const totalRequired = requiredItems.length;
 
   if (completedCount >= totalRequired) return 'completed';
   if (completedCount > 0) return 'current';
@@ -258,13 +302,13 @@ function TimelineMilestone({
   onToggleTask: (taskId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(isCurrent);
-  const requiredTasks = feature.stages.attached.requiredTasks;
-  const optionalTasks = feature.stages.activated.optionalTasks || [];
+  const requiredItems = getRequiredItems(feature);
+  const optionalItems = getOptionalItems(feature);
   const { earned, totalPossible } = calculateFeaturePoints(feature, status);
 
-  const completedRequiredTasks = requiredTasks.filter((t) => status.completedTasks.includes(t.id));
-  const completedOptionalTasks = optionalTasks.filter((t) => status.completedTasks.includes(t.id));
-  const nextTask = requiredTasks.find((t) => !status.completedTasks.includes(t.id));
+  const completedRequiredItems = requiredItems.filter((item) => status.completedTasks.includes(item.itemId));
+  const completedOptionalItems = optionalItems.filter((item) => status.completedTasks.includes(item.itemId));
+  const nextItem = requiredItems.find((item) => !status.completedTasks.includes(item.itemId));
 
   const statusColors = {
     completed: palette.success,
@@ -274,6 +318,11 @@ function TimelineMilestone({
   };
 
   const color = statusColors[milestoneStatus];
+
+  // Get item definition by assignment
+  const getItemDef = (assignment: OnboardingItemAssignment) => {
+    return allOnboardingItems.find(item => item.id === assignment.itemId);
+  };
 
   return (
     <Box sx={{ display: 'flex', position: 'relative' }}>
@@ -436,7 +485,7 @@ function TimelineMilestone({
             <Collapse in={expanded && milestoneStatus !== 'locked'}>
               <Box sx={{ mt: 2.5, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                 {/* Current task highlight */}
-                {nextTask && milestoneStatus === 'current' && (
+                {nextItem && milestoneStatus === 'current' && (
                   <Box
                     sx={{
                       p: 2,
@@ -458,12 +507,12 @@ function TimelineMilestone({
                           fontWeight: 600,
                         }}
                       >
-                        {completedRequiredTasks.length + 1}
+                        {completedRequiredItems.length + 1}
                       </Avatar>
                       <Box sx={{ flex: 1 }}>
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Typography variant="body2" fontWeight={500}>
-                            {nextTask.title}
+                            {getItemDef(nextItem)?.title || nextItem.itemId}
                           </Typography>
                           <Chip
                             label="Next step"
@@ -489,7 +538,7 @@ function TimelineMilestone({
                           />
                         </Stack>
                         <Typography variant="caption" sx={{ color: palette.text.muted }}>
-                          {nextTask.estimatedMinutes} min
+                          {getItemDef(nextItem)?.estimatedMinutes || 5} min
                         </Typography>
                       </Box>
                       <Button
@@ -499,7 +548,7 @@ function TimelineMilestone({
                         startIcon={<PlayArrowRoundedIcon />}
                         onClick={(e) => {
                           e.stopPropagation();
-                          onToggleTask(nextTask.id);
+                          onToggleTask(nextItem.itemId);
                         }}
                         sx={{
                           bgcolor: palette.primary,
@@ -515,93 +564,96 @@ function TimelineMilestone({
                 )}
 
                 {/* Required Tasks */}
-                <Box>
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: palette.text.muted,
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      Required Steps
-                    </Typography>
-                    <Chip
-                      label={`${completedRequiredTasks.length}/${requiredTasks.length}`}
-                      size="small"
-                      sx={{
-                        height: 18,
-                        fontSize: '0.6rem',
-                        bgcolor: palette.bg.muted,
-                        color: palette.text.muted,
-                      }}
-                    />
-                  </Stack>
+                {requiredItems.length > 0 && (
+                  <Box>
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: palette.text.muted,
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        Required Steps
+                      </Typography>
+                      <Chip
+                        label={`${completedRequiredItems.length}/${requiredItems.length}`}
+                        size="small"
+                        sx={{
+                          height: 18,
+                          fontSize: '0.6rem',
+                          bgcolor: palette.bg.muted,
+                          color: palette.text.muted,
+                        }}
+                      />
+                    </Stack>
 
-                  <Stack spacing={0.5}>
-                    {requiredTasks.map((task, index) => {
-                      const isComplete = status.completedTasks.includes(task.id);
-                      const isNext = task.id === nextTask?.id;
-                      return (
-                        <Stack
-                          key={task.id}
-                          direction="row"
-                          spacing={1.5}
-                          alignItems="center"
-                          sx={{
-                            py: 0.75,
-                            px: 1.5,
-                            borderRadius: 1.5,
-                            bgcolor: isNext ? alpha(palette.primary, 0.04) : 'transparent',
-                          }}
-                        >
-                          {isComplete ? (
-                            <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: palette.success }} />
-                          ) : (
-                            <Avatar
-                              sx={{
-                                width: 20,
-                                height: 20,
-                                bgcolor: isNext ? palette.primary : palette.bg.muted,
-                                color: isNext ? 'white' : palette.text.muted,
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                              }}
-                            >
-                              {index + 1}
-                            </Avatar>
-                          )}
-                          <Typography
-                            variant="body2"
+                    <Stack spacing={0.5}>
+                      {requiredItems.map((item, index) => {
+                        const itemDef = getItemDef(item);
+                        const isComplete = status.completedTasks.includes(item.itemId);
+                        const isNext = item.itemId === nextItem?.itemId;
+                        return (
+                          <Stack
+                            key={item.itemId}
+                            direction="row"
+                            spacing={1.5}
+                            alignItems="center"
                             sx={{
-                              flex: 1,
-                              color: isComplete ? palette.text.muted : palette.text.primary,
-                              textDecoration: isComplete ? 'line-through' : 'none',
+                              py: 0.75,
+                              px: 1.5,
+                              borderRadius: 1.5,
+                              bgcolor: isNext ? alpha(palette.primary, 0.04) : 'transparent',
                             }}
                           >
-                            {task.title}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: palette.text.muted }}>
-                            {isComplete ? `+${POINTS.TASK_COMPLETE}` : `${POINTS.TASK_COMPLETE} pts`}
-                          </Typography>
-                          {!isComplete && (
-                            <Checkbox
-                              checked={false}
-                              onChange={() => onToggleTask(task.id)}
-                              size="small"
-                              sx={{ p: 0, color: palette.text.muted }}
-                            />
-                          )}
-                        </Stack>
-                      );
-                    })}
-                  </Stack>
-                </Box>
+                            {isComplete ? (
+                              <CheckCircleOutlinedIcon sx={{ fontSize: 18, color: palette.success }} />
+                            ) : (
+                              <Avatar
+                                sx={{
+                                  width: 20,
+                                  height: 20,
+                                  bgcolor: isNext ? palette.primary : palette.bg.muted,
+                                  color: isNext ? 'white' : palette.text.muted,
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {index + 1}
+                              </Avatar>
+                            )}
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                flex: 1,
+                                color: isComplete ? palette.text.muted : palette.text.primary,
+                                textDecoration: isComplete ? 'line-through' : 'none',
+                              }}
+                            >
+                              {itemDef?.title || item.itemId}
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: palette.text.muted }}>
+                              {isComplete ? `+${POINTS.TASK_COMPLETE}` : `${POINTS.TASK_COMPLETE} pts`}
+                            </Typography>
+                            {!isComplete && (
+                              <Checkbox
+                                checked={false}
+                                onChange={() => onToggleTask(item.itemId)}
+                                size="small"
+                                sx={{ p: 0, color: palette.text.muted }}
+                              />
+                            )}
+                          </Stack>
+                        );
+                      })}
+                    </Stack>
+                  </Box>
+                )}
 
                 {/* Optional Tasks */}
-                {optionalTasks.length > 0 && (
+                {optionalItems.length > 0 && (
                   <Box sx={{ mt: 2.5, pt: 2, borderTop: '1px dashed', borderColor: 'divider' }}>
                     <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
                       <Typography
@@ -616,7 +668,7 @@ function TimelineMilestone({
                         Bonus Steps
                       </Typography>
                       <Chip
-                        label={`${completedOptionalTasks.length}/${optionalTasks.length}`}
+                        label={`${completedOptionalItems.length}/${optionalItems.length}`}
                         size="small"
                         sx={{
                           height: 18,
@@ -628,11 +680,12 @@ function TimelineMilestone({
                     </Stack>
 
                     <Stack spacing={0.5}>
-                      {optionalTasks.map((task) => {
-                        const isComplete = status.completedTasks.includes(task.id);
+                      {optionalItems.map((item) => {
+                        const itemDef = getItemDef(item);
+                        const isComplete = status.completedTasks.includes(item.itemId);
                         return (
                           <Stack
-                            key={task.id}
+                            key={item.itemId}
                             direction="row"
                             spacing={1.5}
                             alignItems="center"
@@ -651,7 +704,7 @@ function TimelineMilestone({
                                 textDecoration: isComplete ? 'line-through' : 'none',
                               }}
                             >
-                              {task.title}
+                              {itemDef?.title || item.itemId}
                             </Typography>
                             <Typography variant="caption" sx={{ color: palette.purple }}>
                               {isComplete ? `+${POINTS.TASK_COMPLETE}` : `${POINTS.TASK_COMPLETE} pts`}
@@ -659,7 +712,7 @@ function TimelineMilestone({
                             {!isComplete && (
                               <Checkbox
                                 checked={false}
-                                onChange={() => onToggleTask(task.id)}
+                                onChange={() => onToggleTask(item.itemId)}
                                 size="small"
                                 sx={{ p: 0, color: palette.text.muted }}
                               />
@@ -750,8 +803,8 @@ export function PortalView() {
   const timelineFeatures = [...features].sort((a, b) => {
     const statusA = activePro.featureStatus[a.id];
     const statusB = activePro.featureStatus[b.id];
-    const milestoneA = getMilestoneStatus(statusA, a.stages.attached.requiredTasks);
-    const milestoneB = getMilestoneStatus(statusB, b.stages.attached.requiredTasks);
+    const milestoneA = getMilestoneStatus(statusA, getRequiredItems(a));
+    const milestoneB = getMilestoneStatus(statusB, getRequiredItems(b));
 
     const order = { completed: 0, current: 1, upcoming: 2, locked: 3 };
     return order[milestoneA] - order[milestoneB];
@@ -760,14 +813,14 @@ export function PortalView() {
   // Find the current milestone index
   const currentIndex = timelineFeatures.findIndex((f) => {
     const status = activePro.featureStatus[f.id];
-    const milestone = getMilestoneStatus(status, f.stages.attached.requiredTasks);
+    const milestone = getMilestoneStatus(status, getRequiredItems(f));
     return milestone === 'current';
   });
 
   // If no "current", find first "upcoming"
   const activeIndex = currentIndex >= 0 ? currentIndex : timelineFeatures.findIndex((f) => {
     const status = activePro.featureStatus[f.id];
-    const milestone = getMilestoneStatus(status, f.stages.attached.requiredTasks);
+    const milestone = getMilestoneStatus(status, getRequiredItems(f));
     return milestone === 'upcoming';
   });
 
@@ -874,7 +927,7 @@ export function PortalView() {
       <Box sx={{ pl: 1 }}>
         {timelineFeatures.map((feature, index) => {
           const status = activePro.featureStatus[feature.id];
-          const milestoneStatus = getMilestoneStatus(status, feature.stages.attached.requiredTasks);
+          const milestoneStatus = getMilestoneStatus(status, getRequiredItems(feature));
           const isCurrent = index === activeIndex;
 
           return (

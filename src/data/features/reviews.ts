@@ -16,6 +16,7 @@ export const reviewsFeature: Feature = {
           { variable: 'addons.reviews', negated: true },
         ],
       },
+      onboardingItems: [],
       contextSnippets: [
         {
           id: 'value-prop',
@@ -40,70 +41,125 @@ export const reviewsFeature: Feature = {
       calendlyTypes: [
         { name: 'Reviews Demo', url: 'https://calendly.com/hcp-sales/reviews', team: 'sales', description: 'See the reviews features' },
       ],
-      upgradePrompt: 'Help the pro understand how automated review collection can build their online reputation.',
-      upgradeTools: [],
+      prompt: 'Help the pro understand how automated review collection can build their online reputation.',
+      tools: [],
     },
+
     attached: {
-      conditions: [
-        'Pro has Reviews feature in their plan',
-        'Pro has not connected Google Business Profile or enabled review requests',
-      ],
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.reviews', negated: false },
+          { variable: 'reviews.setup_complete', negated: true },
+        ],
+      },
       onboardingItems: [
         { itemId: 'connect-google-business', required: true },
         { itemId: 'enable-review-requests', required: true, stageSpecificNote: 'Automatically request reviews after completed jobs' },
         { itemId: 'rep-reviewed-account-health', required: false },
       ],
-      requiredTasks: [
-        { id: 'reviews-connect-google', title: 'Connect your Google Business Profile', description: 'Link your Google listing to manage reviews in one place', estimatedMinutes: 3, actionUrl: '/settings/reviews/google', completionEvent: 'reviews.google_connected' },
-        { id: 'reviews-enable-requests', title: 'Enable review requests', description: 'Automatically ask for reviews after completed jobs', estimatedMinutes: 2, actionUrl: '/settings/reviews/requests', completionEvent: 'reviews.requests_enabled' },
+      contextSnippets: [
+        {
+          id: 'setup-overview',
+          title: 'Setup Overview',
+          content: 'Connect your Google Business Profile and enable automatic review requests to start building your reputation.',
+        },
       ],
-      productPages: [
-        { name: 'Reviews Dashboard', path: '/reviews', description: 'View and manage reviews' },
-        { name: 'Review Settings', path: '/settings/reviews', description: 'Configure review requests' },
-      ],
-      tooltipUrls: [],
-      videos: [
-        { title: 'Setting Up Review Requests', url: 'https://youtube.com/watch?v=hcp-reviews-setup', durationSeconds: 180 },
+      navigation: [
+        {
+          name: 'Reviews Dashboard',
+          description: 'View and manage reviews',
+          url: '/reviews',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Review Settings',
+          description: 'Configure review requests',
+          url: '/settings/reviews',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Setting Up Review Requests',
+          description: 'Video tutorial on configuring reviews',
+          url: 'https://youtube.com/watch?v=hcp-reviews-setup',
+          navigationType: 'hcp_video',
+        },
       ],
       calendlyTypes: [
         { name: 'Reviews Setup', url: 'https://calendly.com/hcp-onboarding/reviews', team: 'onboarding', description: 'Get help with reviews' },
       ],
-      mcpTools: [],
-      agenticPrompt: 'Guide the pro through connecting their Google Business Profile and enabling automatic review requests.',
-      repTalkingPoints: [
-        'Let\'s connect your Google Business Profile first',
-        'Once connected, you can see all your reviews in one place',
-        'We\'ll automatically ask happy customers for reviews',
-      ],
+      prompt: 'Guide the pro through connecting their Google Business Profile and enabling automatic review requests.',
+      tools: [],
     },
+
     activated: {
-      conditions: [
-        'Pro has connected Google and enabled review requests',
-        'Pro has sent fewer than 10 review requests',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'reviews.setup_complete', negated: false },
+          { variable: 'reviews.request_count', negated: true },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'ready-to-go',
+          title: 'Reviews Active',
+          content: 'Your review requests are active! Customize your message for better response rates.',
+        },
       ],
-      optionalTasks: [
-        { id: 'reviews-customize-request', title: 'Customize review request message', description: 'Personalize the message customers receive', estimatedMinutes: 3, actionUrl: '/settings/reviews/message', completionEvent: 'reviews.message_customized' },
-        { id: 'reviews-add-facebook', title: 'Connect Facebook page', description: 'Manage Facebook reviews too', estimatedMinutes: 3, actionUrl: '/settings/reviews/facebook', completionEvent: 'reviews.facebook_connected' },
+      navigation: [
+        {
+          name: 'Reviews Dashboard',
+          description: 'View all your reviews',
+          url: '/reviews',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Review Message',
+          description: 'Customize your review request message',
+          url: '/settings/reviews/message',
+          navigationType: 'hcp_navigate',
+        },
       ],
-      productPages: [{ name: 'Reviews Dashboard', path: '/reviews', description: 'View all your reviews' }],
       calendlyTypes: [],
-      mcpTools: [],
-      engagementPrompt: 'Encourage the pro to customize their review request message and respond to existing reviews.',
-      repTalkingPoints: [
-        'Your review requests are active!',
-        'Pro tip: Respond to every review - it shows you care',
-        'Want to customize the message customers receive?',
-      ],
+      prompt: 'Encourage the pro to customize their review request message and respond to existing reviews.',
+      tools: [],
     },
+
     engaged: {
-      conditions: [
-        'Pro has sent 10 or more review requests',
-        'Pro has received a review within the last 30 days',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'reviews.request_count', negated: false },
+          { variable: 'reviews.recent_activity', negated: false },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'success',
+          title: 'Review Champion',
+          content: 'Your reviews are growing! Share positive reviews on social media to reach more customers.',
+        },
       ],
-      advancedTips: ['Respond to negative reviews professionally - it shows others you care', 'Share positive reviews on social media'],
-      successMetrics: ['Review request conversion over 20%', 'Average rating 4.5+ stars'],
-      upsellOpportunities: ['Add marketing features to showcase your reviews'],
-      repTalkingPoints: ['Your reviews are growing nicely!', 'Have you tried sharing reviews on social media?'],
+      navigation: [
+        {
+          name: 'Reviews Dashboard',
+          description: 'View all your reviews',
+          url: '/reviews',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Social Sharing',
+          description: 'Share reviews on social media',
+          url: '/reviews/share',
+          navigationType: 'hcp_navigate',
+        },
+      ],
+      calendlyTypes: [],
+      prompt: 'Help the experienced reviews user optimize conversion rates and share success on social media.',
+      tools: [],
     },
   },
 };

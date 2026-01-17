@@ -16,6 +16,7 @@ export const csrAiFeature: Feature = {
           { variable: 'addons.csrAi', negated: true },
         ],
       },
+      onboardingItems: [],
       contextSnippets: [
         {
           id: 'value-prop',
@@ -46,71 +47,120 @@ export const csrAiFeature: Feature = {
       calendlyTypes: [
         { name: 'AI Voice Demo', url: 'https://calendly.com/hcp-sales/ai-voice', team: 'sales', description: 'Hear the AI answer a sample call' },
       ],
-      upgradePrompt: 'Help the pro understand how the AI voice agent can capture more leads and book jobs automatically.',
-      upgradeTools: [],
+      prompt: 'Help the pro understand how the AI voice agent can capture more leads and book jobs automatically.',
+      tools: [],
     },
+
     attached: {
-      conditions: [
-        'Pro has AI Voice Agent in their plan',
-        'Pro has not configured greeting, services, or call forwarding',
-      ],
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.csrAi', negated: false },
+          { variable: 'ai.setup_complete', negated: true },
+        ],
+      },
       onboardingItems: [
         { itemId: 'configure-ai-greeting', required: true },
         { itemId: 'configure-ai-services', required: true, stageSpecificNote: 'List all services so the AI can answer questions accurately' },
         { itemId: 'setup-call-forwarding', required: true },
         { itemId: 'rep-training-session-completed', required: false, stageSpecificNote: 'AI Voice training session covers best practices' },
       ],
-      requiredTasks: [
-        { id: 'csr-configure-greeting', title: 'Configure your AI greeting', description: 'Customize how the AI introduces itself and your business', estimatedMinutes: 5, actionUrl: '/settings/ai-voice/greeting', completionEvent: 'ai.greeting_configured' },
-        { id: 'csr-set-services', title: 'Tell the AI your services', description: 'List the services you offer so the AI can answer questions', estimatedMinutes: 5, actionUrl: '/settings/ai-voice/services', completionEvent: 'ai.services_configured' },
-        { id: 'csr-forward-number', title: 'Set up call forwarding', description: 'Forward calls to the AI when you can\'t answer', estimatedMinutes: 3, actionUrl: '/settings/ai-voice/forwarding', completionEvent: 'ai.forwarding_enabled' },
+      contextSnippets: [
+        {
+          id: 'setup-overview',
+          title: 'Setup Overview',
+          content: 'Configure your AI greeting, list your services, and set up call forwarding to start capturing more leads.',
+        },
       ],
-      productPages: [
-        { name: 'AI Voice Settings', path: '/settings/ai-voice', description: 'Configure your AI assistant' },
-      ],
-      tooltipUrls: [],
-      videos: [
-        { title: 'Setting Up AI Voice', url: 'https://youtube.com/watch?v=hcp-ai-setup', durationSeconds: 300 },
+      navigation: [
+        {
+          name: 'AI Voice Settings',
+          description: 'Configure your AI assistant',
+          url: '/settings/ai-voice',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Setting Up AI Voice',
+          description: 'Video tutorial on configuring the AI',
+          url: 'https://youtube.com/watch?v=hcp-ai-setup',
+          navigationType: 'hcp_video',
+        },
       ],
       calendlyTypes: [
         { name: 'AI Voice Setup Help', url: 'https://calendly.com/hcp-onboarding/ai-voice', team: 'onboarding', description: 'Get help configuring your AI' },
       ],
-      mcpTools: [],
-      agenticPrompt: 'Guide the pro through configuring their AI greeting, listing their services, and setting up call forwarding.',
-      repTalkingPoints: [
-        'Let\'s customize how the AI greets your callers',
-        'The AI needs to know your services to answer questions accurately',
-        'You can set it to only take over when you miss calls, or handle all calls',
-      ],
+      prompt: 'Guide the pro through configuring their AI greeting, listing their services, and setting up call forwarding.',
+      tools: [],
     },
+
     activated: {
-      conditions: [
-        'Pro has configured AI greeting, services, and call forwarding',
-        'AI has handled fewer than 10 calls',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'ai.setup_complete', negated: false },
+          { variable: 'ai.call_count', negated: true },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'ready-to-go',
+          title: 'AI Ready',
+          content: 'Your AI is ready to take calls! Add the chat widget to your website for even more leads.',
+        },
       ],
-      optionalTasks: [
-        { id: 'csr-chat-widget', title: 'Add chat to your website', description: 'Let the AI handle website chats too', estimatedMinutes: 5, actionUrl: '/settings/ai-voice/chat-widget', completionEvent: 'ai.chat_enabled' },
-        { id: 'csr-custom-responses', title: 'Add custom Q&A', description: 'Train the AI on your most common questions', estimatedMinutes: 10, actionUrl: '/settings/ai-voice/qa', completionEvent: 'ai.qa_added' },
+      navigation: [
+        {
+          name: 'AI Call History',
+          description: 'Review AI-handled calls',
+          url: '/ai-voice/calls',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Chat Widget',
+          description: 'Add AI chat to your website',
+          url: '/settings/ai-voice/chat-widget',
+          navigationType: 'hcp_navigate',
+        },
       ],
-      productPages: [{ name: 'AI Call History', path: '/ai-voice/calls', description: 'Review AI-handled calls' }],
       calendlyTypes: [],
-      mcpTools: [],
-      engagementPrompt: 'Encourage the pro to review AI call recordings and add the chat widget to their website.',
-      repTalkingPoints: [
-        'Your AI is ready to take calls!',
-        'Review the call recordings to see how it\'s doing',
-        'Want to add AI chat to your website too?',
-      ],
+      prompt: 'Encourage the pro to review AI call recordings and add the chat widget to their website.',
+      tools: [],
     },
+
     engaged: {
-      conditions: [
-        'AI has handled 10 or more calls',
-        'AI has handled a call within the last 7 days',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'ai.call_count', negated: false },
+          { variable: 'ai.recent_activity', negated: false },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'success',
+          title: 'AI Champion',
+          content: 'Your AI is booking jobs while you work! Review transcripts to improve responses.',
+        },
       ],
-      advancedTips: ['Review call transcripts weekly to improve AI responses', 'Add FAQs for questions the AI struggles with'],
-      successMetrics: ['Call booking rate over 40%', 'Customer satisfaction over 4 stars'],
-      upsellOpportunities: ['Add more AI minutes for busier seasons'],
-      repTalkingPoints: ['Your AI is booking jobs while you work!', 'Want to expand its capabilities?'],
+      navigation: [
+        {
+          name: 'AI Call History',
+          description: 'Review AI-handled calls',
+          url: '/ai-voice/calls',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'AI Q&A Training',
+          description: 'Improve AI responses with custom Q&A',
+          url: '/settings/ai-voice/qa',
+          navigationType: 'hcp_navigate',
+        },
+      ],
+      calendlyTypes: [],
+      prompt: 'Help the experienced AI user optimize responses and expand capabilities.',
+      tools: [],
     },
   },
 };

@@ -16,6 +16,7 @@ export const paymentsFeature: Feature = {
           { variable: 'addons.payments', negated: true },
         ],
       },
+      onboardingItems: [],
       contextSnippets: [
         {
           id: 'value-prop',
@@ -40,63 +41,121 @@ export const paymentsFeature: Feature = {
       calendlyTypes: [
         { name: 'Payments Demo', url: 'https://calendly.com/hcp-sales/payments', team: 'sales', description: 'Learn about payment processing' },
       ],
-      upgradePrompt: 'Help the pro understand the value of accepting online payments.',
-      upgradeTools: [],
+      prompt: 'Help the pro understand the value of accepting online payments.',
+      tools: [],
     },
+
     attached: {
-      conditions: [
-        'Pro has Payments feature in their plan',
-        'Pro has not connected their bank account or verified identity',
-      ],
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.payments', negated: false },
+          { variable: 'payments.setup_complete', negated: true },
+        ],
+      },
       onboardingItems: [
         { itemId: 'connect-payment-processor', required: true },
         { itemId: 'collect-first-payment', required: true, stageSpecificNote: 'Process a test payment or your first real payment' },
         { itemId: 'rep-intro-call-completed', required: false },
       ],
-      requiredTasks: [
-        { id: 'payments-connect-stripe', title: 'Connect your bank account', description: 'Link your bank account to receive payments', estimatedMinutes: 5, actionUrl: '/settings/payments/connect', completionEvent: 'payments.stripe_connected' },
-        { id: 'payments-verify', title: 'Verify your identity', description: 'Quick verification required by payment processors', estimatedMinutes: 3, actionUrl: '/settings/payments/verify', completionEvent: 'payments.verified' },
+      contextSnippets: [
+        {
+          id: 'setup-overview',
+          title: 'Setup Overview',
+          content: 'Connect your bank account and verify your identity to start accepting card payments.',
+        },
       ],
-      productPages: [{ name: 'Payment Settings', path: '/settings/payments', description: 'Configure payment processing' }],
-      tooltipUrls: [],
-      videos: [],
+      navigation: [
+        {
+          name: 'Payment Settings',
+          description: 'Configure payment processing',
+          url: '/settings/payments',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Payments Setup Guide',
+          description: 'Step-by-step guide for setting up payments',
+          url: 'https://help.housecallpro.com/payments-setup',
+          navigationType: 'hcp_help_article',
+        },
+      ],
       calendlyTypes: [
         { name: 'Payments Setup Help', url: 'https://calendly.com/hcp-onboarding/payments', team: 'onboarding', description: 'Get help connecting payments' },
       ],
-      mcpTools: [],
-      agenticPrompt: 'Help the pro connect their bank account and verify their identity to start accepting payments.',
-      repTalkingPoints: [
-        'You need to connect your bank account to receive payments',
-        'Verification is quick and required by payment processors',
-        'Once set up, you can accept cards immediately',
-      ],
+      prompt: 'Help the pro connect their bank account and verify their identity to start accepting payments.',
+      tools: [],
     },
+
     activated: {
-      conditions: [
-        'Pro has connected bank account and verified identity',
-        'Pro has processed fewer than 10 payments',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'payments.setup_complete', negated: false },
+          { variable: 'payments.processed_count', negated: true },
+        ],
+      },
+      onboardingItems: [
+        { itemId: 'enable-card-on-file', required: false, stageSpecificNote: 'Let customers save cards for faster checkout' },
       ],
-      optionalTasks: [
-        { id: 'payments-enable-tips', title: 'Enable tipping', description: 'Let customers add tips when paying', estimatedMinutes: 1, actionUrl: '/settings/payments/tips', completionEvent: 'payments.tips_enabled' },
+      contextSnippets: [
+        {
+          id: 'ready-to-go',
+          title: 'Ready to Go',
+          content: 'You\'re all set to accept payments! Enable tipping to boost your technicians\' earnings.',
+        },
       ],
-      productPages: [{ name: 'Payments Dashboard', path: '/payments', description: 'View payment history and payouts' }],
+      navigation: [
+        {
+          name: 'Payments Dashboard',
+          description: 'View payment history and payouts',
+          url: '/payments',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Payment Settings',
+          description: 'Manage tips and card on file',
+          url: '/settings/payments',
+          navigationType: 'hcp_navigate',
+        },
+      ],
       calendlyTypes: [],
-      mcpTools: [],
-      engagementPrompt: 'Encourage the pro to process their first payment and enable tipping.',
-      repTalkingPoints: [
-        'You\'re all set to accept payments!',
-        'Try enabling tips - your techs will appreciate it',
-      ],
+      prompt: 'Encourage the pro to process their first payment and enable tipping.',
+      tools: [],
     },
+
     engaged: {
-      conditions: [
-        'Pro has processed 10 or more payments',
-        'Pro has processed a payment within the last 30 days',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'payments.processed_count', negated: false },
+          { variable: 'payments.recent_activity', negated: false },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'success',
+          title: 'Great Payment Adoption',
+          content: 'Your customers love paying by card! Consider financing options for larger jobs.',
+        },
       ],
-      advancedTips: ['Enable tipping for your field techs', 'Use the mobile app to take payments on-site'],
-      successMetrics: ['Card payment adoption over 70%'],
-      upsellOpportunities: ['Consider financing options for larger jobs'],
-      repTalkingPoints: ['Great payment adoption!', 'Have you tried our financing options?'],
+      navigation: [
+        {
+          name: 'Payments Dashboard',
+          description: 'View payment history and payouts',
+          url: '/payments',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Financing Options',
+          description: 'Offer financing for larger jobs',
+          url: '/settings/financing',
+          navigationType: 'hcp_navigate',
+        },
+      ],
+      calendlyTypes: [],
+      prompt: 'Help the experienced payments user optimize their payment collection and explore financing options.',
+      tools: [],
     },
   },
 };

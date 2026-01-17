@@ -20,6 +20,8 @@ export const invoicingFeature: Feature = {
         ],
       },
 
+      onboardingItems: [],
+
       contextSnippets: [
         {
           id: 'value-prop',
@@ -64,7 +66,7 @@ export const invoicingFeature: Feature = {
         },
       ],
 
-      upgradePrompt: `You are helping a home service professional understand the value of Housecall Pro's invoicing feature.
+      prompt: `You are helping a home service professional understand the value of Housecall Pro's invoicing feature.
 
 Key value proposition: "Look professional to your customers and automate your invoice reminders to ensure you get paid."
 
@@ -78,7 +80,7 @@ When discussing invoicing:
 
 Be conversational and helpful, not pushy. Focus on solving their payment collection challenges.`,
 
-      upgradeTools: [
+      tools: [
         {
           name: 'check_plan_eligibility',
           description: 'Check if the pro is eligible to add invoicing to their current plan',
@@ -108,10 +110,13 @@ Be conversational and helpful, not pushy. Focus on solving their payment collect
     // ATTACHED - Pro has access but hasn't completed required setup
     // =========================================================================
     attached: {
-      conditions: [
-        'Pro has Invoicing feature in their plan',
-        'Pro has not completed all required setup tasks',
-      ],
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.invoicing', negated: false },
+          { variable: 'invoicing.setup_complete', negated: true },
+        ],
+      },
 
       onboardingItems: [
         { itemId: 'create-first-customer', required: true },
@@ -120,75 +125,44 @@ Be conversational and helpful, not pushy. Focus on solving their payment collect
         { itemId: 'rep-intro-call-completed', required: false },
       ],
 
-      requiredTasks: [
+      contextSnippets: [
         {
-          id: 'invoicing-create-customer',
-          title: 'Create your first customer',
-          description:
-            'Add a customer to your account so you have someone to send invoices to.',
-          estimatedMinutes: 2,
-          actionUrl: '/customers/new',
-          completionEvent: 'customer.created',
-        },
-        {
-          id: 'invoicing-create-job',
-          title: 'Create a job',
-          description:
-            'Create a job for your customer. Jobs track the work you do and generate invoices.',
-          estimatedMinutes: 3,
-          actionUrl: '/jobs/new',
-          completionEvent: 'job.created',
-        },
-        {
-          id: 'invoicing-complete-job',
-          title: 'Mark the job as done',
-          description:
-            'When you finish the work, mark the job as done to generate an invoice.',
-          estimatedMinutes: 1,
-          actionUrl: '/jobs',
-          completionEvent: 'job.completed',
+          id: 'setup-overview',
+          title: 'Setup Overview',
+          content: 'Get started with invoicing in 3 simple steps: create a customer, create a job, and complete the job to generate your first invoice.',
         },
       ],
 
-      productPages: [
+      navigation: [
         {
           name: 'Customers',
-          path: '/customers',
-          description: 'Manage your customer list',
+          description: 'Add and manage your customer list',
+          url: '/customers',
+          navigationType: 'hcp_navigate',
         },
         {
           name: 'Jobs',
-          path: '/jobs',
-          description: 'Create and manage jobs',
+          description: 'Create and manage jobs for your customers',
+          url: '/jobs',
+          navigationType: 'hcp_navigate',
         },
         {
           name: 'Invoices',
-          path: '/invoices',
           description: 'View and send invoices',
+          url: '/invoices',
+          navigationType: 'hcp_navigate',
         },
-      ],
-
-      tooltipUrls: [
-        '/tooltips/create-customer',
-        '/tooltips/create-job',
-        '/tooltips/complete-job',
-      ],
-
-      videos: [
         {
-          title: 'Creating Your First Customer',
+          name: 'Creating Your First Customer',
+          description: 'Video tutorial on adding customers to your account',
           url: 'https://www.youtube.com/watch?v=hcp-create-customer',
-          durationSeconds: 120,
+          navigationType: 'hcp_video',
         },
         {
-          title: 'Creating and Completing Jobs',
+          name: 'Jobs Workflow Guide',
+          description: 'Video explaining how to create and complete jobs',
           url: 'https://www.youtube.com/watch?v=hcp-jobs-workflow',
-          durationSeconds: 180,
-        },
-        {
-          title: 'Sending Your First Invoice',
-          url: 'https://www.youtube.com/watch?v=hcp-send-invoice',
-          durationSeconds: 150,
+          navigationType: 'hcp_video',
         },
       ],
 
@@ -201,7 +175,23 @@ Be conversational and helpful, not pushy. Focus on solving their payment collect
         },
       ],
 
-      mcpTools: [
+      prompt: `You are helping a home service professional set up invoicing in Housecall Pro.
+
+They have access to invoicing but need to complete these steps before sending their first invoice:
+1. Create a customer
+2. Create a job for that customer
+3. Mark the job as done (this generates the invoice)
+
+Use the available tools to help them:
+- Use get_setup_progress to see what they've already done
+- Use create_customer to add their first customer
+- Use create_job to create a job for that customer
+- Use complete_job to mark the job done
+
+Guide them step-by-step. After each action, confirm what was done and explain the next step.
+Be encouraging - they're almost ready to send their first professional invoice!`,
+
+      tools: [
         {
           name: 'create_customer',
           description: 'Create a new customer in the pro\'s account',
@@ -237,78 +227,57 @@ Be conversational and helpful, not pushy. Focus on solving their payment collect
           },
         },
       ],
-
-      agenticPrompt: `You are helping a home service professional set up invoicing in Housecall Pro.
-
-They have access to invoicing but need to complete these steps before sending their first invoice:
-1. Create a customer
-2. Create a job for that customer
-3. Mark the job as done (this generates the invoice)
-
-Use the available tools to help them:
-- Use get_setup_progress to see what they've already done
-- Use create_customer to add their first customer
-- Use create_job to create a job for that customer
-- Use complete_job to mark the job done
-
-Guide them step-by-step. After each action, confirm what was done and explain the next step.
-Be encouraging - they're almost ready to send their first professional invoice!`,
-
-      repTalkingPoints: [
-        'I see you have invoicing but haven\'t sent your first invoice yet',
-        'You need to create a customer and complete a job first - it only takes a few minutes',
-        'Would you like me to walk you through creating your first customer?',
-        'Once you complete a job, the invoice is automatically generated',
-        'I can book you a call with our onboarding team if you\'d prefer hands-on help',
-      ],
     },
 
     // =========================================================================
     // ACTIVATED - Pro has completed setup, ready to send invoices
     // =========================================================================
     activated: {
-      conditions: [
-        'Pro has completed all required setup tasks',
-        'Pro has sent fewer than 5 invoices',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'invoicing.setup_complete', negated: false },
+          { variable: 'invoicing.sent_count', negated: true }, // Less than threshold
+        ],
+      },
+
+      onboardingItems: [
+        { itemId: 'send-first-invoice', required: true },
+        { itemId: 'add-company-logo', required: false, stageSpecificNote: 'Makes invoices look more professional' },
+        { itemId: 'setup-payment-reminders', required: false },
       ],
 
-      optionalTasks: [
+      contextSnippets: [
         {
-          id: 'invoicing-add-logo',
-          title: 'Add your company logo',
-          description: 'Make your invoices look more professional with your logo',
-          estimatedMinutes: 2,
-          actionUrl: '/settings/branding',
-          completionEvent: 'branding.logo_uploaded',
+          id: 'ready-to-go',
+          title: 'Ready to Go',
+          content: 'You\'re all set up! Send your first invoice and start getting paid faster.',
         },
         {
-          id: 'invoicing-setup-reminders',
-          title: 'Configure payment reminders',
-          description: 'Set up automatic reminders so customers pay on time',
-          estimatedMinutes: 3,
-          actionUrl: '/settings/invoicing/reminders',
-          completionEvent: 'invoicing.reminders_configured',
-        },
-        {
-          id: 'invoicing-add-payment-method',
-          title: 'Enable online payments',
-          description: 'Let customers pay invoices online with credit card',
-          estimatedMinutes: 5,
-          actionUrl: '/settings/payments',
-          completionEvent: 'payments.method_added',
+          id: 'pro-tip',
+          title: 'Pro Tip',
+          content: 'Add your company logo and set up payment reminders to look professional and reduce late payments.',
         },
       ],
 
-      productPages: [
+      navigation: [
         {
           name: 'Invoices',
-          path: '/invoices',
           description: 'View, send, and manage invoices',
+          url: '/invoices',
+          navigationType: 'hcp_navigate',
         },
         {
           name: 'Invoice Settings',
-          path: '/settings/invoicing',
           description: 'Customize invoice appearance and reminders',
+          url: '/settings/invoicing',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Branding Settings',
+          description: 'Add your logo and customize colors',
+          url: '/settings/branding',
+          navigationType: 'hcp_navigate',
         },
       ],
 
@@ -321,7 +290,18 @@ Be encouraging - they're almost ready to send their first professional invoice!`
         },
       ],
 
-      mcpTools: [
+      prompt: `You are helping a home service professional who has invoicing set up and is ready to use it.
+
+Encourage them to:
+1. Send their first invoice if they haven't yet
+2. Add their logo for a professional look
+3. Set up payment reminders to get paid faster
+4. Enable online payments for customer convenience
+
+Use the tools to help them send invoices and manage payments.
+Celebrate their progress - they're on their way to getting paid faster!`,
+
+      tools: [
         {
           name: 'send_invoice',
           description: 'Send an invoice to a customer',
@@ -345,62 +325,92 @@ Be encouraging - they're almost ready to send their first professional invoice!`
           },
         },
       ],
-
-      engagementPrompt: `You are helping a home service professional who has invoicing set up and is ready to use it.
-
-Encourage them to:
-1. Send their first invoice if they haven't yet
-2. Add their logo for a professional look
-3. Set up payment reminders to get paid faster
-4. Enable online payments for customer convenience
-
-Use the tools to help them send invoices and manage payments.
-Celebrate their progress - they're on their way to getting paid faster!`,
-
-      repTalkingPoints: [
-        'Great news - you\'re all set up to send invoices!',
-        'Have you sent your first invoice yet? I can help you with that',
-        'Pro tip: Adding your logo makes invoices look more professional',
-        'Setting up automatic payment reminders can really help with collections',
-        'Would you like to enable online payments? Customers love paying by card',
-      ],
     },
 
     // =========================================================================
     // ENGAGED - Pro is actively using invoicing
     // =========================================================================
     engaged: {
-      conditions: [
-        'Pro has sent 5 or more invoices',
-        'Pro has used Invoicing within the last 30 days',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'invoicing.sent_count', negated: false }, // Above threshold
+          { variable: 'invoicing.recent_activity', negated: false },
+        ],
+      },
+
+      onboardingItems: [],
+
+      contextSnippets: [
+        {
+          id: 'success',
+          title: 'Success',
+          content: 'You\'re using invoicing like a pro! Here are some advanced tips to get paid even faster.',
+        },
+        {
+          id: 'advanced-tip',
+          title: 'Advanced Tip',
+          content: 'Use invoice templates for common job types to save time. Set up recurring invoices for repeat customers.',
+        },
       ],
 
-      advancedTips: [
-        'Use invoice templates for common job types to save time',
-        'Set up recurring invoices for repeat customers',
-        'Review your aging report weekly to catch overdue invoices early',
-        'Consider offering a small discount for early payment',
-        'Use the mobile app to send invoices right from the job site',
+      navigation: [
+        {
+          name: 'Invoices',
+          description: 'View, send, and manage invoices',
+          url: '/invoices',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Aging Report',
+          description: 'Track overdue invoices and collections',
+          url: '/reports/aging',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Invoice Templates',
+          description: 'Create templates for common job types',
+          url: '/settings/invoicing/templates',
+          navigationType: 'hcp_navigate',
+        },
       ],
 
-      successMetrics: [
-        'Average time to payment under 7 days',
-        'Less than 10% of invoices overdue',
-        'Online payment adoption over 50%',
+      calendlyTypes: [
+        {
+          name: 'Success Check-in',
+          url: 'https://calendly.com/hcp-success/check-in',
+          team: 'support',
+          description: 'Review your invoicing success and get advanced tips',
+        },
       ],
 
-      upsellOpportunities: [
-        'Upgrade to accept ACH payments for lower fees',
-        'Add automated follow-up campaigns for overdue invoices',
-        'Enable financing options for larger jobs',
-      ],
+      prompt: `You are helping an experienced invoicing user get even more value from the feature.
 
-      repTalkingPoints: [
-        'Great job! You\'re using invoicing like a pro',
-        'I see you\'ve sent [X] invoices - your customers must love the professional look',
-        'Have you tried setting up recurring invoices for your repeat customers?',
-        'Your average time to payment is looking good - want some tips to make it even faster?',
-        'You might be interested in our ACH payment option for lower transaction fees',
+They're already successfully using invoicing. Help them with:
+1. Advanced tips like invoice templates and recurring invoices
+2. Troubleshooting any payment collection issues
+3. Answering power-user questions
+4. Identifying opportunities for related features (payments, financing)
+
+Celebrate their success and help them optimize their workflow.`,
+
+      tools: [
+        {
+          name: 'get_invoice_analytics',
+          description: 'Get invoicing performance metrics',
+          parameters: {
+            proId: { type: 'string', description: 'The pro account ID', required: true },
+            period: { type: 'string', description: 'Time period: week, month, quarter' },
+          },
+        },
+        {
+          name: 'create_invoice_template',
+          description: 'Create a reusable invoice template',
+          parameters: {
+            name: { type: 'string', description: 'Template name', required: true },
+            lineItems: { type: 'array', description: 'Default line items' },
+          },
+        },
       ],
     },
   },

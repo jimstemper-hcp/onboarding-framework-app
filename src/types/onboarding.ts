@@ -125,6 +125,8 @@ export interface OnboardingItemDefinition {
   title: string;
   description: string;
   type: OnboardingItemType;
+  // Labels for categorization and visual representation
+  labels?: string[];
   // For in_product items - how we track completion
   completionApi?: CompletionApi;
   // For rep_facing items - instructions for the rep
@@ -148,8 +150,7 @@ export interface OnboardingItemAssignment {
 // -----------------------------------------------------------------------------
 
 /**
- * Context for when a Pro does NOT have access to the feature.
- * Focus: Help them understand value and upgrade their plan.
+ * Access condition for determining stage eligibility.
  */
 export interface AccessCondition {
   variable: string; // e.g., "jobs.invoicing", "payments.processing"
@@ -161,64 +162,32 @@ export interface AccessConditionRule {
   conditions: AccessCondition[];
 }
 
-export interface NotAttachedContext {
-  accessConditions: AccessConditionRule;
-  // Important context - value prop is always first, additional snippets can be added
-  contextSnippets: ContextSnippet[];
-  // Navigation combines sell page and learn more resources
-  navigation: NavigationItem[];
-  // Calendly event types
-  calendlyTypes: CalendlyLink[];
-  // AI prompt for upgrade flow
-  upgradePrompt: string;
-  // MCP tools for upgrade actions
-  upgradeTools: McpTool[];
-}
-
 /**
- * Context for when a Pro HAS access but hasn't completed required setup.
- * Focus: Guide them through the setup steps to activate the feature.
+ * Base stage context - all stages share these fields.
+ * This ensures consistency across all four adoption stages.
  */
-export interface AttachedContext {
-  conditions: string[];
+export interface StageContext {
+  // Access conditions that determine when a pro is in this stage
+  accessConditions: AccessConditionRule;
   // Onboarding items from the central repository
   onboardingItems: OnboardingItemAssignment[];
-  // Legacy tasks (being replaced by onboardingItems)
-  requiredTasks: OnboardingTask[];
-  productPages: ProductPage[];
-  tooltipUrls: string[];
-  videos: Video[];
+  // Important context snippets (value prop, tips, etc.)
+  contextSnippets: ContextSnippet[];
+  // Navigation links (pages, articles, videos, etc.)
+  navigation: NavigationItem[];
+  // Calendly event types for scheduling calls
   calendlyTypes: CalendlyLink[];
-  mcpTools: McpTool[];
-  agenticPrompt: string;
-  repTalkingPoints: string[];
+  // AI prompt for this stage
+  prompt: string;
+  // MCP tools available for this stage
+  tools: McpTool[];
 }
 
-/**
- * Context for when a Pro has completed setup and can use the feature.
- * Focus: Encourage first use and provide optional enhancements.
- */
-export interface ActivatedContext {
-  conditions: string[];
-  optionalTasks: OnboardingTask[];
-  productPages: ProductPage[];
-  calendlyTypes: CalendlyLink[];
-  mcpTools: McpTool[];
-  engagementPrompt: string;
-  repTalkingPoints: string[];
-}
-
-/**
- * Context for when a Pro is actively using the feature.
- * Focus: Advanced tips, success celebration, and upsell opportunities.
- */
-export interface EngagedContext {
-  conditions: string[];
-  advancedTips: string[];
-  successMetrics: string[];
-  upsellOpportunities: string[];
-  repTalkingPoints: string[];
-}
+// Type aliases for each stage - they all use the same structure now
+export type NotAttachedContext = StageContext;
+export type AttachedContext = StageContext;
+export type ActivatedContext = StageContext;
+export type EngagedContext = StageContext;
 
 // -----------------------------------------------------------------------------
 // FEATURE DEFINITION

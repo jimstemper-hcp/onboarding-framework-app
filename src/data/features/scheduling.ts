@@ -16,6 +16,7 @@ export const schedulingFeature: Feature = {
           { variable: 'addons.scheduling', negated: true },
         ],
       },
+      onboardingItems: [],
       contextSnippets: [
         {
           id: 'value-prop',
@@ -40,14 +41,18 @@ export const schedulingFeature: Feature = {
       calendlyTypes: [
         { name: 'Scheduling Demo', url: 'https://calendly.com/hcp-sales/scheduling', team: 'sales', description: 'See the scheduling features' },
       ],
-      upgradePrompt: 'Help the pro understand how scheduling and dispatching can save hours every week.',
-      upgradeTools: [],
+      prompt: 'Help the pro understand how scheduling and dispatching can save hours every week.',
+      tools: [],
     },
+
     attached: {
-      conditions: [
-        'Pro has Scheduling feature in their plan',
-        'Pro has not added team members or scheduled a job',
-      ],
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.scheduling', negated: false },
+          { variable: 'scheduling.setup_complete', negated: true },
+        ],
+      },
       onboardingItems: [
         { itemId: 'create-first-customer', required: true },
         { itemId: 'set-business-hours', required: true },
@@ -56,57 +61,108 @@ export const schedulingFeature: Feature = {
         { itemId: 'dispatch-first-job', required: false, stageSpecificNote: 'Required only if you have team members' },
         { itemId: 'rep-training-session-scheduled', required: false },
       ],
-      requiredTasks: [
-        { id: 'scheduling-add-employee', title: 'Add your team members', description: 'Add employees so you can assign jobs to them', estimatedMinutes: 3, actionUrl: '/settings/team', completionEvent: 'team.member_added' },
-        { id: 'scheduling-set-hours', title: 'Set your business hours', description: 'Define when your business is available for jobs', estimatedMinutes: 2, actionUrl: '/settings/schedule', completionEvent: 'schedule.hours_set' },
-        { id: 'scheduling-first-job', title: 'Schedule your first job', description: 'Create and schedule a job to see the calendar in action', estimatedMinutes: 3, actionUrl: '/calendar', completionEvent: 'job.scheduled' },
+      contextSnippets: [
+        {
+          id: 'setup-overview',
+          title: 'Setup Overview',
+          content: 'Set your business hours, add team members, and schedule your first job.',
+        },
       ],
-      productPages: [
-        { name: 'Calendar', path: '/calendar', description: 'View and manage schedule' },
-        { name: 'Team Settings', path: '/settings/team', description: 'Manage team members' },
-      ],
-      tooltipUrls: [],
-      videos: [
-        { title: 'Using the Dispatch Board', url: 'https://youtube.com/watch?v=hcp-dispatch', durationSeconds: 240 },
+      navigation: [
+        {
+          name: 'Calendar',
+          description: 'View and manage schedule',
+          url: '/calendar',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Team Settings',
+          description: 'Manage team members',
+          url: '/settings/team',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Using the Dispatch Board',
+          description: 'Video tutorial on dispatching jobs',
+          url: 'https://youtube.com/watch?v=hcp-dispatch',
+          navigationType: 'hcp_video',
+        },
       ],
       calendlyTypes: [
         { name: 'Scheduling Setup', url: 'https://calendly.com/hcp-onboarding/scheduling', team: 'onboarding', description: 'Get help setting up your schedule' },
       ],
-      mcpTools: [],
-      agenticPrompt: 'Guide the pro through adding team members, setting business hours, and scheduling their first job.',
-      repTalkingPoints: [
-        'First, let\'s add your team members so you can assign jobs',
-        'Setting your business hours helps customers book at the right times',
-        'Try scheduling a job to see how the calendar works',
-      ],
+      prompt: 'Guide the pro through adding team members, setting business hours, and scheduling their first job.',
+      tools: [],
     },
+
     activated: {
-      conditions: [
-        'Pro has added team members and scheduled at least one job',
-        'Pro has scheduled fewer than 20 jobs total',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'scheduling.setup_complete', negated: false },
+          { variable: 'scheduling.job_count', negated: true },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'ready-to-go',
+          title: 'Scheduling Active',
+          content: 'Your scheduling is set up! Enable online booking to let customers book 24/7.',
+        },
       ],
-      optionalTasks: [
-        { id: 'scheduling-online-booking', title: 'Enable online booking', description: 'Let customers book appointments from your website', estimatedMinutes: 5, actionUrl: '/settings/online-booking', completionEvent: 'booking.enabled' },
-        { id: 'scheduling-sync-calendar', title: 'Sync with Google Calendar', description: 'Keep your personal calendar in sync', estimatedMinutes: 2, actionUrl: '/settings/integrations/google', completionEvent: 'calendar.synced' },
+      navigation: [
+        {
+          name: 'Calendar',
+          description: 'Your team schedule',
+          url: '/calendar',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Online Booking',
+          description: 'Let customers book online',
+          url: '/settings/online-booking',
+          navigationType: 'hcp_navigate',
+        },
       ],
-      productPages: [{ name: 'Calendar', path: '/calendar', description: 'Your team schedule' }],
       calendlyTypes: [],
-      mcpTools: [],
-      engagementPrompt: 'Encourage the pro to enable online booking and sync their calendar.',
-      repTalkingPoints: [
-        'Your scheduling is all set up!',
-        'Have you considered enabling online booking? Customers love being able to book 24/7',
-      ],
+      prompt: 'Encourage the pro to enable online booking and sync their calendar.',
+      tools: [],
     },
+
     engaged: {
-      conditions: [
-        'Pro has scheduled 20 or more jobs',
-        'Pro has scheduled a job within the last 7 days',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'scheduling.job_count', negated: false },
+          { variable: 'scheduling.recent_activity', negated: false },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'success',
+          title: 'Scheduling Pro',
+          content: 'Your scheduling is running smoothly! Add GPS tracking to see your team in real-time.',
+        },
       ],
-      advancedTips: ['Use the mobile app to check and update schedules on the go', 'Set up job tags to organize by job type'],
-      successMetrics: ['Schedule utilization over 80%', 'Drive time under 20% of day'],
-      upsellOpportunities: ['Add GPS tracking to see your team in real-time'],
-      repTalkingPoints: ['Your scheduling is running smoothly!', 'Want to see your team\'s locations in real-time?'],
+      navigation: [
+        {
+          name: 'Calendar',
+          description: 'Your team schedule',
+          url: '/calendar',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'GPS Tracking',
+          description: 'See your team\'s location in real-time',
+          url: '/settings/gps',
+          navigationType: 'hcp_navigate',
+        },
+      ],
+      calendlyTypes: [],
+      prompt: 'Help the experienced scheduling user optimize routes and explore GPS tracking.',
+      tools: [],
     },
   },
 };

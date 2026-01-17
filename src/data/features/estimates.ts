@@ -16,6 +16,7 @@ export const estimatesFeature: Feature = {
           { variable: 'addons.estimates', negated: true },
         ],
       },
+      onboardingItems: [],
       contextSnippets: [
         {
           id: 'value-prop',
@@ -40,14 +41,18 @@ export const estimatesFeature: Feature = {
       calendlyTypes: [
         { name: 'Estimates Demo', url: 'https://calendly.com/hcp-sales/estimates', team: 'sales', description: 'See how estimates work' },
       ],
-      upgradePrompt: 'Help the pro understand how professional estimates can help them win more jobs.',
-      upgradeTools: [],
+      prompt: 'Help the pro understand how professional estimates can help them win more jobs.',
+      tools: [],
     },
+
     attached: {
-      conditions: [
-        'Pro has Estimates feature in their plan',
-        'Pro has not added items to price book or created an estimate',
-      ],
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'billing.plan.estimates', negated: false },
+          { variable: 'estimates.setup_complete', negated: true },
+        ],
+      },
       onboardingItems: [
         { itemId: 'create-first-customer', required: true },
         { itemId: 'add-price-book-item', required: true, stageSpecificNote: 'Add your most common services to speed up estimate creation' },
@@ -55,55 +60,108 @@ export const estimatesFeature: Feature = {
         { itemId: 'send-first-estimate', required: true },
         { itemId: 'rep-documented-goals', required: false },
       ],
-      requiredTasks: [
-        { id: 'estimates-price-book', title: 'Add items to your price book', description: 'Set up your services and prices for quick estimates', estimatedMinutes: 5, actionUrl: '/settings/price-book', completionEvent: 'pricebook.item_added' },
-        { id: 'estimates-create-first', title: 'Create your first estimate', description: 'Send a professional estimate to a customer', estimatedMinutes: 3, actionUrl: '/estimates/new', completionEvent: 'estimate.created' },
+      contextSnippets: [
+        {
+          id: 'setup-overview',
+          title: 'Setup Overview',
+          content: 'Set up your price book and create your first estimate to start winning more jobs.',
+        },
       ],
-      productPages: [
-        { name: 'Estimates', path: '/estimates', description: 'View and create estimates' },
-        { name: 'Price Book', path: '/settings/price-book', description: 'Manage your services and prices' },
-      ],
-      tooltipUrls: [],
-      videos: [
-        { title: 'Creating Your First Estimate', url: 'https://youtube.com/watch?v=hcp-estimates', durationSeconds: 180 },
+      navigation: [
+        {
+          name: 'Estimates',
+          description: 'View and create estimates',
+          url: '/estimates',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Price Book',
+          description: 'Manage your services and prices',
+          url: '/settings/price-book',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Creating Your First Estimate',
+          description: 'Video tutorial on creating estimates',
+          url: 'https://youtube.com/watch?v=hcp-estimates',
+          navigationType: 'hcp_video',
+        },
       ],
       calendlyTypes: [
         { name: 'Estimates Setup', url: 'https://calendly.com/hcp-onboarding/estimates', team: 'onboarding', description: 'Get help with estimates' },
       ],
-      mcpTools: [],
-      agenticPrompt: 'Guide the pro through setting up their price book and creating their first estimate.',
-      repTalkingPoints: [
-        'Let\'s set up your price book first - it makes creating estimates much faster',
-        'Once you have your services listed, estimates take just seconds to create',
-      ],
+      prompt: 'Guide the pro through setting up their price book and creating their first estimate.',
+      tools: [],
     },
+
     activated: {
-      conditions: [
-        'Pro has created at least one estimate',
-        'Pro has sent fewer than 10 estimates',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'estimates.setup_complete', negated: false },
+          { variable: 'estimates.sent_count', negated: true },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'ready-to-go',
+          title: 'Estimates Active',
+          content: 'You\'re ready to send estimates! Try Good/Better/Best pricing to increase your average ticket.',
+        },
       ],
-      optionalTasks: [
-        { id: 'estimates-templates', title: 'Create estimate templates', description: 'Save time with templates for common jobs', estimatedMinutes: 5, actionUrl: '/settings/templates/estimates', completionEvent: 'template.created' },
-        { id: 'estimates-good-better-best', title: 'Set up Good/Better/Best options', description: 'Give customers pricing options to increase ticket size', estimatedMinutes: 5, actionUrl: '/settings/estimates/options', completionEvent: 'estimates.options_enabled' },
+      navigation: [
+        {
+          name: 'Estimates',
+          description: 'Manage your estimates',
+          url: '/estimates',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Estimate Templates',
+          description: 'Save time with templates',
+          url: '/settings/templates/estimates',
+          navigationType: 'hcp_navigate',
+        },
       ],
-      productPages: [{ name: 'Estimates', path: '/estimates', description: 'Manage your estimates' }],
       calendlyTypes: [],
-      mcpTools: [],
-      engagementPrompt: 'Encourage the pro to create templates and try Good/Better/Best pricing.',
-      repTalkingPoints: [
-        'You\'re ready to send estimates!',
-        'Pro tip: Good/Better/Best options can increase your average ticket by 30%',
-      ],
+      prompt: 'Encourage the pro to create templates and try Good/Better/Best pricing.',
+      tools: [],
     },
+
     engaged: {
-      conditions: [
-        'Pro has sent 10 or more estimates',
-        'Pro has sent an estimate within the last 14 days',
+      accessConditions: {
+        operator: 'AND',
+        conditions: [
+          { variable: 'estimates.sent_count', negated: false },
+          { variable: 'estimates.recent_activity', negated: false },
+        ],
+      },
+      onboardingItems: [],
+      contextSnippets: [
+        {
+          id: 'success',
+          title: 'Estimates Pro',
+          content: 'Your estimates are winning jobs! Consider adding financing for larger jobs.',
+        },
       ],
-      advancedTips: ['Use the mobile app to create estimates on-site', 'Follow up on pending estimates within 24 hours'],
-      successMetrics: ['Estimate approval rate over 60%', 'Average time to approval under 2 days'],
-      upsellOpportunities: ['Add financing options for larger estimates'],
-      repTalkingPoints: ['Your estimate approval rate is looking good!', 'Have you tried offering financing for larger jobs?'],
+      navigation: [
+        {
+          name: 'Estimates',
+          description: 'Manage your estimates',
+          url: '/estimates',
+          navigationType: 'hcp_navigate',
+        },
+        {
+          name: 'Financing Options',
+          description: 'Offer financing for larger estimates',
+          url: '/settings/financing',
+          navigationType: 'hcp_navigate',
+        },
+      ],
+      calendlyTypes: [],
+      prompt: 'Help the experienced estimates user optimize approval rates and explore financing.',
+      tools: [],
     },
   },
 };
