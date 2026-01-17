@@ -48,6 +48,11 @@ export const reviewsFeature: Feature = {
         'Pro has Reviews feature in their plan',
         'Pro has not connected Google Business Profile or enabled review requests',
       ],
+      onboardingItems: [
+        { itemId: 'connect-google-business', required: true },
+        { itemId: 'enable-review-requests', required: true, stageSpecificNote: 'Automatically request reviews after completed jobs' },
+        { itemId: 'rep-reviewed-account-health', required: false },
+      ],
       requiredTasks: [
         { id: 'reviews-connect-google', title: 'Connect your Google Business Profile', description: 'Link your Google listing to manage reviews in one place', estimatedMinutes: 3, actionUrl: '/settings/reviews/google', completionEvent: 'reviews.google_connected' },
         { id: 'reviews-enable-requests', title: 'Enable review requests', description: 'Automatically ask for reviews after completed jobs', estimatedMinutes: 2, actionUrl: '/settings/reviews/requests', completionEvent: 'reviews.requests_enabled' },

@@ -48,6 +48,13 @@ export const estimatesFeature: Feature = {
         'Pro has Estimates feature in their plan',
         'Pro has not added items to price book or created an estimate',
       ],
+      onboardingItems: [
+        { itemId: 'create-first-customer', required: true },
+        { itemId: 'add-price-book-item', required: true, stageSpecificNote: 'Add your most common services to speed up estimate creation' },
+        { itemId: 'create-first-estimate', required: true },
+        { itemId: 'send-first-estimate', required: true },
+        { itemId: 'rep-documented-goals', required: false },
+      ],
       requiredTasks: [
         { id: 'estimates-price-book', title: 'Add items to your price book', description: 'Set up your services and prices for quick estimates', estimatedMinutes: 5, actionUrl: '/settings/price-book', completionEvent: 'pricebook.item_added' },
         { id: 'estimates-create-first', title: 'Create your first estimate', description: 'Send a professional estimate to a customer', estimatedMinutes: 3, actionUrl: '/estimates/new', completionEvent: 'estimate.created' },

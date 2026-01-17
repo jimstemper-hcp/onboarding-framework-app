@@ -48,6 +48,12 @@ export const automatedCommsFeature: Feature = {
         'Pro has Automated Communications in their plan',
         'Pro has not enabled on-my-way texts or verified their phone number',
       ],
+      onboardingItems: [
+        { itemId: 'enable-appointment-reminders', required: true },
+        { itemId: 'enable-on-my-way', required: true },
+        { itemId: 'customize-message-templates', required: false, stageSpecificNote: 'Personalize your messages for better engagement' },
+        { itemId: 'rep-sent-welcome-resources', required: false },
+      ],
       requiredTasks: [
         { id: 'comms-enable-otw', title: 'Enable on-my-way texts', description: 'Automatically notify customers when you\'re heading to their location', estimatedMinutes: 2, actionUrl: '/settings/communications/otw', completionEvent: 'comms.otw_enabled' },
         { id: 'comms-verify-number', title: 'Verify your business phone', description: 'Verify your number so texts come from your business', estimatedMinutes: 3, actionUrl: '/settings/communications/verify', completionEvent: 'comms.number_verified' },

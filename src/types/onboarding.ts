@@ -95,6 +95,54 @@ export interface OnboardingTask {
   completionEvent: string;
 }
 
+// =============================================================================
+// CENTRALIZED ONBOARDING ITEMS
+// =============================================================================
+
+/**
+ * Two types of onboarding items:
+ * - in_product: Completion tracked via product API/events
+ * - rep_facing: Manually tracked by reps (checkbox in admin panel)
+ */
+export type OnboardingItemType = 'in_product' | 'rep_facing';
+
+/**
+ * API completion tracking info for in_product items.
+ * This is the information we get from feature teams.
+ */
+export interface CompletionApi {
+  eventName: string;           // e.g., "customer.created", "job.completed"
+  endpoint?: string;           // Optional: API endpoint to check status
+  description: string;         // Human-readable: "Triggers when a customer is created"
+}
+
+/**
+ * A centralized onboarding item definition.
+ * These are stored in a central repository and referenced by features.
+ */
+export interface OnboardingItemDefinition {
+  id: string;
+  title: string;
+  description: string;
+  type: OnboardingItemType;
+  // For in_product items - how we track completion
+  completionApi?: CompletionApi;
+  // For rep_facing items - instructions for the rep
+  repInstructions?: string;
+  estimatedMinutes?: number;
+  actionUrl?: string;          // Where to go to complete this item
+}
+
+/**
+ * When an onboarding item is assigned to a feature's stage.
+ * This references the central item and adds stage-specific context.
+ */
+export interface OnboardingItemAssignment {
+  itemId: string;              // References OnboardingItemDefinition.id
+  required: boolean;           // Required vs optional for this stage
+  stageSpecificNote?: string;  // Optional context for this feature's use
+}
+
 // -----------------------------------------------------------------------------
 // STAGE-SPECIFIC CONTEXT TYPES
 // -----------------------------------------------------------------------------
@@ -133,6 +181,9 @@ export interface NotAttachedContext {
  */
 export interface AttachedContext {
   conditions: string[];
+  // Onboarding items from the central repository
+  onboardingItems: OnboardingItemAssignment[];
+  // Legacy tasks (being replaced by onboardingItems)
   requiredTasks: OnboardingTask[];
   productPages: ProductPage[];
   tooltipUrls: string[];

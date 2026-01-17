@@ -54,6 +54,12 @@ export const csrAiFeature: Feature = {
         'Pro has AI Voice Agent in their plan',
         'Pro has not configured greeting, services, or call forwarding',
       ],
+      onboardingItems: [
+        { itemId: 'configure-ai-greeting', required: true },
+        { itemId: 'configure-ai-services', required: true, stageSpecificNote: 'List all services so the AI can answer questions accurately' },
+        { itemId: 'setup-call-forwarding', required: true },
+        { itemId: 'rep-training-session-completed', required: false, stageSpecificNote: 'AI Voice training session covers best practices' },
+      ],
       requiredTasks: [
         { id: 'csr-configure-greeting', title: 'Configure your AI greeting', description: 'Customize how the AI introduces itself and your business', estimatedMinutes: 5, actionUrl: '/settings/ai-voice/greeting', completionEvent: 'ai.greeting_configured' },
         { id: 'csr-set-services', title: 'Tell the AI your services', description: 'List the services you offer so the AI can answer questions', estimatedMinutes: 5, actionUrl: '/settings/ai-voice/services', completionEvent: 'ai.services_configured' },

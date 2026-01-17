@@ -113,6 +113,13 @@ Be conversational and helpful, not pushy. Focus on solving their payment collect
         'Pro has not completed all required setup tasks',
       ],
 
+      onboardingItems: [
+        { itemId: 'create-first-customer', required: true },
+        { itemId: 'create-first-job', required: true },
+        { itemId: 'complete-first-job', required: true, stageSpecificNote: 'Completing a job generates the invoice automatically' },
+        { itemId: 'rep-intro-call-completed', required: false },
+      ],
+
       requiredTasks: [
         {
           id: 'invoicing-create-customer',

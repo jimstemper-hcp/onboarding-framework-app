@@ -48,6 +48,14 @@ export const schedulingFeature: Feature = {
         'Pro has Scheduling feature in their plan',
         'Pro has not added team members or scheduled a job',
       ],
+      onboardingItems: [
+        { itemId: 'create-first-customer', required: true },
+        { itemId: 'set-business-hours', required: true },
+        { itemId: 'add-team-member', required: false, stageSpecificNote: 'Skip if you work alone' },
+        { itemId: 'schedule-first-job', required: true },
+        { itemId: 'dispatch-first-job', required: false, stageSpecificNote: 'Required only if you have team members' },
+        { itemId: 'rep-training-session-scheduled', required: false },
+      ],
       requiredTasks: [
         { id: 'scheduling-add-employee', title: 'Add your team members', description: 'Add employees so you can assign jobs to them', estimatedMinutes: 3, actionUrl: '/settings/team', completionEvent: 'team.member_added' },
         { id: 'scheduling-set-hours', title: 'Set your business hours', description: 'Define when your business is available for jobs', estimatedMinutes: 2, actionUrl: '/settings/schedule', completionEvent: 'schedule.hours_set' },

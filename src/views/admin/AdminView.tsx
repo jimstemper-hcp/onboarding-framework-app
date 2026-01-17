@@ -20,18 +20,12 @@ import {
   TextField,
   Stack,
   Chip,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  List,
-  ListItem,
   Select,
   MenuItem,
   FormControl,
   alpha,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
@@ -40,7 +34,6 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import BuildIcon from '@mui/icons-material/Build';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
-import WebIcon from '@mui/icons-material/Web';
 import FlagRoundedIcon from '@mui/icons-material/FlagRounded';
 import { useOnboarding } from '../../context';
 import ToggleButton from '@mui/material/ToggleButton';
@@ -48,6 +41,10 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import TextSnippetIcon from '@mui/icons-material/TextSnippet';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import ChecklistIcon from '@mui/icons-material/Checklist';
+import PersonIcon from '@mui/icons-material/Person';
+import ComputerIcon from '@mui/icons-material/Computer';
+import { onboardingItems } from '../../data';
 import type {
   Feature,
   AdoptionStage,
@@ -60,6 +57,8 @@ import type {
   NavigationItem,
   NavigationType,
   ContextSnippet,
+  OnboardingItemAssignment,
+  OnboardingItemDefinition,
 } from '../../types';
 
 // Palette for consistent styling
@@ -169,7 +168,7 @@ function EditableStringList({
   );
 }
 
-// Task editor component
+// Task editor component (stacked format for readability)
 function TaskEditor({
   tasks,
   onChange,
@@ -177,8 +176,6 @@ function TaskEditor({
   tasks: OnboardingTask[];
   onChange: (tasks: OnboardingTask[]) => void;
 }) {
-  const [expanded, setExpanded] = useState<string | false>(false);
-
   const handleTaskChange = (index: number, field: keyof OnboardingTask, value: string | number) => {
     const updated = [...tasks];
     updated[index] = { ...updated[index], [field]: value };
@@ -195,7 +192,6 @@ function TaskEditor({
       completionEvent: '',
     };
     onChange([...tasks, newTask]);
-    setExpanded(newTask.id);
   };
 
   const handleRemoveTask = (index: number) => {
@@ -204,77 +200,68 @@ function TaskEditor({
 
   return (
     <Box>
-      {tasks.map((task, index) => (
-        <Accordion
-          key={task.id}
-          expanded={expanded === task.id}
-          onChange={(_, isExpanded) => setExpanded(isExpanded ? task.id : false)}
-          sx={{ mb: 1 }}
-        >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1, mr: 2 }}>
-              <Typography variant="body2" fontWeight={500}>
-                {task.title}
-              </Typography>
-              <Chip label={`${task.estimatedMinutes} min`} size="small" />
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Stack spacing={2}>
+      <Stack spacing={1.5}>
+        {tasks.map((task, index) => (
+          <Paper key={task.id} variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Task {index + 1}
+                </Typography>
+                <IconButton size="small" onClick={() => handleRemoveTask(index)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Stack>
               <TextField
-                label="Title"
                 size="small"
+                label="Title"
                 fullWidth
                 value={task.title}
                 onChange={(e) => handleTaskChange(index, 'title', e.target.value)}
               />
               <TextField
-                label="Description"
                 size="small"
+                label="Description"
                 fullWidth
                 multiline
                 rows={2}
                 value={task.description}
                 onChange={(e) => handleTaskChange(index, 'description', e.target.value)}
               />
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  label="Est. Minutes"
-                  size="small"
-                  type="number"
-                  value={task.estimatedMinutes}
-                  onChange={(e) => handleTaskChange(index, 'estimatedMinutes', parseInt(e.target.value) || 0)}
-                  sx={{ width: 120 }}
-                />
-                <TextField
-                  label="Action URL"
-                  size="small"
-                  fullWidth
-                  value={task.actionUrl}
-                  onChange={(e) => handleTaskChange(index, 'actionUrl', e.target.value)}
-                />
-              </Stack>
               <TextField
-                label="Completion Event"
                 size="small"
+                label="Estimated Minutes"
+                type="number"
+                fullWidth
+                value={task.estimatedMinutes}
+                onChange={(e) => handleTaskChange(index, 'estimatedMinutes', parseInt(e.target.value) || 0)}
+              />
+              <TextField
+                size="small"
+                label="Action URL"
+                fullWidth
+                value={task.actionUrl}
+                onChange={(e) => handleTaskChange(index, 'actionUrl', e.target.value)}
+                InputProps={{
+                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
+                }}
+              />
+              <TextField
+                size="small"
+                label="Completion Event"
                 fullWidth
                 value={task.completionEvent}
                 onChange={(e) => handleTaskChange(index, 'completionEvent', e.target.value)}
                 helperText="Event name that triggers task completion"
+                InputProps={{
+                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
+                }}
               />
-              <Button
-                color="error"
-                size="small"
-                startIcon={<DeleteIcon />}
-                onClick={() => handleRemoveTask(index)}
-              >
-                Remove Task
-              </Button>
             </Stack>
-          </AccordionDetails>
-        </Accordion>
-      ))}
-      <Button startIcon={<AddIcon />} onClick={handleAddTask} sx={{ mt: 1 }}>
+          </Paper>
+        ))}
+      </Stack>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddTask} sx={{ mt: 1.5 }}>
         Add Task
       </Button>
     </Box>
@@ -347,7 +334,7 @@ function ContextSnippetsEditor({
   );
 }
 
-// Navigation editor (table-like format)
+// Navigation editor (stacked format for readability)
 function NavigationEditor({
   items,
   onChange,
@@ -375,44 +362,59 @@ function NavigationEditor({
 
   return (
     <Box>
-      {/* Column headers */}
-      <Stack direction="row" spacing={1} sx={{ mb: 1, px: 1 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 2 }}>
-          Name
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 3 }}>
-          LLM Description
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ width: 150 }}>
-          Navigation Type
-        </Typography>
-        <Box sx={{ width: 80 }} />
-      </Stack>
-
-      <Stack spacing={1}>
+      <Stack spacing={1.5}>
         {items.map((item, index) => (
-          <Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
-            <Stack direction="row" spacing={1} alignItems="flex-start">
+          <Paper key={index} variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Navigation Item {index + 1}
+                </Typography>
+                <Stack direction="row" spacing={0.5}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenUrl(item.url)}
+                    disabled={!item.url}
+                    title="Open URL"
+                  >
+                    <OpenInNewIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleRemoveItem(index)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              </Stack>
               <TextField
                 size="small"
-                placeholder="Name"
+                label="Name"
+                fullWidth
                 value={item.name}
                 onChange={(e) => handleItemChange(index, 'name', e.target.value)}
-                sx={{ flex: 2 }}
               />
               <TextField
                 size="small"
-                placeholder="LLM description"
+                label="LLM Description"
+                fullWidth
+                multiline
+                rows={2}
                 value={item.description}
                 onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                sx={{ flex: 3 }}
-                multiline
-                maxRows={2}
               />
-              <FormControl size="small" sx={{ width: 150 }}>
+              <TextField
+                size="small"
+                label="URL"
+                fullWidth
+                value={item.url}
+                onChange={(e) => handleItemChange(index, 'url', e.target.value)}
+                InputProps={{
+                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
+                }}
+              />
+              <FormControl size="small" fullWidth>
                 <Select
                   value={item.navigationType}
                   onChange={(e) => handleItemChange(index, 'navigationType', e.target.value)}
+                  displayEmpty
                 >
                   {navigationTypes.map((type) => (
                     <MenuItem key={type.value} value={type.value}>
@@ -421,42 +423,18 @@ function NavigationEditor({
                   ))}
                 </Select>
               </FormControl>
-              <Stack direction="row" spacing={0.5}>
-                <IconButton
-                  size="small"
-                  onClick={() => handleOpenUrl(item.url)}
-                  disabled={!item.url}
-                  title="Open URL"
-                >
-                  <OpenInNewIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" onClick={() => handleRemoveItem(index)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Stack>
             </Stack>
-            <TextField
-              size="small"
-              fullWidth
-              placeholder="URL"
-              value={item.url}
-              onChange={(e) => handleItemChange(index, 'url', e.target.value)}
-              sx={{ mt: 1 }}
-              InputProps={{
-                sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
-              }}
-            />
           </Paper>
         ))}
       </Stack>
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddItem} sx={{ mt: 1 }}>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddItem} sx={{ mt: 1.5 }}>
         Add Navigation
       </Button>
     </Box>
   );
 }
 
-// Calendly editor component (table-like format)
+// Calendly editor component (stacked format for readability)
 function CalendlyEditor({
   links,
   onChange,
@@ -484,73 +462,66 @@ function CalendlyEditor({
 
   return (
     <Box>
-      {/* Column headers */}
-      <Stack direction="row" spacing={1} sx={{ mb: 1, px: 1 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 2 }}>
-          Calendly Call Type
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 3 }}>
-          Description
-        </Typography>
-        <Box sx={{ width: 80 }} />
-      </Stack>
-
-      <Stack spacing={1}>
+      <Stack spacing={1.5}>
         {links.map((link, index) => (
-          <Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
-            <Stack direction="row" spacing={1} alignItems="flex-start">
+          <Paper key={index} variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Calendly Event Type {index + 1}
+                </Typography>
+                <Stack direction="row" spacing={0.5}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenUrl(link.url)}
+                    disabled={!link.url}
+                    title="Open URL"
+                  >
+                    <OpenInNewIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleRemoveLink(index)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              </Stack>
               <TextField
                 size="small"
-                placeholder="Call type name"
+                label="Call Type Name"
+                fullWidth
                 value={link.name}
                 onChange={(e) => handleLinkChange(index, 'name', e.target.value)}
-                sx={{ flex: 2 }}
               />
               <TextField
                 size="small"
-                placeholder="Description"
+                label="Description"
+                fullWidth
+                multiline
+                rows={2}
                 value={link.description}
                 onChange={(e) => handleLinkChange(index, 'description', e.target.value)}
-                sx={{ flex: 3 }}
-                multiline
-                maxRows={2}
               />
-              <Stack direction="row" spacing={0.5}>
-                <IconButton
-                  size="small"
-                  onClick={() => handleOpenUrl(link.url)}
-                  disabled={!link.url}
-                  title="Open URL"
-                >
-                  <OpenInNewIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" onClick={() => handleRemoveLink(index)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Stack>
+              <TextField
+                size="small"
+                label="Calendly URL"
+                fullWidth
+                value={link.url}
+                onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
+                InputProps={{
+                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
+                }}
+              />
             </Stack>
-            <TextField
-              size="small"
-              fullWidth
-              placeholder="Calendly URL"
-              value={link.url}
-              onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-              sx={{ mt: 1 }}
-              InputProps={{
-                sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
-              }}
-            />
           </Paper>
         ))}
       </Stack>
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddLink} sx={{ mt: 1 }}>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddLink} sx={{ mt: 1.5 }}>
         Add Calendly Event Type
       </Button>
     </Box>
   );
 }
 
-// MCP Tool editor component (table-like format)
+// MCP Tool editor component (stacked format for readability)
 function ToolEditor({
   tools,
   onChange,
@@ -558,8 +529,6 @@ function ToolEditor({
   tools: McpTool[];
   onChange: (tools: McpTool[]) => void;
 }) {
-  const [expandedTool, setExpandedTool] = useState<number | null>(null);
-
   const handleToolChange = (index: number, field: keyof McpTool, value: string | object) => {
     const updated = [...tools];
     updated[index] = { ...updated[index], [field]: value };
@@ -576,63 +545,43 @@ function ToolEditor({
 
   return (
     <Box>
-      {/* Column headers */}
-      <Stack direction="row" spacing={1} sx={{ mb: 1, px: 1 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 2 }}>
-          Tool Name
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ flex: 4 }}>
-          Tool Description
-        </Typography>
-        <Box sx={{ width: 80 }} />
-      </Stack>
-
-      <Stack spacing={1}>
+      <Stack spacing={1.5}>
         {tools.map((tool, index) => (
-          <Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
-            <Stack direction="row" spacing={1} alignItems="flex-start">
+          <Paper key={index} variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Tool {index + 1}
+                </Typography>
+                <IconButton size="small" onClick={() => handleRemoveTool(index)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Stack>
               <TextField
                 size="small"
-                placeholder="tool_name"
+                label="Tool Name"
+                fullWidth
                 value={tool.name}
                 onChange={(e) => handleToolChange(index, 'name', e.target.value)}
-                sx={{ flex: 2 }}
                 InputProps={{
                   sx: { fontFamily: 'monospace' },
                 }}
               />
               <TextField
                 size="small"
-                placeholder="Tool description"
+                label="Tool Description"
+                fullWidth
+                multiline
+                rows={2}
                 value={tool.description}
                 onChange={(e) => handleToolChange(index, 'description', e.target.value)}
-                sx={{ flex: 4 }}
-                multiline
-                maxRows={2}
               />
-              <Stack direction="row" spacing={0.5}>
-                <IconButton
-                  size="small"
-                  onClick={() => setExpandedTool(expandedTool === index ? null : index)}
-                  title="Edit parameters"
-                  sx={{
-                    bgcolor: expandedTool === index ? alpha(palette.primary, 0.1) : 'transparent',
-                  }}
-                >
-                  <BuildIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" onClick={() => handleRemoveTool(index)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-            </Stack>
-            {expandedTool === index && (
               <TextField
                 size="small"
+                label="Parameters (JSON)"
                 fullWidth
                 multiline
                 rows={4}
-                placeholder='{"param": {"type": "string", "description": "..."}}'
                 value={JSON.stringify(tool.parameters, null, 2)}
                 onChange={(e) => {
                   try {
@@ -641,24 +590,23 @@ function ToolEditor({
                     // Invalid JSON, don't update
                   }
                 }}
-                sx={{ mt: 1 }}
                 InputProps={{
                   sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
                 }}
                 helperText="JSON object defining tool parameters"
               />
-            )}
+            </Stack>
           </Paper>
         ))}
       </Stack>
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddTool} sx={{ mt: 1 }}>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddTool} sx={{ mt: 1.5 }}>
         Add Tool
       </Button>
     </Box>
   );
 }
 
-// Video editor component
+// Video editor component (stacked format for readability)
 function VideoEditor({
   videos,
   onChange,
@@ -680,49 +628,368 @@ function VideoEditor({
     onChange(videos.filter((_, i) => i !== index));
   };
 
+  const handleOpenUrl = (url: string) => {
+    if (url) window.open(url, '_blank');
+  };
+
   return (
     <Box>
-      <List dense>
+      <Stack spacing={1.5}>
         {videos.map((video, index) => (
-          <ListItem key={index} sx={{ px: 0 }}>
-            <Stack direction="row" spacing={1} sx={{ flex: 1 }} alignItems="center">
+          <Paper key={index} variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Video {index + 1}
+                </Typography>
+                <Stack direction="row" spacing={0.5}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleOpenUrl(video.url)}
+                    disabled={!video.url}
+                    title="Open URL"
+                  >
+                    <OpenInNewIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton size="small" onClick={() => handleRemoveVideo(index)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+              </Stack>
               <TextField
                 size="small"
-                placeholder="Title"
+                label="Title"
+                fullWidth
                 value={video.title}
                 onChange={(e) => handleVideoChange(index, 'title', e.target.value)}
-                sx={{ flex: 1 }}
               />
               <TextField
                 size="small"
-                placeholder="URL"
+                label="URL"
+                fullWidth
                 value={video.url}
                 onChange={(e) => handleVideoChange(index, 'url', e.target.value)}
-                sx={{ flex: 2 }}
+                InputProps={{
+                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
+                }}
               />
               <TextField
                 size="small"
-                placeholder="Seconds"
+                label="Duration (seconds)"
                 type="number"
+                fullWidth
                 value={video.durationSeconds}
                 onChange={(e) => handleVideoChange(index, 'durationSeconds', parseInt(e.target.value) || 0)}
-                sx={{ width: 100 }}
               />
-              <IconButton size="small" onClick={() => handleRemoveVideo(index)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
             </Stack>
-          </ListItem>
+          </Paper>
         ))}
-      </List>
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddVideo}>
+      </Stack>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddVideo} sx={{ mt: 1.5 }}>
         Add Video
       </Button>
     </Box>
   );
 }
 
-// Product page editor component
+// Onboarding items editor component (for centralized onboarding items)
+function OnboardingItemsEditor({
+  assignments,
+  onChange,
+}: {
+  assignments: OnboardingItemAssignment[];
+  onChange: (assignments: OnboardingItemAssignment[]) => void;
+}) {
+  const [showAddDialog, setShowAddDialog] = useState(false);
+
+  // Get assigned item IDs
+  const assignedIds = assignments.map((a) => a.itemId);
+
+  // Get available items (not yet assigned)
+  const availableItems = onboardingItems.filter((item) => !assignedIds.includes(item.id));
+
+  const handleAddItem = (itemId: string) => {
+    onChange([...assignments, { itemId, required: true }]);
+    setShowAddDialog(false);
+  };
+
+  const handleRemoveItem = (itemId: string) => {
+    onChange(assignments.filter((a) => a.itemId !== itemId));
+  };
+
+  const handleToggleRequired = (itemId: string) => {
+    onChange(
+      assignments.map((a) =>
+        a.itemId === itemId ? { ...a, required: !a.required } : a
+      )
+    );
+  };
+
+  const handleUpdateNote = (itemId: string, note: string) => {
+    onChange(
+      assignments.map((a) =>
+        a.itemId === itemId ? { ...a, stageSpecificNote: note || undefined } : a
+      )
+    );
+  };
+
+  // Get item definition by ID
+  const getItemDef = (itemId: string): OnboardingItemDefinition | undefined => {
+    return onboardingItems.find((item) => item.id === itemId);
+  };
+
+  return (
+    <Box>
+      <Stack spacing={1.5}>
+        {assignments.map((assignment) => {
+          const itemDef = getItemDef(assignment.itemId);
+          if (!itemDef) return null;
+
+          return (
+            <Paper key={assignment.itemId} variant="outlined" sx={{ p: 2 }}>
+              <Stack spacing={1.5}>
+                {/* Header row */}
+                <Stack direction="row" spacing={1} alignItems="flex-start" justifyContent="space-between">
+                  <Box sx={{ flex: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      {itemDef.type === 'in_product' ? (
+                        <ComputerIcon fontSize="small" sx={{ color: palette.primary }} />
+                      ) : (
+                        <PersonIcon fontSize="small" sx={{ color: palette.secondary }} />
+                      )}
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        {itemDef.title}
+                      </Typography>
+                      <Chip
+                        label={itemDef.type === 'in_product' ? 'In-Product' : 'Rep-Facing'}
+                        size="small"
+                        sx={{
+                          height: 20,
+                          fontSize: '0.7rem',
+                          bgcolor:
+                            itemDef.type === 'in_product'
+                              ? alpha(palette.primary, 0.1)
+                              : alpha(palette.secondary, 0.1),
+                          color: itemDef.type === 'in_product' ? palette.primary : palette.secondary,
+                        }}
+                      />
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      {itemDef.description}
+                    </Typography>
+                  </Box>
+                  <IconButton size="small" onClick={() => handleRemoveItem(assignment.itemId)}>
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Stack>
+
+                {/* Completion API info for in_product items */}
+                {itemDef.type === 'in_product' && itemDef.completionApi && (
+                  <Box
+                    sx={{
+                      bgcolor: alpha(palette.primary, 0.04),
+                      p: 1.5,
+                      borderRadius: 1,
+                      border: `1px solid ${alpha(palette.primary, 0.1)}`,
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Completion Tracking
+                    </Typography>
+                    <Stack direction="row" spacing={2} sx={{ mt: 0.5 }}>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontFamily: 'monospace',
+                          fontSize: '0.8rem',
+                          color: palette.grey[800],
+                        }}
+                      >
+                        Event: {itemDef.completionApi.eventName}
+                      </Typography>
+                      {itemDef.completionApi.endpoint && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontFamily: 'monospace',
+                            fontSize: '0.8rem',
+                            color: palette.grey[600],
+                          }}
+                        >
+                          Endpoint: {itemDef.completionApi.endpoint}
+                        </Typography>
+                      )}
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                      {itemDef.completionApi.description}
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* Rep instructions for rep_facing items */}
+                {itemDef.type === 'rep_facing' && itemDef.repInstructions && (
+                  <Box
+                    sx={{
+                      bgcolor: alpha(palette.secondary, 0.04),
+                      p: 1.5,
+                      borderRadius: 1,
+                      border: `1px solid ${alpha(palette.secondary, 0.1)}`,
+                    }}
+                  >
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Rep Instructions
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 0.5 }}>
+                      {itemDef.repInstructions}
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* Required toggle and stage-specific note */}
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <Select
+                      value={assignment.required ? 'required' : 'optional'}
+                      onChange={(e) => handleToggleRequired(assignment.itemId)}
+                    >
+                      <MenuItem value="required">Required</MenuItem>
+                      <MenuItem value="optional">Optional</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="Stage-specific note"
+                    placeholder="Add context for this feature's use of this item..."
+                    value={assignment.stageSpecificNote || ''}
+                    onChange={(e) => handleUpdateNote(assignment.itemId, e.target.value)}
+                  />
+                </Stack>
+
+                {/* Meta info */}
+                <Stack direction="row" spacing={2}>
+                  {itemDef.estimatedMinutes && (
+                    <Typography variant="caption" color="text.secondary">
+                      ~{itemDef.estimatedMinutes} min
+                    </Typography>
+                  )}
+                  {itemDef.actionUrl && (
+                    <Typography
+                      variant="caption"
+                      sx={{ fontFamily: 'monospace', color: palette.grey[600] }}
+                    >
+                      {itemDef.actionUrl}
+                    </Typography>
+                  )}
+                </Stack>
+              </Stack>
+            </Paper>
+          );
+        })}
+      </Stack>
+
+      {/* Add item button */}
+      <Button
+        startIcon={<AddIcon />}
+        size="small"
+        onClick={() => setShowAddDialog(true)}
+        sx={{ mt: 1.5 }}
+        disabled={availableItems.length === 0}
+      >
+        Add Onboarding Item
+      </Button>
+
+      {/* Add item dialog */}
+      <Dialog
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Add Onboarding Item</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Select an item from the central repository to add to this feature's stage.
+          </Typography>
+          <Stack spacing={1}>
+            {availableItems.map((item) => (
+              <Paper
+                key={item.id}
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: alpha(palette.primary, 0.04),
+                    borderColor: palette.primary,
+                  },
+                }}
+                onClick={() => handleAddItem(item.id)}
+              >
+                <Stack direction="row" spacing={1} alignItems="flex-start">
+                  <Box sx={{ flex: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      {item.type === 'in_product' ? (
+                        <ComputerIcon fontSize="small" sx={{ color: palette.primary }} />
+                      ) : (
+                        <PersonIcon fontSize="small" sx={{ color: palette.secondary }} />
+                      )}
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        {item.title}
+                      </Typography>
+                      <Chip
+                        label={item.type === 'in_product' ? 'In-Product' : 'Rep-Facing'}
+                        size="small"
+                        sx={{
+                          height: 18,
+                          fontSize: '0.65rem',
+                          bgcolor:
+                            item.type === 'in_product'
+                              ? alpha(palette.primary, 0.1)
+                              : alpha(palette.secondary, 0.1),
+                          color: item.type === 'in_product' ? palette.primary : palette.secondary,
+                        }}
+                      />
+                    </Stack>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      {item.description}
+                    </Typography>
+                    {item.type === 'in_product' && item.completionApi && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          mt: 0.5,
+                          display: 'block',
+                          fontFamily: 'monospace',
+                          color: palette.grey[600],
+                        }}
+                      >
+                        Event: {item.completionApi.eventName}
+                      </Typography>
+                    )}
+                  </Box>
+                  <Button size="small" variant="outlined">
+                    Add
+                  </Button>
+                </Stack>
+              </Paper>
+            ))}
+            {availableItems.length === 0 && (
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                All available items have been added to this stage.
+              </Typography>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowAddDialog(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
+
+// Product page editor component (stacked format for readability)
 function ProductPageEditor({
   pages,
   onChange,
@@ -746,39 +1013,49 @@ function ProductPageEditor({
 
   return (
     <Box>
-      <List dense>
+      <Stack spacing={1.5}>
         {pages.map((page, index) => (
-          <ListItem key={index} sx={{ px: 0 }}>
-            <Stack direction="row" spacing={1} sx={{ flex: 1 }} alignItems="center">
+          <Paper key={index} variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1.5}>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                  Product Page {index + 1}
+                </Typography>
+                <IconButton size="small" onClick={() => handleRemovePage(index)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Stack>
               <TextField
                 size="small"
-                placeholder="Page Name"
+                label="Page Name"
+                fullWidth
                 value={page.name}
                 onChange={(e) => handlePageChange(index, 'name', e.target.value)}
-                sx={{ flex: 1 }}
               />
               <TextField
                 size="small"
-                placeholder="Path"
+                label="Path"
+                fullWidth
                 value={page.path}
                 onChange={(e) => handlePageChange(index, 'path', e.target.value)}
-                sx={{ flex: 1 }}
+                InputProps={{
+                  sx: { fontFamily: 'monospace', fontSize: '0.85rem' },
+                }}
               />
               <TextField
                 size="small"
-                placeholder="Description"
+                label="Description"
+                fullWidth
+                multiline
+                rows={2}
                 value={page.description}
                 onChange={(e) => handlePageChange(index, 'description', e.target.value)}
-                sx={{ flex: 2 }}
               />
-              <IconButton size="small" onClick={() => handleRemovePage(index)}>
-                <DeleteIcon fontSize="small" />
-              </IconButton>
             </Stack>
-          </ListItem>
+          </Paper>
         ))}
-      </List>
-      <Button startIcon={<AddIcon />} size="small" onClick={handleAddPage}>
+      </Stack>
+      <Button startIcon={<AddIcon />} size="small" onClick={handleAddPage} sx={{ mt: 1.5 }}>
         Add Product Page
       </Button>
     </Box>
@@ -1080,7 +1357,26 @@ function AttachedEditor({
       </Paper>
 
       <Paper sx={{ p: 3 }}>
-        <SectionHeader icon={<TaskAltIcon />} title="Required Tasks" count={context.requiredTasks.length} />
+        <SectionHeader
+          icon={<ChecklistIcon />}
+          title="Onboarding Items"
+          count={context.onboardingItems?.length || 0}
+        />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Centralized onboarding items assigned to this feature. These items are tracked once across all features -
+          if a pro completes "Create a customer" for invoicing, it's also complete for estimates.
+        </Typography>
+        <OnboardingItemsEditor
+          assignments={context.onboardingItems || []}
+          onChange={(items) => updateContext({ onboardingItems: items })}
+        />
+      </Paper>
+
+      <Paper sx={{ p: 3 }}>
+        <SectionHeader icon={<TaskAltIcon />} title="Legacy Tasks" count={context.requiredTasks.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Legacy tasks (being migrated to Onboarding Items above). Tasks the pro must complete to activate this feature.
+        </Typography>
         <TaskEditor
           tasks={context.requiredTasks}
           onChange={(tasks) => updateContext({ requiredTasks: tasks })}
@@ -1088,7 +1384,10 @@ function AttachedEditor({
       </Paper>
 
       <Paper sx={{ p: 3 }}>
-        <SectionHeader icon={<WebIcon />} title="Product Pages" count={context.productPages.length} />
+        <SectionHeader icon={<LinkIcon />} title="Navigation" count={context.productPages.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Product pages and navigation destinations for this feature.
+        </Typography>
         <ProductPageEditor
           pages={context.productPages}
           onChange={(pages) => updateContext({ productPages: pages })}
@@ -1097,6 +1396,9 @@ function AttachedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<VideoLibraryIcon />} title="Tutorial Videos" count={context.videos.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Video tutorials to help pros set up and use this feature.
+        </Typography>
         <VideoEditor
           videos={context.videos}
           onChange={(videos) => updateContext({ videos: videos })}
@@ -1105,6 +1407,9 @@ function AttachedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Event Types" count={context.calendlyTypes.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Calendly call types for onboarding assistance with this feature.
+        </Typography>
         <CalendlyEditor
           links={context.calendlyTypes}
           onChange={(links) => updateContext({ calendlyTypes: links })}
@@ -1113,6 +1418,9 @@ function AttachedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<BuildIcon />} title="Tools" count={context.mcpTools.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          MCP tools the AI can use to help with feature setup.
+        </Typography>
         <ToolEditor
           tools={context.mcpTools}
           onChange={(tools) => updateContext({ mcpTools: tools })}
@@ -1136,6 +1444,9 @@ function AttachedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TipsAndUpdatesIcon />} title="Rep Talking Points" count={context.repTalkingPoints.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Talking points for frontline reps when discussing this feature.
+        </Typography>
         <EditableStringList
           items={context.repTalkingPoints}
           onChange={(points) => updateContext({ repTalkingPoints: points })}
@@ -1177,6 +1488,9 @@ function ActivatedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TaskAltIcon />} title="Optional Tasks" count={context.optionalTasks.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Optional tasks to enhance the pro's use of this feature.
+        </Typography>
         <TaskEditor
           tasks={context.optionalTasks}
           onChange={(tasks) => updateContext({ optionalTasks: tasks })}
@@ -1184,7 +1498,10 @@ function ActivatedEditor({
       </Paper>
 
       <Paper sx={{ p: 3 }}>
-        <SectionHeader icon={<WebIcon />} title="Product Pages" count={context.productPages.length} />
+        <SectionHeader icon={<LinkIcon />} title="Navigation" count={context.productPages.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Product pages and navigation destinations for this feature.
+        </Typography>
         <ProductPageEditor
           pages={context.productPages}
           onChange={(pages) => updateContext({ productPages: pages })}
@@ -1193,6 +1510,9 @@ function ActivatedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Event Types" count={context.calendlyTypes.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Calendly call types for support and success calls.
+        </Typography>
         <CalendlyEditor
           links={context.calendlyTypes}
           onChange={(links) => updateContext({ calendlyTypes: links })}
@@ -1201,6 +1521,9 @@ function ActivatedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<BuildIcon />} title="Tools" count={context.mcpTools.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          MCP tools the AI can use to help with feature engagement.
+        </Typography>
         <ToolEditor
           tools={context.mcpTools}
           onChange={(tools) => updateContext({ mcpTools: tools })}
@@ -1224,6 +1547,9 @@ function ActivatedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TipsAndUpdatesIcon />} title="Rep Talking Points" count={context.repTalkingPoints.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Talking points for frontline reps when discussing this feature.
+        </Typography>
         <EditableStringList
           items={context.repTalkingPoints}
           onChange={(points) => updateContext({ repTalkingPoints: points })}
@@ -1265,6 +1591,9 @@ function EngagedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TipsAndUpdatesIcon />} title="Advanced Tips" count={context.advancedTips.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Advanced tips for power users of this feature.
+        </Typography>
         <EditableStringList
           items={context.advancedTips}
           onChange={(tips) => updateContext({ advancedTips: tips })}
@@ -1274,6 +1603,9 @@ function EngagedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TaskAltIcon />} title="Success Metrics" count={context.successMetrics.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Metrics that indicate successful use of this feature.
+        </Typography>
         <EditableStringList
           items={context.successMetrics}
           onChange={(metrics) => updateContext({ successMetrics: metrics })}
@@ -1283,6 +1615,9 @@ function EngagedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TipsAndUpdatesIcon />} title="Upsell Opportunities" count={context.upsellOpportunities.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Related features or upgrades to suggest to engaged pros.
+        </Typography>
         <EditableStringList
           items={context.upsellOpportunities}
           onChange={(opportunities) => updateContext({ upsellOpportunities: opportunities })}
@@ -1292,6 +1627,9 @@ function EngagedEditor({
 
       <Paper sx={{ p: 3 }}>
         <SectionHeader icon={<TipsAndUpdatesIcon />} title="Rep Talking Points" count={context.repTalkingPoints.length} />
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Talking points for frontline reps when discussing this feature.
+        </Typography>
         <EditableStringList
           items={context.repTalkingPoints}
           onChange={(points) => updateContext({ repTalkingPoints: points })}

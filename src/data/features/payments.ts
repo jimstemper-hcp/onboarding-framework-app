@@ -48,6 +48,11 @@ export const paymentsFeature: Feature = {
         'Pro has Payments feature in their plan',
         'Pro has not connected their bank account or verified identity',
       ],
+      onboardingItems: [
+        { itemId: 'connect-payment-processor', required: true },
+        { itemId: 'collect-first-payment', required: true, stageSpecificNote: 'Process a test payment or your first real payment' },
+        { itemId: 'rep-intro-call-completed', required: false },
+      ],
       requiredTasks: [
         { id: 'payments-connect-stripe', title: 'Connect your bank account', description: 'Link your bank account to receive payments', estimatedMinutes: 5, actionUrl: '/settings/payments/connect', completionEvent: 'payments.stripe_connected' },
         { id: 'payments-verify', title: 'Verify your identity', description: 'Quick verification required by payment processors', estimatedMinutes: 3, actionUrl: '/settings/payments/verify', completionEvent: 'payments.verified' },
