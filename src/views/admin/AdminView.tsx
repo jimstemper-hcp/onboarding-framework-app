@@ -64,6 +64,9 @@ import type {
   ContextSnippet,
   OnboardingItemAssignment,
   OnboardingItemDefinition,
+  OnboardingItemStatus,
+  OnboardingItemType,
+  CompletionApi,
 } from '../../types';
 
 // =============================================================================
@@ -2598,8 +2601,572 @@ function CallsManagementPage() {
 // ONBOARDING ITEMS MANAGEMENT PAGE
 // =============================================================================
 
+const onboardingItemStatusOptions: { value: OnboardingItemStatus; label: string; color: string }[] = [
+  { value: 'published', label: 'Published', color: palette.success },
+  { value: 'draft', label: 'Draft', color: palette.warning },
+  { value: 'archived', label: 'Archived', color: palette.grey[600] },
+];
+
+const onboardingItemTypeOptions: { value: OnboardingItemType; label: string; icon: React.ReactNode; color: string }[] = [
+  { value: 'in_product', label: 'In-Product', icon: <ComputerIcon fontSize="small" />, color: palette.primary },
+  { value: 'rep_facing', label: 'Rep-Facing', icon: <PersonIcon fontSize="small" />, color: palette.secondary },
+];
+
+// Create default context snippets for onboarding items
+function createDefaultOnboardingItemSnippets(description: string): ContextSnippet[] {
+  return [
+    { id: 'llm-desc', title: 'LLM Description', content: description || '' },
+    { id: 'value-statement', title: 'Value Statement', content: '' },
+  ];
+}
+
+// Create default OnboardingItemDefinition
+function createDefaultOnboardingItem(): OnboardingItemDefinition {
+  return {
+    id: '',
+    title: '',
+    status: 'draft',
+    type: 'in_product',
+    labels: [],
+    contextSnippets: createDefaultOnboardingItemSnippets(''),
+    prompt: '',
+    tools: [],
+    description: '',
+  };
+}
+
+// Onboarding Item edit modal
+function OnboardingItemEditModal({
+  item,
+  open,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  item: OnboardingItemDefinition | null;
+  open: boolean;
+  onClose: () => void;
+  onSave: (item: OnboardingItemDefinition) => void;
+  onDelete?: () => void;
+}) {
+  const [editedItem, setEditedItem] = useState<OnboardingItemDefinition>(createDefaultOnboardingItem());
+  const [activeTab, setActiveTab] = useState(0);
+  const [newLabel, setNewLabel] = useState('');
+
+  useEffect(() => {
+    if (item) {
+      // Ensure contextSnippets has the required default snippets
+      const snippets = item.contextSnippets?.length
+        ? item.contextSnippets
+        : createDefaultOnboardingItemSnippets(item.description || '');
+      setEditedItem({
+        ...createDefaultOnboardingItem(),
+        ...item,
+        contextSnippets: snippets,
+      });
+    } else {
+      setEditedItem(createDefaultOnboardingItem());
+    }
+    setActiveTab(0);
+  }, [item, open]);
+
+  // Auto-generate ID from title if empty
+  const handleTitleChange = (title: string) => {
+    const updates: Partial<OnboardingItemDefinition> = { title };
+    if (!editedItem.id || editedItem.id === generateSlugId(editedItem.title)) {
+      updates.id = generateSlugId(title);
+    }
+    setEditedItem({ ...editedItem, ...updates });
+  };
+
+  // Update context snippets
+  const handleSnippetChange = (index: number, field: 'title' | 'content', value: string) => {
+    const updated = [...(editedItem.contextSnippets || [])];
+    updated[index] = { ...updated[index], [field]: value };
+    // Update description from first snippet
+    const newDesc = index === 0 && field === 'content' ? value : editedItem.description;
+    setEditedItem({ ...editedItem, contextSnippets: updated, description: newDesc });
+  };
+
+  const handleAddSnippet = () => {
+    const newId = `snippet-${Date.now()}`;
+    setEditedItem({
+      ...editedItem,
+      contextSnippets: [...(editedItem.contextSnippets || []), { id: newId, title: 'New Context', content: '' }],
+    });
+  };
+
+  const handleRemoveSnippet = (index: number) => {
+    if (index < 2) return; // Can't remove LLM Description or Value Statement
+    setEditedItem({
+      ...editedItem,
+      contextSnippets: (editedItem.contextSnippets || []).filter((_, i) => i !== index),
+    });
+  };
+
+  // Label management
+  const handleAddLabel = () => {
+    if (newLabel.trim() && !editedItem.labels?.includes(newLabel.trim())) {
+      setEditedItem({
+        ...editedItem,
+        labels: [...(editedItem.labels || []), newLabel.trim()],
+      });
+      setNewLabel('');
+    }
+  };
+
+  const handleRemoveLabel = (label: string) => {
+    setEditedItem({
+      ...editedItem,
+      labels: (editedItem.labels || []).filter((l) => l !== label),
+    });
+  };
+
+  // Completion API handling
+  const handleCompletionApiChange = (field: keyof CompletionApi, value: string) => {
+    setEditedItem({
+      ...editedItem,
+      completionApi: {
+        eventName: editedItem.completionApi?.eventName || '',
+        description: editedItem.completionApi?.description || '',
+        ...editedItem.completionApi,
+        [field]: value,
+      },
+    });
+  };
+
+  // Build JSON payload
+  const buildJsonPayload = () => {
+    const payload: Record<string, unknown> = {
+      id: editedItem.id,
+      title: editedItem.title,
+      status: editedItem.status,
+      type: editedItem.type,
+    };
+    if (editedItem.type === 'in_product' && editedItem.completionApi) {
+      payload.completionApi = editedItem.completionApi;
+    }
+    if (editedItem.type === 'rep_facing' && editedItem.repInstructions) {
+      payload.repInstructions = editedItem.repInstructions;
+    }
+    if (editedItem.labels?.length) payload.labels = editedItem.labels;
+    payload.context = editedItem.contextSnippets;
+    if (editedItem.prompt) payload.prompt = editedItem.prompt;
+    if (editedItem.tools?.length) payload.tools = editedItem.tools;
+    if (editedItem.estimatedMinutes) payload.estimatedMinutes = editedItem.estimatedMinutes;
+    if (editedItem.actionUrl) payload.actionUrl = editedItem.actionUrl;
+    return payload;
+  };
+
+  const handleSave = () => {
+    onSave({ ...editedItem, description: editedItem.contextSnippets?.[0]?.content || '' });
+    onClose();
+  };
+
+  if (!open) return null;
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
+      <DialogTitle sx={{ pb: 0 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Typography variant="h6">
+              {item ? 'Edit Onboarding Item' : 'New Onboarding Item'}
+            </Typography>
+            {editedItem.status && (
+              <Chip
+                label={onboardingItemStatusOptions.find((s) => s.value === editedItem.status)?.label || editedItem.status}
+                size="small"
+                sx={{
+                  bgcolor: alpha(
+                    onboardingItemStatusOptions.find((s) => s.value === editedItem.status)?.color || palette.grey[600],
+                    0.1
+                  ),
+                  color: onboardingItemStatusOptions.find((s) => s.value === editedItem.status)?.color || palette.grey[600],
+                }}
+              />
+            )}
+          </Stack>
+          {onDelete && (
+            <Button
+              color="error"
+              size="small"
+              startIcon={<DeleteIcon />}
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete this onboarding item?')) {
+                  onDelete();
+                  onClose();
+                }
+              }}
+            >
+              Delete
+            </Button>
+          )}
+        </Stack>
+      </DialogTitle>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3, pt: 1 }}>
+        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+          <Tab label="Basic Info" />
+          <Tab label="Important Context" />
+          <Tab label="AI Config" />
+          <Tab label="JSON Payload" />
+        </Tabs>
+      </Box>
+
+      <DialogContent sx={{ p: 3, bgcolor: palette.grey[50] }}>
+        {/* Tab 0: Basic Info */}
+        {activeTab === 0 && (
+          <Stack spacing={3}>
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<ChecklistIcon />} title="Identity" />
+              <Stack spacing={2}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Name"
+                  value={editedItem.title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  placeholder="e.g., Create First Invoice"
+                />
+                <Stack direction="row" spacing={2}>
+                  <TextField
+                    size="small"
+                    label="ID"
+                    value={editedItem.id}
+                    onChange={(e) => setEditedItem({ ...editedItem, id: e.target.value })}
+                    placeholder="create-first-invoice"
+                    inputProps={{ style: { fontFamily: 'monospace' } }}
+                    helperText="Unique identifier"
+                    sx={{ flex: 1 }}
+                  />
+                  <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <Select
+                      value={editedItem.status || 'draft'}
+                      onChange={(e) => setEditedItem({ ...editedItem, status: e.target.value as OnboardingItemStatus })}
+                    >
+                      {onboardingItemStatusOptions.map((opt) => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: opt.color }} />
+                            <span>{opt.label}</span>
+                          </Stack>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Stack>
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<CategoryIcon />} title="Type" />
+              <FormControl fullWidth size="small">
+                <Select
+                  value={editedItem.type}
+                  onChange={(e) => setEditedItem({ ...editedItem, type: e.target.value as OnboardingItemType })}
+                >
+                  {onboardingItemTypeOptions.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Box sx={{ color: opt.color }}>{opt.icon}</Box>
+                        <span>{opt.label}</span>
+                      </Stack>
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                {editedItem.type === 'in_product'
+                  ? 'Completion is tracked automatically via product events'
+                  : 'Completion is tracked manually by reps'}
+              </Typography>
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<FlagRoundedIcon />} title="Completion Logic" />
+              {editedItem.type === 'in_product' ? (
+                <Stack spacing={2}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="Event Name"
+                    value={editedItem.completionApi?.eventName || ''}
+                    onChange={(e) => handleCompletionApiChange('eventName', e.target.value)}
+                    placeholder="e.g., invoice.created"
+                    inputProps={{ style: { fontFamily: 'monospace' } }}
+                    helperText="The event that triggers completion"
+                  />
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="API Endpoint (optional)"
+                    value={editedItem.completionApi?.endpoint || ''}
+                    onChange={(e) => handleCompletionApiChange('endpoint', e.target.value)}
+                    placeholder="e.g., /api/invoices/status"
+                    inputProps={{ style: { fontFamily: 'monospace' } }}
+                    helperText="Endpoint to check completion status"
+                  />
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="Description"
+                    value={editedItem.completionApi?.description || ''}
+                    onChange={(e) => handleCompletionApiChange('description', e.target.value)}
+                    placeholder="e.g., Triggers when the pro creates their first invoice"
+                    multiline
+                    rows={2}
+                    helperText="Human-readable explanation of when this completes"
+                  />
+                </Stack>
+              ) : (
+                <Stack spacing={2}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    label="Rep Instructions"
+                    value={editedItem.repInstructions || ''}
+                    onChange={(e) => setEditedItem({ ...editedItem, repInstructions: e.target.value })}
+                    placeholder="e.g., Mark complete after verifying the pro understands..."
+                    multiline
+                    rows={3}
+                    helperText="Instructions for reps on when to mark this complete"
+                  />
+                </Stack>
+              )}
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<CategoryIcon />} title="Labels" count={editedItem.labels?.length || 0} />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Labels for categorization and visual representation.
+              </Typography>
+              <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+                {(editedItem.labels || []).map((label) => (
+                  <Chip
+                    key={label}
+                    label={label}
+                    size="small"
+                    onDelete={() => handleRemoveLabel(label)}
+                  />
+                ))}
+                {(editedItem.labels || []).length === 0 && (
+                  <Typography variant="body2" color="text.secondary">No labels added</Typography>
+                )}
+              </Stack>
+              <Stack direction="row" spacing={1}>
+                <TextField
+                  size="small"
+                  placeholder="Add label..."
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAddLabel()}
+                  sx={{ flex: 1 }}
+                />
+                <Button variant="outlined" size="small" onClick={handleAddLabel}>Add</Button>
+              </Stack>
+            </Paper>
+          </Stack>
+        )}
+
+        {/* Tab 1: Important Context */}
+        {activeTab === 1 && (
+          <Paper sx={{ p: 3 }}>
+            <SectionHeader icon={<TextSnippetIcon />} title="Important Context" count={editedItem.contextSnippets?.length || 0} />
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Context snippets help the AI understand this onboarding item.
+            </Typography>
+            <Stack spacing={2}>
+              {(editedItem.contextSnippets || []).map((snippet, index) => (
+                <Paper key={snippet.id} variant="outlined" sx={{ p: 2 }}>
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <TextField
+                        size="small"
+                        label="Title"
+                        value={snippet.title}
+                        onChange={(e) => handleSnippetChange(index, 'title', e.target.value)}
+                        sx={{ flex: 1 }}
+                        disabled={index < 2} // LLM Description and Value Statement titles are fixed
+                      />
+                      {index < 2 && (
+                        <Chip label="Required" size="small" color="primary" variant="outlined" />
+                      )}
+                      {index >= 2 && (
+                        <IconButton size="small" onClick={() => handleRemoveSnippet(index)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </Stack>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      multiline
+                      rows={3}
+                      placeholder={
+                        index === 0 ? "Describe this item for the AI..." :
+                        index === 1 ? "Why is this valuable for the pro?" :
+                        "Additional context..."
+                      }
+                      value={snippet.content}
+                      onChange={(e) => handleSnippetChange(index, 'content', e.target.value)}
+                    />
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
+            <Button startIcon={<AddIcon />} size="small" onClick={handleAddSnippet} sx={{ mt: 2 }}>
+              Add Context Snippet
+            </Button>
+          </Paper>
+        )}
+
+        {/* Tab 2: AI Config */}
+        {activeTab === 2 && (
+          <Stack spacing={3}>
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<SmartToyIcon />} title="Prompt" />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Additional instructions for the AI when this onboarding item is relevant.
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                value={editedItem.prompt || ''}
+                onChange={(e) => setEditedItem({ ...editedItem, prompt: e.target.value })}
+                placeholder="e.g., When helping with this item, guide the pro through the invoice creation flow step by step..."
+              />
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<BuildIcon />} title="Tools" count={editedItem.tools?.length || 0} />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                MCP tools that can be used to help complete this item.
+              </Typography>
+              {(editedItem.tools?.length || 0) === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                  No tools configured
+                </Typography>
+              ) : (
+                <Stack spacing={1}>
+                  {editedItem.tools?.map((tool, i) => (
+                    <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" fontWeight={500} sx={{ fontFamily: 'monospace' }}>
+                            {tool.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {tool.description}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size="small"
+                          onClick={() => setEditedItem({
+                            ...editedItem,
+                            tools: editedItem.tools?.filter((_, idx) => idx !== i),
+                          })}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
+              <Button
+                startIcon={<AddIcon />}
+                size="small"
+                sx={{ mt: 1 }}
+                onClick={() => {
+                  const toolName = window.prompt('Enter tool name:');
+                  if (toolName) {
+                    const toolDesc = window.prompt('Enter tool description:') || '';
+                    setEditedItem({
+                      ...editedItem,
+                      tools: [...(editedItem.tools || []), { name: toolName, description: toolDesc, parameters: {} }],
+                    });
+                  }
+                }}
+              >
+                Add Tool
+              </Button>
+            </Paper>
+          </Stack>
+        )}
+
+        {/* Tab 3: JSON Payload */}
+        {activeTab === 3 && (
+          <Paper sx={{ p: 3 }}>
+            <SectionHeader icon={<TextSnippetIcon />} title="JSON Payload" />
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              This is the complete JSON representation of this onboarding item.
+            </Typography>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2,
+                bgcolor: palette.grey[800],
+                color: '#fff',
+                fontFamily: 'monospace',
+                fontSize: '0.85rem',
+                overflow: 'auto',
+                maxHeight: 500,
+              }}
+            >
+              <pre style={{ margin: 0 }}>
+                {JSON.stringify(buildJsonPayload(), null, 2)}
+              </pre>
+            </Paper>
+          </Paper>
+        )}
+      </DialogContent>
+
+      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          disabled={!editedItem.title || !editedItem.id}
+        >
+          Save Changes
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
 function OnboardingItemsManagementPage() {
   const [selectedItem, setSelectedItem] = useState<OnboardingItemDefinition | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [localItems, setLocalItems] = useState<OnboardingItemDefinition[]>(onboardingItems);
+
+  const handleEdit = (item: OnboardingItemDefinition) => {
+    setSelectedItem(item);
+    setEditorOpen(true);
+  };
+
+  const handleDelete = (item: OnboardingItemDefinition) => {
+    if (!window.confirm(`Delete "${item.title}"?`)) return;
+    setLocalItems(localItems.filter((i) => i.id !== item.id));
+  };
+
+  const handleSave = (updatedItem: OnboardingItemDefinition) => {
+    const index = localItems.findIndex((i) => i.id === selectedItem?.id);
+    if (index >= 0) {
+      const updated = [...localItems];
+      updated[index] = updatedItem;
+      setLocalItems(updated);
+    }
+    setSelectedItem(null);
+  };
+
+  const handleDeleteFromModal = () => {
+    if (!selectedItem) return;
+    setLocalItems(localItems.filter((i) => i.id !== selectedItem.id));
+    setSelectedItem(null);
+  };
 
   return (
     <Box>
@@ -2610,125 +3177,127 @@ function OnboardingItemsManagementPage() {
             Centralized repository of onboarding tasks and actions
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} disabled>Add Item</Button>
+        <Button variant="contained" startIcon={<AddIcon />} disabled>
+          Add Item
+        </Button>
       </Stack>
 
       <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: palette.grey[50] }}>
-              <TableCell sx={{ fontWeight: 600 }}>Title</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Labels</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Completion Event</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Completion</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {onboardingItems.map((item) => (
-              <TableRow key={item.id} hover>
-                <TableCell>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    {item.type === 'in_product' ? (
-                      <ComputerIcon fontSize="small" sx={{ color: palette.primary }} />
-                    ) : (
-                      <PersonIcon fontSize="small" sx={{ color: palette.secondary }} />
-                    )}
-                    <Typography fontWeight={500}>{item.title}</Typography>
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={item.type === 'in_product' ? 'In-Product' : 'Rep-Facing'}
-                    size="small"
-                    sx={{
-                      bgcolor: item.type === 'in_product' ? alpha(palette.primary, 0.1) : alpha(palette.secondary, 0.1),
-                      color: item.type === 'in_product' ? palette.primary : palette.secondary,
-                    }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                    {(item.labels || []).slice(0, 3).map((label) => (
-                      <Chip key={label} label={label} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
-                    ))}
-                    {(item.labels || []).length > 3 && (
-                      <Chip label={`+${(item.labels || []).length - 3}`} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
-                    )}
-                  </Stack>
-                </TableCell>
-                <TableCell>
-                  {item.completionApi ? (
-                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                      {item.completionApi.eventName}
-                    </Typography>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">Manual</Typography>
-                  )}
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton size="small" onClick={() => setSelectedItem(item)} sx={{ color: palette.primary }}>
-                    <EditIcon fontSize="small" />
-                  </IconButton>
+            {localItems.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                    No onboarding items defined
+                  </Typography>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              localItems.map((item) => (
+                <TableRow key={item.id} hover>
+                  <TableCell>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      {item.type === 'in_product' ? (
+                        <ComputerIcon fontSize="small" sx={{ color: palette.primary }} />
+                      ) : (
+                        <PersonIcon fontSize="small" sx={{ color: palette.secondary }} />
+                      )}
+                      <Stack>
+                        <Typography fontWeight={500}>{item.title}</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                          {item.id}
+                        </Typography>
+                      </Stack>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={item.type === 'in_product' ? 'In-Product' : 'Rep-Facing'}
+                      size="small"
+                      sx={{
+                        bgcolor: item.type === 'in_product' ? alpha(palette.primary, 0.1) : alpha(palette.secondary, 0.1),
+                        color: item.type === 'in_product' ? palette.primary : palette.secondary,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={onboardingItemStatusOptions.find((s) => s.value === item.status)?.label || 'Draft'}
+                      size="small"
+                      sx={{
+                        bgcolor: alpha(
+                          onboardingItemStatusOptions.find((s) => s.value === item.status)?.color || palette.warning,
+                          0.1
+                        ),
+                        color: onboardingItemStatusOptions.find((s) => s.value === item.status)?.color || palette.warning,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                      {(item.labels || []).slice(0, 3).map((label) => (
+                        <Chip key={label} label={label} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
+                      ))}
+                      {(item.labels || []).length > 3 && (
+                        <Chip label={`+${(item.labels || []).length - 3}`} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
+                      )}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    {item.type === 'in_product' && item.completionApi ? (
+                      <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                        {item.completionApi.eventName}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        {item.type === 'rep_facing' ? 'Manual' : '—'}
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEdit(item)}
+                      sx={{ color: palette.primary }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(item)}
+                      sx={{ color: palette.error }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      {/* Edit Item Dialog */}
-      <Dialog open={!!selectedItem} onClose={() => setSelectedItem(null)} maxWidth="md" fullWidth>
-        <DialogTitle>Edit Onboarding Item</DialogTitle>
-        <DialogContent dividers>
-          {selectedItem && (
-            <Stack spacing={2}>
-              <TextField size="small" label="Title" fullWidth value={selectedItem.title} disabled />
-              <TextField size="small" label="Description" fullWidth multiline rows={2} value={selectedItem.description} disabled />
-              <TextField size="small" label="Type" fullWidth value={selectedItem.type} disabled />
-              {selectedItem.labels && (
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Labels</Typography>
-                  <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
-                    {selectedItem.labels.map((label) => (
-                      <Chip key={label} label={label} size="small" />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-              {selectedItem.completionApi && (
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Completion API</Typography>
-                  <Paper variant="outlined" sx={{ p: 1.5, mt: 0.5, bgcolor: palette.grey[50] }}>
-                    <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                      Event: {selectedItem.completionApi.eventName}
-                    </Typography>
-                    {selectedItem.completionApi.endpoint && (
-                      <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                        Endpoint: {selectedItem.completionApi.endpoint}
-                      </Typography>
-                    )}
-                    <Typography variant="caption" color="text.secondary">
-                      {selectedItem.completionApi.description}
-                    </Typography>
-                  </Paper>
-                </Box>
-              )}
-              {selectedItem.repInstructions && (
-                <Box>
-                  <Typography variant="caption" color="text.secondary">Rep Instructions</Typography>
-                  <Paper variant="outlined" sx={{ p: 1.5, mt: 0.5, bgcolor: alpha(palette.secondary, 0.04) }}>
-                    <Typography variant="body2">{selectedItem.repInstructions}</Typography>
-                  </Paper>
-                </Box>
-              )}
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSelectedItem(null)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+      <OnboardingItemEditModal
+        item={selectedItem}
+        open={editorOpen}
+        onClose={() => {
+          setEditorOpen(false);
+          setSelectedItem(null);
+        }}
+        onSave={handleSave}
+        onDelete={selectedItem ? handleDeleteFromModal : undefined}
+      />
     </Box>
   );
 }

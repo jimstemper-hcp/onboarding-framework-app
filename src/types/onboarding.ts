@@ -186,19 +186,39 @@ export interface CompletionApi {
  * A centralized onboarding item definition.
  * These are stored in a central repository and referenced by features.
  */
+export type OnboardingItemStatus = 'published' | 'archived' | 'draft';
+
+/**
+ * A centralized onboarding item definition.
+ * These are stored in a central repository and referenced by features.
+ */
 export interface OnboardingItemDefinition {
+  // Core identity
   id: string;
   title: string;
-  description: string;
+  status?: OnboardingItemStatus;
+
+  // Type and completion
   type: OnboardingItemType;
-  // Labels for categorization and visual representation
-  labels?: string[];
   // For in_product items - how we track completion
   completionApi?: CompletionApi;
   // For rep_facing items - instructions for the rep
   repInstructions?: string;
+
+  // Categorization
+  labels?: string[];
+
+  // Context for AI/LLM (first two are "LLM Description" and "Value Statement")
+  contextSnippets?: ContextSnippet[];
+  prompt?: string;
+  tools?: McpTool[];
+
+  // Additional metadata
   estimatedMinutes?: number;
   actionUrl?: string;          // Where to go to complete this item
+
+  // Legacy field for backward compatibility
+  description: string;         // LLM description
 }
 
 /**
