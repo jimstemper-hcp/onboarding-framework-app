@@ -102,11 +102,31 @@ export interface ContextSnippet {
   content: string;
 }
 
+export type CalendlyTeam = 'sales' | 'onboarding' | 'support';
+export type CalendlyStatus = 'published' | 'archived' | 'draft';
+
+/**
+ * A Calendly call/meeting type that can be scheduled.
+ * Used across features and stages for booking calls with pros.
+ */
 export interface CalendlyLink {
+  // Core identity
+  slugId?: string;          // Unique ID (lowercase, hyphenated from name)
   name: string;
-  url: string;
-  team: 'sales' | 'onboarding' | 'support';
-  description: string;
+  status?: CalendlyStatus;
+
+  // Calendly configuration
+  team: CalendlyTeam;
+  eventType?: string;       // Calendly event type name
+  url: string;              // Calendly booking link
+
+  // Context for AI/LLM
+  contextSnippets?: ContextSnippet[];  // First one is "LLM Description"
+  prompt?: string;
+  tools?: McpTool[];
+
+  // Legacy field for backward compatibility
+  description: string;      // LLM description
 }
 
 export interface McpTool {

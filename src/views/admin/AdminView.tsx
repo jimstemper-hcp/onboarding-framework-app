@@ -53,6 +53,8 @@ import { onboardingItems } from '../../data';
 import type {
   Feature,
   CalendlyLink,
+  CalendlyTeam,
+  CalendlyStatus,
   McpTool,
   AccessConditionRule,
   NavigationItem,
@@ -786,17 +788,28 @@ function QuickAddCalendlyDialog({
   onClose: () => void;
   onAdd: (cal: CalendlyLink) => void;
 }) {
-  const [cal, setCal] = useState<CalendlyLink>({
-    name: '',
-    description: '',
-    url: '',
-    team: 'onboarding',
-  });
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [url, setUrl] = useState('');
+  const [team, setTeam] = useState<CalendlyTeam>('onboarding');
 
   const handleAdd = () => {
-    if (cal.name && cal.url) {
+    if (name && url) {
+      const slugId = generateSlugId(name);
+      const cal: CalendlyLink = {
+        slugId,
+        name,
+        status: 'draft',
+        team,
+        url,
+        contextSnippets: [{ id: 'llm-desc', title: 'LLM Description', content: description }],
+        description,
+      };
       onAdd(cal);
-      setCal({ name: '', description: '', url: '', team: 'onboarding' });
+      setName('');
+      setDescription('');
+      setUrl('');
+      setTeam('onboarding');
     }
   };
 
@@ -809,41 +822,42 @@ function QuickAddCalendlyDialog({
             size="small"
             label="Name"
             fullWidth
-            value={cal.name}
-            onChange={(e) => setCal({ ...cal, name: e.target.value })}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
           />
           <TextField
             size="small"
-            label="Description"
+            label="Description (for AI)"
             fullWidth
             multiline
             rows={2}
-            value={cal.description}
-            onChange={(e) => setCal({ ...cal, description: e.target.value })}
-          />
-          <TextField
-            size="small"
-            label="Calendly URL"
-            fullWidth
-            value={cal.url}
-            onChange={(e) => setCal({ ...cal, url: e.target.value })}
-            inputProps={{ style: { fontFamily: 'monospace' } }}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
           <FormControl size="small" fullWidth>
             <Select
-              value={cal.team}
-              onChange={(e) => setCal({ ...cal, team: e.target.value as 'sales' | 'onboarding' | 'support' })}
+              value={team}
+              onChange={(e) => setTeam(e.target.value as CalendlyTeam)}
             >
               <MenuItem value="sales">Sales</MenuItem>
               <MenuItem value="onboarding">Onboarding</MenuItem>
               <MenuItem value="support">Support</MenuItem>
             </Select>
           </FormControl>
+          <TextField
+            size="small"
+            label="Calendly Booking URL"
+            fullWidth
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            inputProps={{ style: { fontFamily: 'monospace' } }}
+            placeholder="https://calendly.com/..."
+          />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleAdd} disabled={!cal.name || !cal.url}>Add</Button>
+        <Button variant="contained" onClick={handleAdd} disabled={!name || !url}>Add</Button>
       </DialogActions>
     </Dialog>
   );
@@ -1923,23 +1937,531 @@ function NavigationManagementPage() {
 // CALLS MANAGEMENT PAGE
 // =============================================================================
 
-function CallsManagementPage() {
-  const { features } = useOnboarding();
+const calendlyTeamOptions: { value: CalendlyTeam; label: string; color: string }[] = [
+  { value: 'sales', label: 'Sales', color: palette.warning },
+  { value: 'onboarding', label: 'Onboarding', color: palette.primary },
+  { value: 'support', label: 'Support', color: palette.grey[600] },
+];
 
-  // Collect all unique calendly items across all features/stages
-  const allCallItems: { featureName: string; stageName: string; item: CalendlyLink }[] = [];
+const calendlyStatusOptions: { value: CalendlyStatus; label: string; color: string }[] = [
+  { value: 'published', label: 'Published', color: palette.success },
+  { value: 'draft', label: 'Draft', color: palette.warning },
+  { value: 'archived', label: 'Archived', color: palette.grey[600] },
+];
+
+// Create default CalendlyLink
+function createDefaultCalendlyLink(): CalendlyLink {
+  return {
+    slugId: '',
+    name: '',
+    status: 'draft',
+    team: 'onboarding',
+    eventType: '',
+    url: '',
+    contextSnippets: [{ id: 'llm-desc', title: 'LLM Description', content: '' }],
+    prompt: '',
+    tools: [],
+    description: '',
+  };
+}
+
+// Calls edit modal
+function CallsEditModal({
+  item,
+  open,
+  onClose,
+  onSave,
+  onDelete,
+}: {
+  item: CalendlyLink | null;
+  open: boolean;
+  onClose: () => void;
+  onSave: (item: CalendlyLink) => void;
+  onDelete?: () => void;
+}) {
+  const [editedItem, setEditedItem] = useState<CalendlyLink>(createDefaultCalendlyLink());
+  const [activeTab, setActiveTab] = useState(0);
+
+  useEffect(() => {
+    if (item) {
+      const snippets = item.contextSnippets?.length
+        ? item.contextSnippets
+        : [{ id: 'llm-desc', title: 'LLM Description', content: item.description || '' }];
+      setEditedItem({
+        ...createDefaultCalendlyLink(),
+        ...item,
+        contextSnippets: snippets,
+      });
+    } else {
+      setEditedItem(createDefaultCalendlyLink());
+    }
+    setActiveTab(0);
+  }, [item, open]);
+
+  // Auto-generate slugId from name
+  const handleNameChange = (name: string) => {
+    const updates: Partial<CalendlyLink> = { name };
+    if (!editedItem.slugId || editedItem.slugId === generateSlugId(editedItem.name)) {
+      updates.slugId = generateSlugId(name);
+    }
+    setEditedItem({ ...editedItem, ...updates });
+  };
+
+  // Update context snippets
+  const handleSnippetChange = (index: number, field: 'title' | 'content', value: string) => {
+    const updated = [...(editedItem.contextSnippets || [])];
+    updated[index] = { ...updated[index], [field]: value };
+    const newDesc = index === 0 && field === 'content' ? value : editedItem.description;
+    setEditedItem({ ...editedItem, contextSnippets: updated, description: newDesc });
+  };
+
+  const handleAddSnippet = () => {
+    const newId = `snippet-${Date.now()}`;
+    setEditedItem({
+      ...editedItem,
+      contextSnippets: [...(editedItem.contextSnippets || []), { id: newId, title: 'New Context', content: '' }],
+    });
+  };
+
+  const handleRemoveSnippet = (index: number) => {
+    if (index === 0) return;
+    setEditedItem({
+      ...editedItem,
+      contextSnippets: (editedItem.contextSnippets || []).filter((_, i) => i !== index),
+    });
+  };
+
+  // Build JSON payload
+  const buildJsonPayload = () => {
+    const payload: Record<string, unknown> = {
+      slugId: editedItem.slugId,
+      name: editedItem.name,
+      status: editedItem.status,
+      team: editedItem.team,
+      eventType: editedItem.eventType,
+      bookingUrl: editedItem.url,
+      context: editedItem.contextSnippets,
+    };
+    if (editedItem.prompt) payload.prompt = editedItem.prompt;
+    if (editedItem.tools?.length) payload.tools = editedItem.tools;
+    return payload;
+  };
+
+  const handleSave = () => {
+    onSave({ ...editedItem, description: editedItem.contextSnippets?.[0]?.content || '' });
+    onClose();
+  };
+
+  if (!open) return null;
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
+      <DialogTitle sx={{ pb: 0 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Typography variant="h6">
+              {item ? 'Edit Call Type' : 'New Call Type'}
+            </Typography>
+            {editedItem.status && (
+              <Chip
+                label={calendlyStatusOptions.find((s) => s.value === editedItem.status)?.label || editedItem.status}
+                size="small"
+                sx={{
+                  bgcolor: alpha(
+                    calendlyStatusOptions.find((s) => s.value === editedItem.status)?.color || palette.grey[600],
+                    0.1
+                  ),
+                  color: calendlyStatusOptions.find((s) => s.value === editedItem.status)?.color || palette.grey[600],
+                }}
+              />
+            )}
+          </Stack>
+          {onDelete && (
+            <Button
+              color="error"
+              size="small"
+              startIcon={<DeleteIcon />}
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete this call type?')) {
+                  onDelete();
+                  onClose();
+                }
+              }}
+            >
+              Delete
+            </Button>
+          )}
+        </Stack>
+      </DialogTitle>
+
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3, pt: 1 }}>
+        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+          <Tab label="Basic Info" />
+          <Tab label="Important Context" />
+          <Tab label="AI Config" />
+          <Tab label="JSON Payload" />
+        </Tabs>
+      </Box>
+
+      <DialogContent sx={{ p: 3, bgcolor: palette.grey[50] }}>
+        {/* Tab 0: Basic Info */}
+        {activeTab === 0 && (
+          <Stack spacing={3}>
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<PhoneIcon />} title="Identity" />
+              <Stack spacing={2}>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Name"
+                  value={editedItem.name}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                  placeholder="e.g., Invoicing Setup Call"
+                />
+                <Stack direction="row" spacing={2}>
+                  <TextField
+                    size="small"
+                    label="Slug ID"
+                    value={editedItem.slugId || ''}
+                    onChange={(e) => setEditedItem({ ...editedItem, slugId: e.target.value })}
+                    placeholder="invoicing-setup-call"
+                    inputProps={{ style: { fontFamily: 'monospace' } }}
+                    helperText="Unique identifier"
+                    sx={{ flex: 1 }}
+                  />
+                  <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <Select
+                      value={editedItem.status || 'draft'}
+                      onChange={(e) => setEditedItem({ ...editedItem, status: e.target.value as CalendlyStatus })}
+                    >
+                      {calendlyStatusOptions.map((opt) => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: opt.color }} />
+                            <span>{opt.label}</span>
+                          </Stack>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
+              </Stack>
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<CalendarMonthIcon />} title="Calendly Configuration" />
+              <Stack spacing={2}>
+                <FormControl fullWidth size="small">
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5 }}>Team</Typography>
+                  <Select
+                    value={editedItem.team}
+                    onChange={(e) => setEditedItem({ ...editedItem, team: e.target.value as CalendlyTeam })}
+                  >
+                    {calendlyTeamOptions.map((opt) => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: opt.color }} />
+                          <span>{opt.label}</span>
+                        </Stack>
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Calendly Event Type"
+                  value={editedItem.eventType || ''}
+                  onChange={(e) => setEditedItem({ ...editedItem, eventType: e.target.value })}
+                  placeholder="e.g., 30-minute-onboarding-call"
+                  helperText="The event type name in Calendly"
+                />
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Calendly Booking Link"
+                  value={editedItem.url}
+                  onChange={(e) => setEditedItem({ ...editedItem, url: e.target.value })}
+                  placeholder="https://calendly.com/hcp-onboarding/invoicing"
+                  inputProps={{ style: { fontFamily: 'monospace' } }}
+                  helperText="Full Calendly booking URL"
+                />
+              </Stack>
+            </Paper>
+          </Stack>
+        )}
+
+        {/* Tab 1: Important Context */}
+        {activeTab === 1 && (
+          <Paper sx={{ p: 3 }}>
+            <SectionHeader icon={<TextSnippetIcon />} title="Important Context" count={editedItem.contextSnippets?.length || 0} />
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Context snippets help the AI understand when to recommend this call type.
+            </Typography>
+            <Stack spacing={2}>
+              {(editedItem.contextSnippets || []).map((snippet, index) => (
+                <Paper key={snippet.id} variant="outlined" sx={{ p: 2 }}>
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <TextField
+                        size="small"
+                        label="Title"
+                        value={snippet.title}
+                        onChange={(e) => handleSnippetChange(index, 'title', e.target.value)}
+                        sx={{ flex: 1 }}
+                        disabled={index === 0}
+                      />
+                      {index === 0 && (
+                        <Chip label="Required" size="small" color="primary" variant="outlined" />
+                      )}
+                      {index > 0 && (
+                        <IconButton size="small" onClick={() => handleRemoveSnippet(index)}>
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      )}
+                    </Stack>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      multiline
+                      rows={3}
+                      placeholder={index === 0 ? "Describe when to recommend this call..." : "Additional context..."}
+                      value={snippet.content}
+                      onChange={(e) => handleSnippetChange(index, 'content', e.target.value)}
+                    />
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
+            <Button startIcon={<AddIcon />} size="small" onClick={handleAddSnippet} sx={{ mt: 2 }}>
+              Add Context Snippet
+            </Button>
+          </Paper>
+        )}
+
+        {/* Tab 2: AI Config */}
+        {activeTab === 2 && (
+          <Stack spacing={3}>
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<SmartToyIcon />} title="Prompt" />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Additional instructions for the AI when recommending this call type.
+              </Typography>
+              <TextField
+                fullWidth
+                multiline
+                rows={4}
+                value={editedItem.prompt || ''}
+                onChange={(e) => setEditedItem({ ...editedItem, prompt: e.target.value })}
+                placeholder="e.g., Recommend this call when the pro needs help setting up their first invoice..."
+              />
+            </Paper>
+
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<BuildIcon />} title="Tools" count={editedItem.tools?.length || 0} />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                MCP tools that can be used with this call type.
+              </Typography>
+              {(editedItem.tools?.length || 0) === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                  No tools configured
+                </Typography>
+              ) : (
+                <Stack spacing={1}>
+                  {editedItem.tools?.map((tool, i) => (
+                    <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Box>
+                          <Typography variant="body2" fontWeight={500} sx={{ fontFamily: 'monospace' }}>
+                            {tool.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {tool.description}
+                          </Typography>
+                        </Box>
+                        <IconButton
+                          size="small"
+                          onClick={() => setEditedItem({
+                            ...editedItem,
+                            tools: editedItem.tools?.filter((_, idx) => idx !== i),
+                          })}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Stack>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
+              <Button
+                startIcon={<AddIcon />}
+                size="small"
+                sx={{ mt: 1 }}
+                onClick={() => {
+                  const toolName = window.prompt('Enter tool name:');
+                  if (toolName) {
+                    const toolDesc = window.prompt('Enter tool description:') || '';
+                    setEditedItem({
+                      ...editedItem,
+                      tools: [...(editedItem.tools || []), { name: toolName, description: toolDesc, parameters: {} }],
+                    });
+                  }
+                }}
+              >
+                Add Tool
+              </Button>
+            </Paper>
+          </Stack>
+        )}
+
+        {/* Tab 3: JSON Payload */}
+        {activeTab === 3 && (
+          <Paper sx={{ p: 3 }}>
+            <SectionHeader icon={<TextSnippetIcon />} title="JSON Payload" />
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              This is the complete JSON representation of this call type.
+            </Typography>
+            <Paper
+              variant="outlined"
+              sx={{
+                p: 2,
+                bgcolor: palette.grey[800],
+                color: '#fff',
+                fontFamily: 'monospace',
+                fontSize: '0.85rem',
+                overflow: 'auto',
+                maxHeight: 500,
+              }}
+            >
+              <pre style={{ margin: 0 }}>
+                {JSON.stringify(buildJsonPayload(), null, 2)}
+              </pre>
+            </Paper>
+          </Paper>
+        )}
+      </DialogContent>
+
+      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          disabled={!editedItem.name || !editedItem.url}
+        >
+          Save Changes
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function CallsManagementPage() {
+  const { features, updateFeature } = useOnboarding();
+  const [selectedItem, setSelectedItem] = useState<{
+    item: CalendlyLink;
+    featureId: string;
+    stageKey: StageKey;
+    index: number;
+  } | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+
+  // Collect all calendly items across all features/stages
+  const allCallItems: {
+    featureId: string;
+    featureName: string;
+    stageKey: StageKey;
+    stageName: string;
+    item: CalendlyLink;
+    index: number;
+  }[] = [];
+
   features.forEach((feature) => {
     stageKeys.forEach((stageKey) => {
       const stage = feature.stages[stageKey];
-      (stage.calendlyTypes || []).forEach((cal) => {
+      (stage.calendlyTypes || []).forEach((cal, index) => {
         allCallItems.push({
+          featureId: feature.id,
           featureName: feature.name,
+          stageKey,
           stageName: stageConfig[stageKey].label,
           item: cal,
+          index,
         });
       });
     });
   });
+
+  const handleEdit = (entry: typeof allCallItems[0]) => {
+    setSelectedItem({
+      item: entry.item,
+      featureId: entry.featureId,
+      stageKey: entry.stageKey,
+      index: entry.index,
+    });
+    setEditorOpen(true);
+  };
+
+  const handleDelete = (entry: typeof allCallItems[0]) => {
+    if (!window.confirm(`Delete "${entry.item.name}"?`)) return;
+
+    const feature = features.find((f) => f.id === entry.featureId);
+    if (!feature) return;
+
+    const updatedFeature = {
+      ...feature,
+      stages: {
+        ...feature.stages,
+        [entry.stageKey]: {
+          ...feature.stages[entry.stageKey],
+          calendlyTypes: feature.stages[entry.stageKey].calendlyTypes.filter((_, i) => i !== entry.index),
+        },
+      },
+    };
+    updateFeature(updatedFeature);
+  };
+
+  const handleSave = (updatedItem: CalendlyLink) => {
+    if (!selectedItem) return;
+
+    const feature = features.find((f) => f.id === selectedItem.featureId);
+    if (!feature) return;
+
+    const currentCalls = [...feature.stages[selectedItem.stageKey].calendlyTypes];
+    currentCalls[selectedItem.index] = updatedItem;
+
+    const updatedFeature = {
+      ...feature,
+      stages: {
+        ...feature.stages,
+        [selectedItem.stageKey]: {
+          ...feature.stages[selectedItem.stageKey],
+          calendlyTypes: currentCalls,
+        },
+      },
+    };
+    updateFeature(updatedFeature);
+    setSelectedItem(null);
+  };
+
+  const handleDeleteFromModal = () => {
+    if (!selectedItem) return;
+
+    const feature = features.find((f) => f.id === selectedItem.featureId);
+    if (!feature) return;
+
+    const updatedFeature = {
+      ...feature,
+      stages: {
+        ...feature.stages,
+        [selectedItem.stageKey]: {
+          ...feature.stages[selectedItem.stageKey],
+          calendlyTypes: feature.stages[selectedItem.stageKey].calendlyTypes.filter((_, i) => i !== selectedItem.index),
+        },
+      },
+    };
+    updateFeature(updatedFeature);
+    setSelectedItem(null);
+  };
 
   return (
     <Box>
@@ -1950,7 +2472,9 @@ function CallsManagementPage() {
             Manage Calendly event types and call scheduling
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} disabled>Add Call Type</Button>
+        <Button variant="contained" startIcon={<AddIcon />} disabled>
+          Add Call Type
+        </Button>
       </Stack>
 
       <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
@@ -1959,40 +2483,113 @@ function CallsManagementPage() {
             <TableRow sx={{ bgcolor: palette.grey[50] }}>
               <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Team</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>URL</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Booking Link</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Used In</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {allCallItems.map((entry, i) => (
-              <TableRow key={i} hover>
-                <TableCell><Typography fontWeight={500}>{entry.item.name}</Typography></TableCell>
-                <TableCell>
-                  <Chip
-                    label={entry.item.team.charAt(0).toUpperCase() + entry.item.team.slice(1)}
-                    size="small"
-                    color={entry.item.team === 'sales' ? 'warning' : entry.item.team === 'onboarding' ? 'primary' : 'default'}
-                  />
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                    {entry.item.url}
+            {allCallItems.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6}>
+                  <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                    No call types defined
                   </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {entry.featureName} → {entry.stageName}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton size="small" disabled><EditIcon fontSize="small" /></IconButton>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              allCallItems.map((entry, i) => (
+                <TableRow key={i} hover>
+                  <TableCell>
+                    <Stack>
+                      <Typography fontWeight={500}>{entry.item.name}</Typography>
+                      {entry.item.eventType && (
+                        <Typography variant="caption" color="text.secondary">
+                          {entry.item.eventType}
+                        </Typography>
+                      )}
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={entry.item.team.charAt(0).toUpperCase() + entry.item.team.slice(1)}
+                      size="small"
+                      sx={{
+                        bgcolor: alpha(
+                          calendlyTeamOptions.find((t) => t.value === entry.item.team)?.color || palette.grey[600],
+                          0.1
+                        ),
+                        color: calendlyTeamOptions.find((t) => t.value === entry.item.team)?.color || palette.grey[600],
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={calendlyStatusOptions.find((s) => s.value === entry.item.status)?.label || 'Draft'}
+                      size="small"
+                      sx={{
+                        bgcolor: alpha(
+                          calendlyStatusOptions.find((s) => s.value === entry.item.status)?.color || palette.warning,
+                          0.1
+                        ),
+                        color: calendlyStatusOptions.find((s) => s.value === entry.item.status)?.color || palette.warning,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontFamily: 'monospace',
+                        fontSize: '0.8rem',
+                        maxWidth: 200,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {entry.item.url}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {entry.featureName} → {entry.stageName}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEdit(entry)}
+                      sx={{ color: palette.primary }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDelete(entry)}
+                      sx={{ color: palette.error }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+
+      <CallsEditModal
+        item={selectedItem?.item || null}
+        open={editorOpen}
+        onClose={() => {
+          setEditorOpen(false);
+          setSelectedItem(null);
+        }}
+        onSave={handleSave}
+        onDelete={selectedItem ? handleDeleteFromModal : undefined}
+      />
     </Box>
   );
 }
