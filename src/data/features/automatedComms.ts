@@ -5,9 +5,14 @@ export const automatedCommsFeature: Feature = {
   name: 'Automated Communications',
   description: 'Automated texts and emails to keep customers informed',
   icon: 'Sms',
+  version: '2.1.0',
 
   stages: {
     notAttached: {
+      conditions: [
+        'Pro does not have Automated Communications in their current plan',
+        'Pro has not purchased Communications as an add-on',
+      ],
       valueProp: 'Never miss a follow-up again. Automated texts and emails keep your customers informed and coming back.',
       sellPageUrl: '/pricing/communications',
       learnMoreResources: [
@@ -25,6 +30,10 @@ export const automatedCommsFeature: Feature = {
       ],
     },
     attached: {
+      conditions: [
+        'Pro has Automated Communications in their plan',
+        'Pro has not enabled on-my-way texts or verified their phone number',
+      ],
       requiredTasks: [
         { id: 'comms-enable-otw', title: 'Enable on-my-way texts', description: 'Automatically notify customers when you\'re heading to their location', estimatedMinutes: 2, actionUrl: '/settings/communications/otw', completionEvent: 'comms.otw_enabled' },
         { id: 'comms-verify-number', title: 'Verify your business phone', description: 'Verify your number so texts come from your business', estimatedMinutes: 3, actionUrl: '/settings/communications/verify', completionEvent: 'comms.number_verified' },
@@ -45,6 +54,10 @@ export const automatedCommsFeature: Feature = {
       ],
     },
     activated: {
+      conditions: [
+        'Pro has enabled on-my-way texts and verified phone number',
+        'Pro has sent fewer than 20 automated messages',
+      ],
       optionalTasks: [
         { id: 'comms-review-request', title: 'Set up review requests', description: 'Automatically ask for reviews after completed jobs', estimatedMinutes: 3, actionUrl: '/settings/communications/reviews', completionEvent: 'comms.review_requests_enabled' },
         { id: 'comms-follow-up', title: 'Create follow-up campaigns', description: 'Bring customers back with automated follow-ups', estimatedMinutes: 5, actionUrl: '/settings/communications/campaigns', completionEvent: 'comms.campaigns_created' },
@@ -59,6 +72,10 @@ export const automatedCommsFeature: Feature = {
       ],
     },
     engaged: {
+      conditions: [
+        'Pro has sent 20 or more automated messages',
+        'Pro has sent automated messages within the last 14 days',
+      ],
       advancedTips: ['Customize your message templates for a personal touch', 'Use follow-up campaigns for seasonal services'],
       successMetrics: ['Customer response rate over 80%', 'Review request conversion over 20%'],
       upsellOpportunities: ['Add marketing campaigns to reach past customers'],

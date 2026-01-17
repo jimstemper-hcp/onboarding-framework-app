@@ -1,4 +1,4 @@
-import type { ProAccount, FeatureId, FeatureStatus, ProGoal } from '../types';
+import type { ProAccount, FeatureId, FeatureStatus } from '../types';
 
 // Helper to create a feature status at a specific stage
 const createStatus = (

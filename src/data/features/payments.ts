@@ -5,9 +5,14 @@ export const paymentsFeature: Feature = {
   name: 'Collecting Payment',
   description: 'Accept credit cards and get paid online',
   icon: 'CreditCard',
+  version: '1.0.0',
 
   stages: {
     notAttached: {
+      conditions: [
+        'Pro does not have Payments feature in their current plan',
+        'Pro has not purchased Payments as an add-on',
+      ],
       valueProp: 'Accept credit cards and get paid instantly. No more chasing checks or waiting for cash.',
       sellPageUrl: '/pricing/payments',
       learnMoreResources: [
@@ -25,6 +30,10 @@ export const paymentsFeature: Feature = {
       ],
     },
     attached: {
+      conditions: [
+        'Pro has Payments feature in their plan',
+        'Pro has not connected their bank account or verified identity',
+      ],
       requiredTasks: [
         { id: 'payments-connect-stripe', title: 'Connect your bank account', description: 'Link your bank account to receive payments', estimatedMinutes: 5, actionUrl: '/settings/payments/connect', completionEvent: 'payments.stripe_connected' },
         { id: 'payments-verify', title: 'Verify your identity', description: 'Quick verification required by payment processors', estimatedMinutes: 3, actionUrl: '/settings/payments/verify', completionEvent: 'payments.verified' },
@@ -44,6 +53,10 @@ export const paymentsFeature: Feature = {
       ],
     },
     activated: {
+      conditions: [
+        'Pro has connected bank account and verified identity',
+        'Pro has processed fewer than 10 payments',
+      ],
       optionalTasks: [
         { id: 'payments-enable-tips', title: 'Enable tipping', description: 'Let customers add tips when paying', estimatedMinutes: 1, actionUrl: '/settings/payments/tips', completionEvent: 'payments.tips_enabled' },
       ],
@@ -57,6 +70,10 @@ export const paymentsFeature: Feature = {
       ],
     },
     engaged: {
+      conditions: [
+        'Pro has processed 10 or more payments',
+        'Pro has processed a payment within the last 30 days',
+      ],
       advancedTips: ['Enable tipping for your field techs', 'Use the mobile app to take payments on-site'],
       successMetrics: ['Card payment adoption over 70%'],
       upsellOpportunities: ['Consider financing options for larger jobs'],

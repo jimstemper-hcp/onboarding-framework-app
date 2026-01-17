@@ -5,9 +5,14 @@ export const csrAiFeature: Feature = {
   name: 'AI Voice Agent',
   description: 'AI assistant that answers calls and books jobs for you 24/7',
   icon: 'SupportAgent',
+  version: '0.9.0',
 
   stages: {
     notAttached: {
+      conditions: [
+        'Pro does not have AI Voice Agent in their current plan',
+        'Pro has not purchased AI Voice Agent as an add-on',
+      ],
       valueProp: 'Never miss a call again. Our AI answers your phone 24/7, books jobs, and sounds just like a real person.',
       sellPageUrl: '/pricing/ai-voice',
       learnMoreResources: [
@@ -26,6 +31,10 @@ export const csrAiFeature: Feature = {
       ],
     },
     attached: {
+      conditions: [
+        'Pro has AI Voice Agent in their plan',
+        'Pro has not configured greeting, services, or call forwarding',
+      ],
       requiredTasks: [
         { id: 'csr-configure-greeting', title: 'Configure your AI greeting', description: 'Customize how the AI introduces itself and your business', estimatedMinutes: 5, actionUrl: '/settings/ai-voice/greeting', completionEvent: 'ai.greeting_configured' },
         { id: 'csr-set-services', title: 'Tell the AI your services', description: 'List the services you offer so the AI can answer questions', estimatedMinutes: 5, actionUrl: '/settings/ai-voice/services', completionEvent: 'ai.services_configured' },
@@ -50,6 +59,10 @@ export const csrAiFeature: Feature = {
       ],
     },
     activated: {
+      conditions: [
+        'Pro has configured AI greeting, services, and call forwarding',
+        'AI has handled fewer than 10 calls',
+      ],
       optionalTasks: [
         { id: 'csr-chat-widget', title: 'Add chat to your website', description: 'Let the AI handle website chats too', estimatedMinutes: 5, actionUrl: '/settings/ai-voice/chat-widget', completionEvent: 'ai.chat_enabled' },
         { id: 'csr-custom-responses', title: 'Add custom Q&A', description: 'Train the AI on your most common questions', estimatedMinutes: 10, actionUrl: '/settings/ai-voice/qa', completionEvent: 'ai.qa_added' },
@@ -65,6 +78,10 @@ export const csrAiFeature: Feature = {
       ],
     },
     engaged: {
+      conditions: [
+        'AI has handled 10 or more calls',
+        'AI has handled a call within the last 7 days',
+      ],
       advancedTips: ['Review call transcripts weekly to improve AI responses', 'Add FAQs for questions the AI struggles with'],
       successMetrics: ['Call booking rate over 40%', 'Customer satisfaction over 4 stars'],
       upsellOpportunities: ['Add more AI minutes for busier seasons'],

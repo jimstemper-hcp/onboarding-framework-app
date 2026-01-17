@@ -5,12 +5,18 @@ export const invoicingFeature: Feature = {
   name: 'Invoicing',
   description: 'Create and send professional invoices to your customers',
   icon: 'Receipt',
+  version: '1.2.0',
 
   stages: {
     // =========================================================================
     // NOT ATTACHED - Pro doesn't have access to invoicing
     // =========================================================================
     notAttached: {
+      conditions: [
+        'Pro does not have Invoicing feature in their current plan',
+        'Pro has not purchased Invoicing as an add-on',
+      ],
+
       valueProp:
         'Look professional to your customers and automate your invoice reminders to ensure you get paid.',
 
@@ -95,6 +101,11 @@ Be conversational and helpful, not pushy. Focus on solving their payment collect
     // ATTACHED - Pro has access but hasn't completed required setup
     // =========================================================================
     attached: {
+      conditions: [
+        'Pro has Invoicing feature in their plan',
+        'Pro has not completed all required setup tasks',
+      ],
+
       requiredTasks: [
         {
           id: 'invoicing-create-customer',
@@ -242,6 +253,11 @@ Be encouraging - they're almost ready to send their first professional invoice!`
     // ACTIVATED - Pro has completed setup, ready to send invoices
     // =========================================================================
     activated: {
+      conditions: [
+        'Pro has completed all required setup tasks',
+        'Pro has sent fewer than 5 invoices',
+      ],
+
       optionalTasks: [
         {
           id: 'invoicing-add-logo',
@@ -340,6 +356,11 @@ Celebrate their progress - they're on their way to getting paid faster!`,
     // ENGAGED - Pro is actively using invoicing
     // =========================================================================
     engaged: {
+      conditions: [
+        'Pro has sent 5 or more invoices',
+        'Pro has used Invoicing within the last 30 days',
+      ],
+
       advancedTips: [
         'Use invoice templates for common job types to save time',
         'Set up recurring invoices for repeat customers',

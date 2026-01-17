@@ -216,10 +216,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   );
 
   const getStageContext = useCallback(
-    <T extends AdoptionStage>(
-      featureId: FeatureId,
-      stage: T
-    ): Feature['stages'][T] | undefined => {
+    (featureId: FeatureId, stage: AdoptionStage) => {
       const feature = features.find((f) => f.id === featureId);
       if (!feature) return undefined;
 
@@ -230,7 +227,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         engaged: 'engaged',
       };
 
-      return feature.stages[stageMap[stage]] as Feature['stages'][T];
+      return feature.stages[stageMap[stage]];
     },
     [features]
   );

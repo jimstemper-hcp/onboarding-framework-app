@@ -79,6 +79,7 @@ export interface OnboardingTask {
  * Focus: Help them understand value and upgrade their plan.
  */
 export interface NotAttachedContext {
+  conditions: string[];
   valueProp: string;
   sellPageUrl: string;
   learnMoreResources: Resource[];
@@ -93,6 +94,7 @@ export interface NotAttachedContext {
  * Focus: Guide them through the setup steps to activate the feature.
  */
 export interface AttachedContext {
+  conditions: string[];
   requiredTasks: OnboardingTask[];
   productPages: ProductPage[];
   tooltipUrls: string[];
@@ -108,6 +110,7 @@ export interface AttachedContext {
  * Focus: Encourage first use and provide optional enhancements.
  */
 export interface ActivatedContext {
+  conditions: string[];
   optionalTasks: OnboardingTask[];
   productPages: ProductPage[];
   calendlyTypes: CalendlyLink[];
@@ -121,6 +124,7 @@ export interface ActivatedContext {
  * Focus: Advanced tips, success celebration, and upsell opportunities.
  */
 export interface EngagedContext {
+  conditions: string[];
   advancedTips: string[];
   successMetrics: string[];
   upsellOpportunities: string[];
@@ -140,6 +144,7 @@ export interface Feature {
   name: string;
   description: string;
   icon: string; // MUI icon name
+  version: string; // Semantic version (major.minor.patch)
   stages: {
     notAttached: NotAttachedContext;
     attached: AttachedContext;
@@ -234,10 +239,10 @@ export interface OnboardingContextActions {
   getFeatureById: (featureId: FeatureId) => Feature | undefined;
   getProById: (proId: string) => ProAccount | undefined;
   getProFeatureStatus: (proId: string, featureId: FeatureId) => FeatureStatus | undefined;
-  getStageContext: <T extends AdoptionStage>(
+  getStageContext: (
     featureId: FeatureId,
-    stage: T
-  ) => Feature['stages'][T] | undefined;
+    stage: AdoptionStage
+  ) => NotAttachedContext | AttachedContext | ActivatedContext | EngagedContext | undefined;
 }
 
 export type OnboardingContextValue = OnboardingContextState & OnboardingContextActions;

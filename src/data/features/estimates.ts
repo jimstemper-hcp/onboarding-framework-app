@@ -5,9 +5,14 @@ export const estimatesFeature: Feature = {
   name: 'Estimates',
   description: 'Create and send professional estimates that win jobs',
   icon: 'RequestQuote',
+  version: '1.1.0',
 
   stages: {
     notAttached: {
+      conditions: [
+        'Pro does not have Estimates feature in their current plan',
+        'Pro has not purchased Estimates as an add-on',
+      ],
       valueProp: 'Win more jobs with professional estimates. Send beautiful quotes that customers can approve with one click.',
       sellPageUrl: '/pricing/estimates',
       learnMoreResources: [
@@ -25,6 +30,10 @@ export const estimatesFeature: Feature = {
       ],
     },
     attached: {
+      conditions: [
+        'Pro has Estimates feature in their plan',
+        'Pro has not added items to price book or created an estimate',
+      ],
       requiredTasks: [
         { id: 'estimates-price-book', title: 'Add items to your price book', description: 'Set up your services and prices for quick estimates', estimatedMinutes: 5, actionUrl: '/settings/price-book', completionEvent: 'pricebook.item_added' },
         { id: 'estimates-create-first', title: 'Create your first estimate', description: 'Send a professional estimate to a customer', estimatedMinutes: 3, actionUrl: '/estimates/new', completionEvent: 'estimate.created' },
@@ -48,6 +57,10 @@ export const estimatesFeature: Feature = {
       ],
     },
     activated: {
+      conditions: [
+        'Pro has created at least one estimate',
+        'Pro has sent fewer than 10 estimates',
+      ],
       optionalTasks: [
         { id: 'estimates-templates', title: 'Create estimate templates', description: 'Save time with templates for common jobs', estimatedMinutes: 5, actionUrl: '/settings/templates/estimates', completionEvent: 'template.created' },
         { id: 'estimates-good-better-best', title: 'Set up Good/Better/Best options', description: 'Give customers pricing options to increase ticket size', estimatedMinutes: 5, actionUrl: '/settings/estimates/options', completionEvent: 'estimates.options_enabled' },
@@ -62,6 +75,10 @@ export const estimatesFeature: Feature = {
       ],
     },
     engaged: {
+      conditions: [
+        'Pro has sent 10 or more estimates',
+        'Pro has sent an estimate within the last 14 days',
+      ],
       advancedTips: ['Use the mobile app to create estimates on-site', 'Follow up on pending estimates within 24 hours'],
       successMetrics: ['Estimate approval rate over 60%', 'Average time to approval under 2 days'],
       upsellOpportunities: ['Add financing options for larger estimates'],

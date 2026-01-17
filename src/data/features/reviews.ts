@@ -5,9 +5,14 @@ export const reviewsFeature: Feature = {
   name: 'Reviews',
   description: 'Collect and manage customer reviews to build your reputation',
   icon: 'Star',
+  version: '1.0.2',
 
   stages: {
     notAttached: {
+      conditions: [
+        'Pro does not have Reviews feature in their current plan',
+        'Pro has not purchased Reviews as an add-on',
+      ],
       valueProp: 'Build your online reputation automatically. Request reviews after every job and watch your ratings grow.',
       sellPageUrl: '/pricing/reviews',
       learnMoreResources: [
@@ -25,6 +30,10 @@ export const reviewsFeature: Feature = {
       ],
     },
     attached: {
+      conditions: [
+        'Pro has Reviews feature in their plan',
+        'Pro has not connected Google Business Profile or enabled review requests',
+      ],
       requiredTasks: [
         { id: 'reviews-connect-google', title: 'Connect your Google Business Profile', description: 'Link your Google listing to manage reviews in one place', estimatedMinutes: 3, actionUrl: '/settings/reviews/google', completionEvent: 'reviews.google_connected' },
         { id: 'reviews-enable-requests', title: 'Enable review requests', description: 'Automatically ask for reviews after completed jobs', estimatedMinutes: 2, actionUrl: '/settings/reviews/requests', completionEvent: 'reviews.requests_enabled' },
@@ -49,6 +58,10 @@ export const reviewsFeature: Feature = {
       ],
     },
     activated: {
+      conditions: [
+        'Pro has connected Google and enabled review requests',
+        'Pro has sent fewer than 10 review requests',
+      ],
       optionalTasks: [
         { id: 'reviews-customize-request', title: 'Customize review request message', description: 'Personalize the message customers receive', estimatedMinutes: 3, actionUrl: '/settings/reviews/message', completionEvent: 'reviews.message_customized' },
         { id: 'reviews-add-facebook', title: 'Connect Facebook page', description: 'Manage Facebook reviews too', estimatedMinutes: 3, actionUrl: '/settings/reviews/facebook', completionEvent: 'reviews.facebook_connected' },
@@ -64,6 +77,10 @@ export const reviewsFeature: Feature = {
       ],
     },
     engaged: {
+      conditions: [
+        'Pro has sent 10 or more review requests',
+        'Pro has received a review within the last 30 days',
+      ],
       advancedTips: ['Respond to negative reviews professionally - it shows others you care', 'Share positive reviews on social media'],
       successMetrics: ['Review request conversion over 20%', 'Average rating 4.5+ stars'],
       upsellOpportunities: ['Add marketing features to showcase your reviews'],

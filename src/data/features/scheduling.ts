@@ -5,9 +5,14 @@ export const schedulingFeature: Feature = {
   name: 'Job Scheduling & Dispatching',
   description: 'Schedule jobs and dispatch your team efficiently',
   icon: 'CalendarMonth',
+  version: '3.0.1',
 
   stages: {
     notAttached: {
+      conditions: [
+        'Pro does not have Scheduling feature in their current plan',
+        'Pro has not purchased Scheduling as an add-on',
+      ],
       valueProp: 'Stop the scheduling chaos. See your whole team\'s schedule at a glance and dispatch jobs with one click.',
       sellPageUrl: '/pricing/scheduling',
       learnMoreResources: [
@@ -25,6 +30,10 @@ export const schedulingFeature: Feature = {
       ],
     },
     attached: {
+      conditions: [
+        'Pro has Scheduling feature in their plan',
+        'Pro has not added team members or scheduled a job',
+      ],
       requiredTasks: [
         { id: 'scheduling-add-employee', title: 'Add your team members', description: 'Add employees so you can assign jobs to them', estimatedMinutes: 3, actionUrl: '/settings/team', completionEvent: 'team.member_added' },
         { id: 'scheduling-set-hours', title: 'Set your business hours', description: 'Define when your business is available for jobs', estimatedMinutes: 2, actionUrl: '/settings/schedule', completionEvent: 'schedule.hours_set' },
@@ -50,6 +59,10 @@ export const schedulingFeature: Feature = {
       ],
     },
     activated: {
+      conditions: [
+        'Pro has added team members and scheduled at least one job',
+        'Pro has scheduled fewer than 20 jobs total',
+      ],
       optionalTasks: [
         { id: 'scheduling-online-booking', title: 'Enable online booking', description: 'Let customers book appointments from your website', estimatedMinutes: 5, actionUrl: '/settings/online-booking', completionEvent: 'booking.enabled' },
         { id: 'scheduling-sync-calendar', title: 'Sync with Google Calendar', description: 'Keep your personal calendar in sync', estimatedMinutes: 2, actionUrl: '/settings/integrations/google', completionEvent: 'calendar.synced' },
@@ -64,6 +77,10 @@ export const schedulingFeature: Feature = {
       ],
     },
     engaged: {
+      conditions: [
+        'Pro has scheduled 20 or more jobs',
+        'Pro has scheduled a job within the last 7 days',
+      ],
       advancedTips: ['Use the mobile app to check and update schedules on the go', 'Set up job tags to organize by job type'],
       successMetrics: ['Schedule utilization over 80%', 'Drive time under 20% of day'],
       upsellOpportunities: ['Add GPS tracking to see your team in real-time'],
