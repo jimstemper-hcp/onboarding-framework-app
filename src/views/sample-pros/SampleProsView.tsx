@@ -45,6 +45,17 @@ import type {
   BusinessType,
   PlanTier,
   ProGoal,
+  BillingStatus,
+  FraudStatus,
+  IndustryType,
+  LeadStatus,
+  OrganizationBinSize,
+  OrganizationStatus,
+  CustomerStatusDisplayName,
+  RetentionStatus,
+  Segment,
+  PainPoint,
+  IndustryStandardized,
 } from '../../types';
 
 // =============================================================================
@@ -96,6 +107,56 @@ const businessTypes: BusinessType[] = ['plumber', 'electrician', 'hvac', 'landsc
 const planTiers: PlanTier[] = ['basic', 'essentials', 'max'];
 const proGoals: ProGoal[] = ['growth', 'efficiency'];
 const stages: AdoptionStage[] = ['not_attached', 'attached', 'activated', 'engaged'];
+
+// Pro Data field options
+const billingStatuses: BillingStatus[] = ['trial_expired', 'enrolled', 'unknown', 'unenrolled', 'trial'];
+const fraudStatuses: FraudStatus[] = ['risk_review_approved', 'risk_review_denied', 'risk_review_in_progress', 'unknown'];
+const industryTypes: IndustryType[] = ['Mechanical', 'One-time', 'Recurring'];
+const leadStatuses: LeadStatus[] = [
+  'database', 'demo_attended', 'demo_booked', 'demo_missed', 'in_progress_sale',
+  'independent_trial', 'internal_account', 'not_target_customer', 'sales_and_trial',
+  'sdr_assigned', 'spam', 'stop_outreach'
+];
+const organizationBinSizes: OrganizationBinSize[] = ['0 to 1', '2 to 5', '6 to 10', '11+'];
+const organizationStatuses: OrganizationStatus[] = [
+  'canceled_former_customer', 'enrolled_cancel_requested', 'enrolled_current_customer',
+  'enrolled_under_review_billing', 'enrolled_under_review_risk', 'excluded_internal_account',
+  'terminated_billing_reason', 'terminated_risk_reason', 'unknown'
+];
+const customerStatusDisplayNames: CustomerStatusDisplayName[] = [
+  'Enrolled: Current Customer', 'Enrolled: Cancel Requested', 'Enrolled: Under Review Billing',
+  'Enrolled: Under Review Risk', 'Canceled: Former Customer', 'Prospect: Database',
+  'Prospect: SDR Assigned', 'Sale-in-Progress: Demo Attended', 'Sale-in-Progress: Demo Booked',
+  'Sale-in-Progress: Demo Missed', 'Sale-in-Progress: Independent Trial', 'Sale-in-Progress: Sales',
+  'Sale-in-Progress: Sales + Trial', 'Excluded: Internal Account', 'Excluded: Internal Lead',
+  'Excluded: Not Target Customer', 'Excluded: Spam', 'Excluded: Stop Outreach',
+  'Terminated: Billing Reason', 'Terminated: Risk Reason', 'Unknown'
+];
+const retentionStatuses: RetentionStatus[] = [
+  'billing_retention_in_progress', 'billing_retention_lost', 'billing_retention_saved',
+  'cancellation_retention_in_progress', 'cancellation_retention_lost', 'cancellation_retention_saved',
+  'unknown'
+];
+const segments: Segment[] = [
+  '1', '1A', '1B', '1C', '1D', '2', '2A', '2B', '2C', '2D',
+  '3', '3A', '3B', '3C', '3D', '4', '4A', '4B', '4C', '4D',
+  'A', 'B', 'C', 'D'
+];
+const painPointOptions: PainPoint[] = [
+  'Hiring employees', 'Training employees', 'Managing employees', 'Employee communication',
+  'Customer communications', 'Not enough jobs', 'Selling effectively', 'Collecting my money',
+  'Knowing my numbers', 'Managing my schedule', 'Managing my costs', 'Too many apps',
+  'Too much admin work', 'Need business help & coaching'
+];
+const industryStandardizedOptions: IndustryStandardized[] = [
+  'Heating & Air Conditioning', 'Plumbing', 'Electrical', 'Landscaping & Lawn', 'Home Cleaning',
+  'General Contractor', 'Handyman', 'Pest Control', 'Pool & Spa', 'Roof & Attic', 'Painting',
+  'Flooring', 'Appliances', 'Garage', 'Fencing', 'Tree Services', 'Power Wash', 'Carpet Cleaning',
+  'Junk Removal', 'Moving', 'Locksmith', 'Glass', 'Gutters', 'Sewer & Septic', 'Restoration',
+  'Home Inspection', 'Fireplace & Chimney', 'Doors', 'Drywall', 'Cabinetry', 'Concrete & Asphalt',
+  'Deck & Patio', 'Siding', 'Window & Exterior Cleaning', 'Smart Home', 'Solar & Energy',
+  'Security', 'Construction & Remodels', 'Other'
+];
 
 // =============================================================================
 // HELPERS
@@ -170,7 +231,18 @@ function ProEditorDialog({ open, pro, onSave, onClose, isNew }: ProEditorDialogP
   };
 
   const handleFieldChange = (field: keyof ProAccount, value: string) => {
-    setEditedPro({ ...editedPro, [field]: value });
+    let processedValue: string | boolean | number | undefined = value;
+
+    // Handle special field types
+    if (field === 'techReadiness') {
+      processedValue = value === 'true' ? true : value === 'false' ? false : undefined;
+    } else if (field === 'organizationSize') {
+      processedValue = value ? parseInt(value, 10) : undefined;
+    } else if (value === '') {
+      processedValue = undefined;
+    }
+
+    setEditedPro({ ...editedPro, [field]: processedValue });
   };
 
   const handleFeatureStatusChange = (featureId: FeatureId, status: FeatureStatus) => {
@@ -196,74 +268,331 @@ function ProEditorDialog({ open, pro, onSave, onClose, isNew }: ProEditorDialogP
         </Tabs>
 
         {activeTab === 0 && (
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            <TextField
-              label="Company Name"
-              value={editedPro.companyName}
-              onChange={(e) => handleFieldChange('companyName', e.target.value)}
-              fullWidth
-            />
-            <TextField
-              label="Owner Name"
-              value={editedPro.ownerName}
-              onChange={(e) => handleFieldChange('ownerName', e.target.value)}
-              fullWidth
-            />
-            <Stack direction="row" spacing={2}>
-              <FormControl fullWidth>
-                <InputLabel>Business Type</InputLabel>
+          <Box sx={{ mt: 2, maxHeight: '60vh', overflowY: 'auto', pr: 1 }}>
+            {/* Basic Info Section */}
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+              Basic Information
+            </Typography>
+            <Stack spacing={2} sx={{ mb: 3 }}>
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  label="Company Name"
+                  value={editedPro.companyName}
+                  onChange={(e) => handleFieldChange('companyName', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+                <TextField
+                  label="Owner Name"
+                  value={editedPro.ownerName}
+                  onChange={(e) => handleFieldChange('ownerName', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+              </Stack>
+              <Stack direction="row" spacing={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Plan</InputLabel>
+                  <Select
+                    value={editedPro.plan}
+                    label="Plan"
+                    onChange={(e) => handleFieldChange('plan', e.target.value)}
+                  >
+                    {planTiers.map((tier) => (
+                      <MenuItem key={tier} value={tier}>
+                        {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Company Goal</InputLabel>
+                  <Select
+                    value={editedPro.goal}
+                    label="Company Goal"
+                    onChange={(e) => handleFieldChange('goal', e.target.value)}
+                  >
+                    {proGoals.map((goal) => (
+                      <MenuItem key={goal} value={goal}>
+                        {goal.charAt(0).toUpperCase() + goal.slice(1)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  label="Created At"
+                  type="date"
+                  value={editedPro.createdAt}
+                  onChange={(e) => handleFieldChange('createdAt', e.target.value)}
+                  fullWidth
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Stack>
+            </Stack>
+
+            {/* Organization IDs Section */}
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+              Organization IDs
+            </Typography>
+            <Stack spacing={2} sx={{ mb: 3 }}>
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  label="Business ID"
+                  value={editedPro.businessId || ''}
+                  onChange={(e) => handleFieldChange('businessId', e.target.value)}
+                  fullWidth
+                  size="small"
+                  placeholder="UUID"
+                />
+                <TextField
+                  label="Organization UUID"
+                  value={editedPro.organizationUuid || ''}
+                  onChange={(e) => handleFieldChange('organizationUuid', e.target.value)}
+                  fullWidth
+                  size="small"
+                  placeholder="UUID"
+                />
+              </Stack>
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  label="Salesforce Account ID"
+                  value={editedPro.salesforceAccountId || ''}
+                  onChange={(e) => handleFieldChange('salesforceAccountId', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+                <TextField
+                  label="Salesforce Lead ID"
+                  value={editedPro.salesforceLeadId || ''}
+                  onChange={(e) => handleFieldChange('salesforceLeadId', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+              </Stack>
+            </Stack>
+
+            {/* Industry & Segment Section */}
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+              Industry & Segment
+            </Typography>
+            <Stack spacing={2} sx={{ mb: 3 }}>
+              <Stack direction="row" spacing={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Industry (Standardized)</InputLabel>
+                  <Select
+                    value={editedPro.industryStandardized || ''}
+                    label="Industry (Standardized)"
+                    onChange={(e) => handleFieldChange('industryStandardized', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {industryStandardizedOptions.map((ind) => (
+                      <MenuItem key={ind} value={ind}>{ind}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Industry Type</InputLabel>
+                  <Select
+                    value={editedPro.industryType || ''}
+                    label="Industry Type"
+                    onChange={(e) => handleFieldChange('industryType', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {industryTypes.map((type) => (
+                      <MenuItem key={type} value={type}>{type}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Stack direction="row" spacing={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Segment</InputLabel>
+                  <Select
+                    value={editedPro.segment || ''}
+                    label="Segment"
+                    onChange={(e) => handleFieldChange('segment', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {segments.map((seg) => (
+                      <MenuItem key={seg} value={seg}>{seg}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Organization Bin Size</InputLabel>
+                  <Select
+                    value={editedPro.organizationBinSize || ''}
+                    label="Organization Bin Size"
+                    onChange={(e) => handleFieldChange('organizationBinSize', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {organizationBinSizes.map((size) => (
+                      <MenuItem key={size} value={size}>{size}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  label="Organization Size"
+                  type="number"
+                  value={editedPro.organizationSize || ''}
+                  onChange={(e) => handleFieldChange('organizationSize', e.target.value)}
+                  fullWidth
+                  size="small"
+                />
+              </Stack>
+              <FormControl fullWidth size="small">
+                <InputLabel>Tech Readiness</InputLabel>
                 <Select
-                  value={editedPro.businessType}
-                  label="Business Type"
-                  onChange={(e) => handleFieldChange('businessType', e.target.value)}
+                  value={editedPro.techReadiness === true ? 'true' : editedPro.techReadiness === false ? 'false' : ''}
+                  label="Tech Readiness"
+                  onChange={(e) => handleFieldChange('techReadiness', e.target.value)}
                 >
-                  {businessTypes.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth>
-                <InputLabel>Plan</InputLabel>
-                <Select
-                  value={editedPro.plan}
-                  label="Plan"
-                  onChange={(e) => handleFieldChange('plan', e.target.value)}
-                >
-                  {planTiers.map((tier) => (
-                    <MenuItem key={tier} value={tier}>
-                      {tier.charAt(0).toUpperCase() + tier.slice(1)}
-                    </MenuItem>
-                  ))}
+                  <MenuItem value="">—</MenuItem>
+                  <MenuItem value="true">Yes (Switcher - comparing with current system)</MenuItem>
+                  <MenuItem value="false">No (Coming from pen and paper)</MenuItem>
                 </Select>
               </FormControl>
             </Stack>
-            <Stack direction="row" spacing={2}>
-              <FormControl fullWidth>
-                <InputLabel>Goal</InputLabel>
-                <Select
-                  value={editedPro.goal}
-                  label="Goal"
-                  onChange={(e) => handleFieldChange('goal', e.target.value)}
-                >
-                  {proGoals.map((goal) => (
-                    <MenuItem key={goal} value={goal}>
-                      {goal.charAt(0).toUpperCase() + goal.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <TextField
-                label="Created At"
-                type="date"
-                value={editedPro.createdAt}
-                onChange={(e) => handleFieldChange('createdAt', e.target.value)}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-              />
+
+            {/* Status Section */}
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+              Status Information
+            </Typography>
+            <Stack spacing={2} sx={{ mb: 3 }}>
+              <Stack direction="row" spacing={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Billing Status</InputLabel>
+                  <Select
+                    value={editedPro.billingStatus || ''}
+                    label="Billing Status"
+                    onChange={(e) => handleFieldChange('billingStatus', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {billingStatuses.map((status) => (
+                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Organization Status</InputLabel>
+                  <Select
+                    value={editedPro.organizationStatus || ''}
+                    label="Organization Status"
+                    onChange={(e) => handleFieldChange('organizationStatus', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {organizationStatuses.map((status) => (
+                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Stack direction="row" spacing={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Customer Status Display</InputLabel>
+                  <Select
+                    value={editedPro.customerStatusDisplayName || ''}
+                    label="Customer Status Display"
+                    onChange={(e) => handleFieldChange('customerStatusDisplayName', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {customerStatusDisplayNames.map((status) => (
+                      <MenuItem key={status} value={status}>{status}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Lead Status</InputLabel>
+                  <Select
+                    value={editedPro.leadStatus || ''}
+                    label="Lead Status"
+                    onChange={(e) => handleFieldChange('leadStatus', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {leadStatuses.map((status) => (
+                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Stack direction="row" spacing={2}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Fraud Status</InputLabel>
+                  <Select
+                    value={editedPro.fraudStatus || ''}
+                    label="Fraud Status"
+                    onChange={(e) => handleFieldChange('fraudStatus', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {fraudStatuses.map((status) => (
+                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Retention Status</InputLabel>
+                  <Select
+                    value={editedPro.retentionStatus || ''}
+                    label="Retention Status"
+                    onChange={(e) => handleFieldChange('retentionStatus', e.target.value)}
+                  >
+                    <MenuItem value="">—</MenuItem>
+                    {retentionStatuses.map((status) => (
+                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
             </Stack>
-          </Stack>
+
+            {/* Pain Points Section */}
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+              Pain Points
+            </Typography>
+            <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+              <InputLabel>Pain Points</InputLabel>
+              <Select
+                multiple
+                value={editedPro.painPoints || []}
+                label="Pain Points"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEditedPro({ ...editedPro, painPoints: typeof value === 'string' ? value.split(',') as PainPoint[] : value as PainPoint[] });
+                }}
+                renderValue={(selected) => (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {(selected as string[]).map((value) => (
+                      <Chip key={value} label={value} size="small" />
+                    ))}
+                  </Box>
+                )}
+              >
+                {painPointOptions.map((point) => (
+                  <MenuItem key={point} value={point}>{point}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Legacy Business Type (for backward compatibility) */}
+            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+              Legacy Fields
+            </Typography>
+            <FormControl fullWidth size="small">
+              <InputLabel>Business Type (Legacy)</InputLabel>
+              <Select
+                value={editedPro.businessType}
+                label="Business Type (Legacy)"
+                onChange={(e) => handleFieldChange('businessType', e.target.value)}
+              >
+                {businessTypes.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
         )}
 
         {activeTab === 1 && (

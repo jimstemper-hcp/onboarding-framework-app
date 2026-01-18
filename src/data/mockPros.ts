@@ -40,6 +40,7 @@ const createAllFeatureStatuses = (
 /**
  * Mock pro accounts at different stages of their onboarding journey.
  * These demonstrate the variety of states a pro can be in across features.
+ * Includes Pro Data (Pro Facets) fields from the database.
  */
 export const mockPros: ProAccount[] = [
   // =========================================================================
@@ -53,6 +54,27 @@ export const mockPros: ProAccount[] = [
     plan: 'essentials',
     goal: 'growth',
     createdAt: '2024-01-10',
+
+    // Pro Data (Pro Facets) fields
+    billingStatus: 'enrolled',
+    businessId: '671073f1-02b3-400d-b5cd-e09d6914a208',
+    customerStatusDisplayName: 'Enrolled: Current Customer',
+    fraudStatus: 'risk_review_approved',
+    industry: 'Plumbing',
+    industryStandardized: 'Plumbing',
+    industryType: 'Mechanical',
+    leadStatus: 'demo_attended',
+    organizationBinSize: '2 to 5',
+    organizationSize: 3,
+    organizationStatus: 'enrolled_current_customer',
+    organizationUuid: 'aa4fe49c-a4e7-412f-aab3-6d986eacc7d7',
+    painPoints: ['Managing my schedule', 'Collecting my money', 'Customer communications'],
+    retentionStatus: 'unknown',
+    segment: '2B',
+    salesforceAccountId: '0015000000ABC123',
+    salesforceLeadId: '00Q5000000DEF456',
+    techReadiness: false,
+
     featureStatus: createAllFeatureStatuses({
       // Invoicing: Attached but only created a customer (2 tasks remaining)
       invoicing: {
@@ -110,6 +132,27 @@ export const mockPros: ProAccount[] = [
     plan: 'max',
     goal: 'efficiency',
     createdAt: '2024-02-01',
+
+    // Pro Data (Pro Facets) fields
+    billingStatus: 'trial',
+    businessId: '56948479-cf93-4df7-9730-9c4c84c4f0b2',
+    customerStatusDisplayName: 'Sale-in-Progress: Sales + Trial',
+    fraudStatus: 'unknown',
+    industry: 'Heating & Air Conditioning',
+    industryStandardized: 'Heating & Air Conditioning',
+    industryType: 'Mechanical',
+    leadStatus: 'sales_and_trial',
+    organizationBinSize: '6 to 10',
+    organizationSize: 8,
+    organizationStatus: 'unknown',
+    organizationUuid: '8bcd5b96-da9a-4ece-a607-b0e8f5edda62',
+    painPoints: ['Managing employees', 'Too much admin work', 'Knowing my numbers'],
+    retentionStatus: 'unknown',
+    segment: '3A',
+    salesforceAccountId: '0015000000GHI789',
+    salesforceLeadId: '00Q5000000JKL012',
+    techReadiness: true,
+
     featureStatus: createAllFeatureStatuses({
       // Has access to everything (Max plan) but just started
       invoicing: {
@@ -168,6 +211,27 @@ export const mockPros: ProAccount[] = [
     plan: 'max',
     goal: 'growth',
     createdAt: '2023-06-15',
+
+    // Pro Data (Pro Facets) fields
+    billingStatus: 'enrolled',
+    businessId: 'e063fd0d-016b-44fd-934e-d7c040e7acc6',
+    customerStatusDisplayName: 'Enrolled: Current Customer',
+    fraudStatus: 'risk_review_approved',
+    industry: 'Landscaping & Lawn',
+    industryStandardized: 'Landscaping & Lawn',
+    industryType: 'Recurring',
+    leadStatus: 'demo_attended',
+    organizationBinSize: '11+',
+    organizationSize: 15,
+    organizationStatus: 'enrolled_current_customer',
+    organizationUuid: '7d010772-bac0-489a-9904-09f0eb874a1e',
+    painPoints: ['Hiring employees', 'Managing employees', 'Not enough jobs', 'Managing my schedule'],
+    retentionStatus: 'unknown',
+    segment: '4A',
+    salesforceAccountId: '0015000000MNO345',
+    salesforceLeadId: '00Q5000000PQR678',
+    techReadiness: true,
+
     featureStatus: createAllFeatureStatuses({
       invoicing: {
         stage: 'engaged',
@@ -270,6 +334,26 @@ export const mockPros: ProAccount[] = [
     plan: 'basic',
     goal: 'efficiency',
     createdAt: '2024-01-20',
+
+    // Pro Data (Pro Facets) fields
+    billingStatus: 'enrolled',
+    businessId: 'f4a82c19-7b53-48e6-a9d1-cc7f12389aed',
+    customerStatusDisplayName: 'Enrolled: Current Customer',
+    fraudStatus: 'unknown',
+    industry: 'Electrical',
+    industryStandardized: 'Electrical',
+    industryType: 'Mechanical',
+    leadStatus: 'independent_trial',
+    organizationBinSize: '0 to 1',
+    organizationSize: 1,
+    organizationStatus: 'enrolled_current_customer',
+    organizationUuid: '1521ce20-0138-4866-9830-13087209f775',
+    painPoints: ['Too much admin work', 'Managing my schedule'],
+    retentionStatus: 'unknown',
+    segment: '1A',
+    salesforceAccountId: '0015000000STU901',
+    techReadiness: false,
+
     featureStatus: createAllFeatureStatuses({
       // Basic plan only includes scheduling
       scheduling: {

@@ -368,6 +368,204 @@ export type PlanTier = 'basic' | 'essentials' | 'max';
 
 export type ProGoal = 'growth' | 'efficiency';
 
+// Pro Data (Pro Facets) types from the database
+export type BillingStatus = 'trial_expired' | 'enrolled' | 'unknown' | 'unenrolled' | 'trial';
+
+export type FraudStatus = 'risk_review_approved' | 'risk_review_denied' | 'risk_review_in_progress' | 'unknown';
+
+export type IndustryType = 'Mechanical' | 'One-time' | 'Recurring';
+
+export type LeadStatus =
+  | 'database'
+  | 'demo_attended'
+  | 'demo_booked'
+  | 'demo_missed'
+  | 'in_progress_sale'
+  | 'independent_trial'
+  | 'internal_account'
+  | 'not_target_customer'
+  | 'sales_and_trial'
+  | 'sdr_assigned'
+  | 'spam'
+  | 'stop_outreach';
+
+export type OrganizationBinSize = '0 to 1' | '2 to 5' | '6 to 10' | '11+';
+
+export type OrganizationStatus =
+  | 'canceled_former_customer'
+  | 'enrolled_cancel_requested'
+  | 'enrolled_current_customer'
+  | 'enrolled_under_review_billing'
+  | 'enrolled_under_review_risk'
+  | 'excluded_internal_account'
+  | 'terminated_billing_reason'
+  | 'terminated_risk_reason'
+  | 'unknown';
+
+export type CustomerStatusDisplayName =
+  | 'Canceled: Former Customer'
+  | 'Enrolled: Cancel Requested'
+  | 'Enrolled: Current Customer'
+  | 'Enrolled: Under Review Billing'
+  | 'Enrolled: Under Review Risk'
+  | 'Excluded: Internal Account'
+  | 'Excluded: Internal Lead'
+  | 'Excluded: Not Target Customer'
+  | 'Excluded: Spam'
+  | 'Excluded: Stop Outreach'
+  | 'Prospect: Database'
+  | 'Prospect: SDR Assigned'
+  | 'Sale-in-Progress: Demo Attended'
+  | 'Sale-in-Progress: Demo Booked'
+  | 'Sale-in-Progress: Demo Missed'
+  | 'Sale-in-Progress: Independent Trial'
+  | 'Sale-in-Progress: Sales'
+  | 'Sale-in-Progress: Sales + Trial'
+  | 'Terminated: Billing Reason'
+  | 'Terminated: Risk Reason'
+  | 'Unknown';
+
+export type RetentionStatus =
+  | 'billing_retention_in_progress'
+  | 'billing_retention_lost'
+  | 'billing_retention_saved'
+  | 'cancellation_retention_in_progress'
+  | 'cancellation_retention_lost'
+  | 'cancellation_retention_saved'
+  | 'unknown';
+
+export type Segment =
+  | '1' | '1A' | '1B' | '1C' | '1D'
+  | '2' | '2A' | '2B' | '2C' | '2D'
+  | '3' | '3A' | '3B' | '3C' | '3D'
+  | '4' | '4A' | '4B' | '4C' | '4D'
+  | 'A' | 'B' | 'C' | 'D';
+
+export type PainPoint =
+  | 'Hiring employees'
+  | 'Training employees'
+  | 'Managing employees'
+  | 'Employee communication'
+  | 'Customer communications'
+  | 'Not enough jobs'
+  | 'Selling effectively'
+  | 'Collecting my money'
+  | 'Knowing my numbers'
+  | 'Managing my schedule'
+  | 'Managing my costs'
+  | 'Too many apps'
+  | 'Too much admin work'
+  | 'Need business help & coaching';
+
+// Standardized industry list from Pro Data
+export type IndustryStandardized =
+  | 'Accountant'
+  | 'Air Duct Cleaning'
+  | 'Alternative Therapy'
+  | 'Appliances'
+  | 'Appraisal'
+  | 'Audio & TV'
+  | 'Automotive'
+  | 'Baby Proof'
+  | 'Barber'
+  | 'Business Services'
+  | 'Cabinetry'
+  | 'Carpet Cleaning'
+  | 'Carpet Repair'
+  | 'Caulking & Sealants'
+  | 'Commercial and Industrial Equipment'
+  | 'Concrete & Asphalt'
+  | 'Construction & Remodels'
+  | 'Cooking'
+  | 'Credit Counselor'
+  | 'Deck & Patio'
+  | 'Demolition'
+  | 'Device Repair'
+  | 'Document Storage & Destruction'
+  | 'Doors'
+  | 'Drywall'
+  | 'Electrical'
+  | 'Farming'
+  | 'Fencing'
+  | 'Financial Planner'
+  | 'Fireplace & Chimney'
+  | 'Fitness'
+  | 'Fleets & Trucks'
+  | 'Flooring'
+  | 'Furniture & Upholstery'
+  | 'Garage'
+  | 'General Contractor'
+  | 'Glass'
+  | 'Graphics & Printing'
+  | 'Gutters'
+  | 'Handyman'
+  | 'Health & Beauty'
+  | 'Heating & Air Conditioning'
+  | 'Home Builder'
+  | 'Home Cleaning'
+  | 'Home Inspection'
+  | 'Install & Assemble'
+  | 'Insurance'
+  | 'Janitorial'
+  | 'Junk Removal'
+  | 'Landscaping & Lawn'
+  | 'Laundry'
+  | 'Lighting'
+  | 'Locksmith'
+  | 'Manufacturing'
+  | 'Marine Services'
+  | 'Massage'
+  | 'Mechanical Contractor'
+  | 'Medical'
+  | 'Misc Mechanical'
+  | 'Mortgage Broker'
+  | 'Moving'
+  | 'Music & Singing'
+  | 'Natural Stone'
+  | 'Neighborhood Chores'
+  | 'Notary'
+  | 'Organization & Interior Design'
+  | 'Other'
+  | 'Outdoor Activities'
+  | 'Painting'
+  | 'Parties'
+  | 'Pest Control'
+  | 'Pets'
+  | 'Photography'
+  | 'Plumbing'
+  | 'Pool & Spa'
+  | 'Power Wash'
+  | 'Property Manager'
+  | 'Real Estate'
+  | 'Real Estate Team'
+  | 'Regulatory & Environmental'
+  | 'Restaurant'
+  | 'Restoration'
+  | 'Roof & Attic'
+  | 'Rug Cleaning'
+  | 'Security'
+  | 'Sewer & Septic'
+  | 'Showing Coordinator'
+  | 'Siding'
+  | 'Smart Home'
+  | 'Snow Removal'
+  | 'Solar & Energy'
+  | 'Specialty Contractor'
+  | 'Subcontractor'
+  | 'Tech Help'
+  | 'Tile & Grout'
+  | 'Transportation'
+  | 'Tree Services'
+  | 'Tutoring'
+  | 'Warehousing and Storage'
+  | 'Water Heater'
+  | 'Water Services'
+  | 'Water Treatment'
+  | 'Well Pumps'
+  | 'Wildlife Control'
+  | 'Window & Exterior Cleaning'
+  | 'Wine';
+
 export interface FeatureStatus {
   stage: AdoptionStage;
   attachedAt?: string;
@@ -380,6 +578,7 @@ export interface FeatureStatus {
 /**
  * A ProAccount represents a home service professional using Housecall Pro.
  * Tracks their plan, business type, and progress on each feature.
+ * Includes Pro Data (Pro Facets) fields for core business information.
  */
 export interface ProAccount {
   id: string;
@@ -387,9 +586,29 @@ export interface ProAccount {
   ownerName: string;
   businessType: BusinessType;
   plan: PlanTier;
-  goal: ProGoal;
+  goal: ProGoal;  // Maps to company_goal in Pro Data
   createdAt: string;
   featureStatus: Record<FeatureId, FeatureStatus>;
+
+  // Pro Data (Pro Facets) fields
+  billingStatus?: BillingStatus;
+  businessId?: string;  // UUID
+  customerStatusDisplayName?: CustomerStatusDisplayName;
+  fraudStatus?: FraudStatus;
+  industry?: string;  // Raw industry value
+  industryStandardized?: IndustryStandardized;
+  industryType?: IndustryType;
+  leadStatus?: LeadStatus;
+  organizationBinSize?: OrganizationBinSize;
+  organizationSize?: number;
+  organizationStatus?: OrganizationStatus;
+  organizationUuid?: string;  // UUID
+  painPoints?: PainPoint[];
+  retentionStatus?: RetentionStatus;
+  segment?: Segment;
+  salesforceAccountId?: string;
+  salesforceLeadId?: string;
+  techReadiness?: boolean;
 }
 
 // -----------------------------------------------------------------------------
