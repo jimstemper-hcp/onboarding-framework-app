@@ -111,7 +111,7 @@ function getOptionalItems(feature: Feature): OnboardingItemAssignment[] {
   return items;
 }
 
-function calculateFeaturePoints(feature: Feature, status: FeatureStatus) {
+function calculateFeaturePoints(feature: Feature, status: FeatureStatus | undefined) {
   const allItems = getFeatureOnboardingItems(feature);
 
   const totalPossible =
@@ -121,7 +121,7 @@ function calculateFeaturePoints(feature: Feature, status: FeatureStatus) {
     (allItems.length * POINTS.TASK_COMPLETE);
 
   let earned = 0;
-  if (status.stage !== 'not_attached') {
+  if (status && status.stage !== 'not_attached') {
     earned += POINTS.FEATURE_ATTACHED;
     earned += status.completedTasks.length * POINTS.TASK_COMPLETE;
     if (status.stage === 'activated' || status.stage === 'engaged') {
@@ -170,8 +170,8 @@ function FeatureIcon({ iconName, ...props }: { iconName: string } & Record<strin
 // Timeline milestone status
 type MilestoneStatus = 'completed' | 'current' | 'upcoming' | 'locked';
 
-function getMilestoneStatus(status: FeatureStatus, requiredItems: OnboardingItemAssignment[]): MilestoneStatus {
-  if (status.stage === 'not_attached') return 'locked';
+function getMilestoneStatus(status: FeatureStatus | undefined, requiredItems: OnboardingItemAssignment[]): MilestoneStatus {
+  if (!status || status.stage === 'not_attached') return 'locked';
   if (status.stage === 'engaged' || status.stage === 'activated') return 'completed';
 
   // For attached stage, check if they've started
@@ -199,12 +199,12 @@ function ProgressSummaryCard({
 
   const completedFeatures = features.filter((f) => {
     const status = pro.featureStatus[f.id];
-    return status.stage === 'engaged' || status.stage === 'activated';
+    return status && (status.stage === 'engaged' || status.stage === 'activated');
   }).length;
 
   const availableFeatures = features.filter((f) => {
     const status = pro.featureStatus[f.id];
-    return status.stage !== 'not_attached';
+    return status && status.stage !== 'not_attached';
   }).length;
 
   return (
@@ -295,7 +295,7 @@ function TimelineMilestone({
   onToggleTask,
 }: {
   feature: Feature;
-  status: FeatureStatus;
+  status: FeatureStatus | undefined;
   milestoneStatus: MilestoneStatus;
   isFirst: boolean;
   isLast: boolean;
@@ -306,6 +306,11 @@ function TimelineMilestone({
   const requiredItems = getRequiredItems(feature);
   const optionalItems = getOptionalItems(feature);
   const { earned, totalPossible } = calculateFeaturePoints(feature, status);
+
+  // Handle case where status is undefined (feature not available for this pro)
+  if (!status) {
+    return null;
+  }
 
   const completedRequiredItems = requiredItems.filter((item) => status.completedTasks.includes(item.itemId));
   const completedOptionalItems = optionalItems.filter((item) => status.completedTasks.includes(item.itemId));
@@ -789,6 +794,7 @@ export function PortalView() {
 
   const handleToggleTask = (featureId: string, taskId: string) => {
     const status = activePro.featureStatus[featureId as keyof typeof activePro.featureStatus];
+    if (!status) return;
     if (status.completedTasks.includes(taskId)) {
       uncompleteTask(activePro.id, featureId as keyof typeof activePro.featureStatus, taskId);
     } else {
@@ -801,15 +807,18 @@ export function PortalView() {
   // 2. Current feature (in progress)
   // 3. Upcoming features (recommended first)
   // 4. Locked features
-  const timelineFeatures = [...features].sort((a, b) => {
-    const statusA = activePro.featureStatus[a.id];
-    const statusB = activePro.featureStatus[b.id];
-    const milestoneA = getMilestoneStatus(statusA, getRequiredItems(a));
-    const milestoneB = getMilestoneStatus(statusB, getRequiredItems(b));
+  // Filter out features that don't have status data for this pro
+  const timelineFeatures = [...features]
+    .filter((f) => activePro.featureStatus[f.id] !== undefined)
+    .sort((a, b) => {
+      const statusA = activePro.featureStatus[a.id];
+      const statusB = activePro.featureStatus[b.id];
+      const milestoneA = getMilestoneStatus(statusA, getRequiredItems(a));
+      const milestoneB = getMilestoneStatus(statusB, getRequiredItems(b));
 
-    const order = { completed: 0, current: 1, upcoming: 2, locked: 3 };
-    return order[milestoneA] - order[milestoneB];
-  });
+      const order = { completed: 0, current: 1, upcoming: 2, locked: 3 };
+      return order[milestoneA] - order[milestoneB];
+    });
 
   // Find the current milestone index
   const currentIndex = timelineFeatures.findIndex((f) => {

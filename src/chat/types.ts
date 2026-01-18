@@ -18,6 +18,23 @@ export type ChatMode = 'planning' | 'demo';
 export type MessageRole = 'user' | 'assistant' | 'system';
 
 /**
+ * Supported image MIME types for file attachments.
+ */
+export type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
+
+/**
+ * File attachment for messages (supports images for vision API).
+ */
+export interface FileAttachment {
+  id: string;
+  name: string;
+  type: ImageMediaType;    // MIME type
+  size: number;            // File size in bytes
+  base64Data: string;      // Base64-encoded content
+  previewUrl?: string;     // Object URL for preview (client-side only)
+}
+
+/**
  * A single chat message.
  */
 export interface ChatMessage {
@@ -25,6 +42,7 @@ export interface ChatMessage {
   role: MessageRole;
   content: string;
   timestamp: string; // ISO timestamp
+  attachments?: FileAttachment[];  // Optional file attachments (images)
 }
 
 /**
@@ -55,7 +73,7 @@ export interface ApiKeyConfig {
  * Chat context actions.
  */
 export interface ChatActions {
-  sendMessage: (content: string) => Promise<void>;
+  sendMessage: (content: string, attachments?: FileAttachment[]) => Promise<void>;
   clearMessages: () => void;
   setApiKey: (key: string) => void;
   clearApiKey: () => void;
@@ -70,11 +88,36 @@ export type ChatContextValue = ChatState & ChatActions & {
 };
 
 /**
+ * Anthropic vision content block for images.
+ */
+export interface AnthropicImageBlock {
+  type: 'image';
+  source: {
+    type: 'base64';
+    media_type: ImageMediaType;
+    data: string;  // Base64-encoded image data
+  };
+}
+
+/**
+ * Anthropic text content block.
+ */
+export interface AnthropicTextBlock {
+  type: 'text';
+  text: string;
+}
+
+/**
+ * Content can be a string (text only) or array of blocks (vision).
+ */
+export type AnthropicMessageContent = string | Array<AnthropicImageBlock | AnthropicTextBlock>;
+
+/**
  * Anthropic API message format.
  */
 export interface AnthropicMessage {
   role: 'user' | 'assistant';
-  content: string;
+  content: AnthropicMessageContent;
 }
 
 /**

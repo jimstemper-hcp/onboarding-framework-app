@@ -27,6 +27,13 @@ const createAllFeatureStatuses = (
     estimates: statuses.estimates ?? defaultStatus,
     'csr-ai': statuses['csr-ai'] ?? defaultStatus,
     reviews: statuses.reviews ?? defaultStatus,
+    // New features for Frontline Onboarding Plan
+    'account-setup': statuses['account-setup'] ?? defaultStatus,
+    customers: statuses.customers ?? defaultStatus,
+    'add-ons': statuses['add-ons'] ?? defaultStatus,
+    'service-plans': statuses['service-plans'] ?? defaultStatus,
+    'online-booking': statuses['online-booking'] ?? defaultStatus,
+    reporting: statuses.reporting ?? defaultStatus,
   };
 };
 

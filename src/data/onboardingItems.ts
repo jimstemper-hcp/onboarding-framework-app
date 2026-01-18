@@ -460,6 +460,1539 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     repInstructions: 'Send the welcome email template with links to help articles, videos, and the getting started guide.',
     estimatedMinutes: 5,
   },
+
+  // ===========================================================================
+  // CATEGORY: ACCOUNT SETUP (12 items)
+  // ===========================================================================
+  {
+    id: 'company-profile',
+    title: 'Company Profile',
+    description: 'Set up your company profile with business name, logo, and contact information.',
+    type: 'rep_facing',
+    category: 'account-setup',
+    labels: ['account-setup', 'getting-started'],
+    repInstructions: 'Walk through company profile setup including business name, address, logo, and contact details.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'company-profile-value',
+        title: 'Value Statement',
+        content: 'A complete company profile builds credibility with customers. Your business name, logo, and contact info appear on invoices, estimates, and communications - making every touchpoint look professional.',
+      },
+      {
+        id: 'company-profile-guidance',
+        title: 'Guidance',
+        content: 'Have the pro prepare their logo (PNG/JPG, ideally 500x500px or larger). Walk through Settings > Company Profile. Ensure business name matches what customers know them by. Add phone number they want customers to call back on.',
+      },
+    ],
+  },
+  {
+    id: 'business-hours',
+    title: 'Business Hours',
+    description: 'Configure your business hours for scheduling and availability.',
+    type: 'rep_facing',
+    category: 'account-setup',
+    labels: ['account-setup', 'scheduling'],
+    repInstructions: 'Help set up business hours including days of operation and time slots.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'business-hours-value',
+        title: 'Value Statement',
+        content: 'Accurate business hours ensure customers can only book during times you actually work. This prevents missed appointments and sets proper expectations from the start.',
+      },
+      {
+        id: 'business-hours-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Business Hours. Ask about their typical start/end times and days off. Consider if they want different hours for different services. Remind them this affects online booking availability.',
+      },
+    ],
+  },
+  {
+    id: 'add-employees',
+    title: 'Add Employees/Employee Permissions',
+    description: 'Add team members and configure their permissions and access levels.',
+    type: 'rep_facing',
+    category: 'account-setup',
+    labels: ['account-setup', 'team'],
+    repInstructions: 'Guide through adding employees and setting up appropriate permission levels.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'add-employees-value',
+        title: 'Value Statement',
+        content: 'Adding employees unlocks dispatching, time tracking, and accountability. Each tech gets their own login to see their schedule, mark jobs complete, and collect payments in the field.',
+      },
+      {
+        id: 'add-employees-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Team. Get employee names and email addresses. Discuss permission levels: Admin (full access), Office (no field), Field (mobile only). Set up each employee\'s calendar color for easy dispatch visibility.',
+      },
+    ],
+  },
+  {
+    id: 'notifications-settings',
+    title: 'Notifications',
+    description: 'Configure notification preferences for the account.',
+    type: 'rep_facing',
+    category: 'account-setup',
+    labels: ['account-setup', 'notifications'],
+    repInstructions: 'Review and configure notification settings for email, SMS, and push notifications.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'notifications-settings-value',
+        title: 'Value Statement',
+        content: 'Smart notification settings keep you informed without overwhelming you. Get alerts for new jobs, payments, and customer messages on the channels that work best for your workflow.',
+      },
+      {
+        id: 'notifications-settings-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Notifications. Review each notification type: new jobs, payments, reviews, etc. Ask which channel they prefer (email, SMS, push). Ensure critical alerts like new bookings are enabled.',
+      },
+    ],
+  },
+  {
+    id: 'custom-sms',
+    title: 'Set Up Custom SMS',
+    description: 'Configure custom SMS messaging templates and settings.',
+    type: 'rep_facing',
+    category: 'account-setup',
+    labels: ['account-setup', 'communications'],
+    repInstructions: 'Help set up custom SMS templates and messaging preferences.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'custom-sms-value',
+        title: 'Value Statement',
+        content: 'Custom SMS templates let you communicate with your brand\'s voice. Personalized messages get better response rates and make your business memorable to customers.',
+      },
+      {
+        id: 'custom-sms-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Communications > SMS Templates. Review default templates for appointment reminders, on-my-way, and follow-ups. Customize with their company name and tone. Test by sending a sample message.',
+      },
+    ],
+  },
+  {
+    id: 'estimates-settings',
+    title: 'Estimates Settings',
+    description: 'Configure settings for estimates including templates and defaults.',
+    type: 'rep_facing',
+    category: 'account-setup',
+    labels: ['account-setup', 'estimates'],
+    repInstructions: 'Walk through estimates settings including default terms, expiration, and templates.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'estimates-settings-value',
+        title: 'Value Statement',
+        content: 'Well-configured estimate settings save time on every quote. Set your default terms, expiration periods, and branding once - then every estimate you create starts with your preferences built in.',
+      },
+      {
+        id: 'estimates-settings-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Estimates. Set default expiration (7-30 days typical). Configure terms and conditions. Ensure logo and contact info display correctly. Review approval workflow settings if applicable.',
+      },
+    ],
+  },
+  {
+    id: 'invoice-settings',
+    title: 'Invoice Settings',
+    description: 'Configure invoice settings including payment terms and reminders.',
+    type: 'rep_facing',
+    category: 'account-setup',
+    labels: ['account-setup', 'invoicing'],
+    repInstructions: 'Set up invoice settings including payment terms, due dates, and reminder schedules.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'invoice-settings-value',
+        title: 'Value Statement',
+        content: 'Proper invoice settings help you get paid faster. Automatic reminders chase payments so you don\'t have to, and clear payment terms set expectations from the start.',
+      },
+      {
+        id: 'invoice-settings-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Invoicing. Set default payment terms (Due on Receipt, Net 15, Net 30). Configure automatic payment reminders at 7, 14, 30 days overdue. Add late fee policy if applicable. Review invoice numbering format.',
+      },
+    ],
+  },
+  {
+    id: 'connect-bank-account',
+    title: 'Connect Bank Account',
+    description: 'Connect a bank account for payment processing and deposits.',
+    type: 'rep_facing',
+    category: 'account-setup',
+    labels: ['account-setup', 'payments'],
+    repInstructions: 'Guide through bank account connection for payment processing.',
+    estimatedMinutes: 10,
+    subItems: [
+      { id: 'tap-to-pay', title: 'Tap to Pay' },
+      { id: 'test-payment', title: 'Test Payment' },
+      { id: 'mobile-check-deposit', title: 'Mobile Check Deposit' },
+    ],
+    contextSnippets: [
+      {
+        id: 'connect-bank-account-value',
+        title: 'Value Statement',
+        content: 'Connecting your bank account enables payment processing so you can accept cards in the field, send payment links, and get deposits directly. Most pros see faster payments within the first week.',
+      },
+      {
+        id: 'connect-bank-account-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Payments. Click Connect Bank Account and follow Stripe/Plaid flow. Have routing and account numbers ready. After connecting, demonstrate Tap to Pay setup on mobile and run a test payment to verify everything works.',
+      },
+    ],
+  },
+  {
+    id: 'consumer-financing',
+    title: 'Consumer Financing - Wisetack',
+    description: 'Set up consumer financing options through Wisetack integration.',
+    type: 'rep_facing',
+    category: 'account-setup',
+    labels: ['account-setup', 'payments', 'financing'],
+    repInstructions: 'Explain and set up Wisetack consumer financing integration.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'consumer-financing-value',
+        title: 'Value Statement',
+        content: 'Consumer financing helps close bigger jobs by letting customers pay over time while you get paid upfront. Pros offering financing see 20-30% higher average ticket sizes on big-ticket repairs.',
+      },
+      {
+        id: 'consumer-financing-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Payments > Consumer Financing. Walk through Wisetack signup (takes ~5 min). Explain how to offer financing on estimates and invoices. Train techs to mention financing for jobs over $500. No credit impact for soft checks.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // CATEGORY: THE BASICS (8 items)
+  // ===========================================================================
+  {
+    id: 'add-new-customers',
+    title: 'Add New Customers',
+    description: 'Learn how to add and manage new customers in the system.',
+    type: 'rep_facing',
+    category: 'the-basics',
+    labels: ['the-basics', 'customers'],
+    repInstructions: 'Demonstrate how to add new customers including all required fields.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'add-new-customers-value',
+        title: 'Value Statement',
+        content: 'Your customer database is the foundation of your business. Every customer added becomes a contact for follow-ups, marketing, and repeat business tracking.',
+      },
+      {
+        id: 'add-new-customers-guidance',
+        title: 'Guidance',
+        content: 'Go to Customers > Add New. Show required fields (name, phone/email, address). Demonstrate quick-add from incoming call. Explain duplicate detection. Mention import option for existing customer lists.',
+      },
+    ],
+  },
+  {
+    id: 'customer-profile-details',
+    title: 'Customer Profile Details',
+    description: 'Understand customer profile fields and how to manage customer information.',
+    type: 'rep_facing',
+    category: 'the-basics',
+    labels: ['the-basics', 'customers'],
+    repInstructions: 'Walk through customer profile details and what information can be stored.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'customer-profile-details-value',
+        title: 'Value Statement',
+        content: 'Rich customer profiles help you deliver personalized service. Notes, equipment history, and preferences give techs context before they arrive - impressing customers and saving time.',
+      },
+      {
+        id: 'customer-profile-details-guidance',
+        title: 'Guidance',
+        content: 'Open an existing customer profile. Walk through all sections: contact info, addresses, notes, job history, payment methods. Show how to add internal notes (not visible to customer). Explain lead source tracking for marketing ROI.',
+      },
+    ],
+  },
+  {
+    id: 'customer-portal',
+    title: 'Customer Portal',
+    description: 'Set up and explain the customer portal for self-service.',
+    type: 'rep_facing',
+    category: 'the-basics',
+    labels: ['the-basics', 'customers', 'self-service'],
+    repInstructions: 'Explain customer portal features and how customers can use it.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'customer-portal-value',
+        title: 'Value Statement',
+        content: 'The customer portal lets customers view appointments, pay invoices, and request service 24/7. This reduces phone calls and gives customers the self-service experience they expect.',
+      },
+      {
+        id: 'customer-portal-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Customer Portal. Enable the portal and customize branding. Walk through what customers see: upcoming appointments, invoice history, payment options. Show how portal link is included in customer communications.',
+      },
+    ],
+  },
+  {
+    id: 'customer-tags',
+    title: 'Customer Tags',
+    description: 'Learn how to use tags to organize and categorize customers.',
+    type: 'rep_facing',
+    category: 'the-basics',
+    labels: ['the-basics', 'customers', 'organization'],
+    repInstructions: 'Show how to create and use customer tags for organization and filtering.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'customer-tags-value',
+        title: 'Value Statement',
+        content: 'Tags help you segment customers for targeted marketing and better service. Tag VIP customers, property managers, or service plan members to quickly filter and communicate with specific groups.',
+      },
+      {
+        id: 'customer-tags-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Tags > Customer Tags. Create common tags: VIP, Commercial, Residential, Service Plan, Do Not Call. Show how to apply tags to customers and filter customer list by tag. Explain tag-based marketing campaigns.',
+      },
+    ],
+  },
+  {
+    id: 'cc-on-file',
+    title: 'CC on File',
+    description: 'Set up credit card on file for customers for easy payments.',
+    type: 'rep_facing',
+    category: 'the-basics',
+    labels: ['the-basics', 'payments'],
+    repInstructions: 'Explain how to store credit cards on file and the benefits for recurring payments.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'cc-on-file-value',
+        title: 'Value Statement',
+        content: 'Cards on file eliminate payment friction. Recurring customers and service plan members can be charged automatically, reducing collections work and speeding up cash flow.',
+      },
+      {
+        id: 'cc-on-file-guidance',
+        title: 'Guidance',
+        content: 'Go to customer profile > Payment Methods. Show how to add a card via payment link or manual entry. Explain PCI compliance (cards stored securely by Stripe). Demonstrate charging a card on file from an invoice.',
+      },
+    ],
+  },
+  {
+    id: 'parent-child-billing',
+    title: 'Parent/Child Billing',
+    description: 'Set up parent/child billing relationships for property management.',
+    type: 'rep_facing',
+    category: 'the-basics',
+    labels: ['the-basics', 'billing', 'advanced'],
+    repInstructions: 'Explain parent/child billing for property managers or multi-location customers.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'parent-child-billing-value',
+        title: 'Value Statement',
+        content: 'Parent/child billing simplifies commercial and property management accounts. Bill the management company while tracking work at individual properties - perfect for HOAs, franchises, and multi-unit customers.',
+      },
+      {
+        id: 'parent-child-billing-guidance',
+        title: 'Guidance',
+        content: 'Go to customer profile > Billing Settings. Show how to set up parent company and link child locations. Explain invoice routing options (bill parent vs bill individual). Demonstrate consolidated billing reports for parent accounts.',
+      },
+    ],
+  },
+  {
+    id: 'multiple-addresses',
+    title: 'Adding Multiple Addresses',
+    description: 'Learn how to add multiple service addresses for a single customer.',
+    type: 'rep_facing',
+    category: 'the-basics',
+    labels: ['the-basics', 'customers'],
+    repInstructions: 'Show how to add and manage multiple addresses for customers with multiple properties.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'multiple-addresses-value',
+        title: 'Value Statement',
+        content: 'Multiple addresses let you serve customers with vacation homes, rental properties, or multiple locations without creating duplicate customer records. All history stays under one customer.',
+      },
+      {
+        id: 'multiple-addresses-guidance',
+        title: 'Guidance',
+        content: 'Go to customer profile > Addresses. Click Add Address. Show how to label addresses (Home, Vacation, Rental #1). When creating a job, demonstrate selecting from saved addresses. Explain property-specific notes for each address.',
+      },
+    ],
+  },
+  {
+    id: 'customer-notifications',
+    title: 'Notifications',
+    description: 'Configure customer notification preferences.',
+    type: 'rep_facing',
+    category: 'the-basics',
+    labels: ['the-basics', 'notifications'],
+    repInstructions: 'Set up customer notification preferences for appointments, invoices, and marketing.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'customer-notifications-value',
+        title: 'Value Statement',
+        content: 'Customer notification preferences ensure you\'re communicating how customers prefer. Respect opt-outs for marketing while ensuring transactional messages (appointments, invoices) still get through.',
+      },
+      {
+        id: 'customer-notifications-guidance',
+        title: 'Guidance',
+        content: 'Go to customer profile > Notification Preferences. Show email vs SMS preferences. Explain difference between transactional (can\'t opt out) and marketing (can opt out). Demonstrate how to mark customers as "Do Not Contact" for marketing.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // CATEGORY: ADD ONS (8 items)
+  // ===========================================================================
+  {
+    id: 'pipeline',
+    title: 'Pipeline',
+    description: 'Set up and use the sales pipeline for lead management.',
+    type: 'rep_facing',
+    category: 'add-ons',
+    labels: ['add-ons', 'sales', 'crm'],
+    repInstructions: 'Demonstrate the pipeline feature for tracking leads and opportunities.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'pipeline-value',
+        title: 'Value Statement',
+        content: 'Pipeline helps you track leads from first contact to closed deal. See your sales funnel at a glance, follow up at the right time, and never let a hot lead go cold.',
+      },
+      {
+        id: 'pipeline-guidance',
+        title: 'Guidance',
+        content: 'Go to Pipeline from main menu. Walk through stages: New Lead, Contacted, Estimate Sent, Negotiating, Won/Lost. Create a sample lead and move through stages. Set up follow-up reminders. Show pipeline reports and conversion metrics.',
+      },
+    ],
+  },
+  {
+    id: 'profit-rhino',
+    title: 'Profit Rhino',
+    description: 'Set up Profit Rhino integration for flat-rate pricing.',
+    type: 'rep_facing',
+    category: 'add-ons',
+    labels: ['add-ons', 'pricing', 'integration'],
+    repInstructions: 'Explain and set up Profit Rhino integration for flat-rate pricing books.',
+    estimatedMinutes: 20,
+    contextSnippets: [
+      {
+        id: 'profit-rhino-value',
+        title: 'Value Statement',
+        content: 'Profit Rhino provides industry-standard flat-rate pricing books. Techs present professional options to customers without guessing prices, increasing average ticket size and closing rates.',
+      },
+      {
+        id: 'profit-rhino-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Integrations > Profit Rhino. Connect their Profit Rhino account. Walk through how pricing syncs to estimates. Show techs how to build estimates using the pricing book. Review margin settings and adjustment options.',
+      },
+    ],
+  },
+  {
+    id: 'marketing-center',
+    title: 'Marketing Center',
+    description: 'Set up and use the Marketing Center for campaigns.',
+    type: 'rep_facing',
+    category: 'add-ons',
+    labels: ['add-ons', 'marketing'],
+    repInstructions: 'Walk through Marketing Center features including email campaigns and postcards.',
+    estimatedMinutes: 20,
+    contextSnippets: [
+      {
+        id: 'marketing-center-value',
+        title: 'Value Statement',
+        content: 'Marketing Center lets you stay top-of-mind with automated campaigns. Send seasonal reminders, win back inactive customers, and request reviews - all without lifting a finger after setup.',
+      },
+      {
+        id: 'marketing-center-guidance',
+        title: 'Guidance',
+        content: 'Go to Marketing Center. Review campaign types: Email, Postcard, Automated. Start with a simple "win back" campaign for inactive customers. Set up seasonal reminder campaigns (HVAC tune-up, etc). Review analytics after first send.',
+      },
+    ],
+  },
+  {
+    id: 'voice-call-tracking',
+    title: 'Voice & Call Tracking',
+    description: 'Set up voice and call tracking for marketing attribution.',
+    type: 'rep_facing',
+    category: 'add-ons',
+    labels: ['add-ons', 'calls', 'tracking'],
+    repInstructions: 'Configure voice and call tracking for lead source attribution.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'voice-call-tracking-value',
+        title: 'Value Statement',
+        content: 'Call tracking reveals which marketing channels drive phone calls. Know exactly which ads, mailers, or directories generate leads so you can invest more in what works.',
+      },
+      {
+        id: 'voice-call-tracking-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Voice & Call Tracking. Set up tracking numbers for each lead source (Google, Yelp, mailers). Show call recording settings and compliance. Review call tracking reports to demonstrate ROI attribution.',
+      },
+    ],
+  },
+  {
+    id: 'hcpa',
+    title: 'HCPA',
+    description: 'Set up Housecall Pro Accounting integration.',
+    type: 'rep_facing',
+    category: 'add-ons',
+    labels: ['add-ons', 'accounting', 'integration'],
+    repInstructions: 'Explain and set up HCPA for accounting integration.',
+    estimatedMinutes: 20,
+    contextSnippets: [
+      {
+        id: 'hcpa-value',
+        title: 'Value Statement',
+        content: 'HCPA syncs your Housecall Pro data with accounting software automatically. No more double entry - invoices, payments, and expenses flow directly to your books, saving hours each month.',
+      },
+      {
+        id: 'hcpa-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Integrations > HCPA. Connect their QuickBooks or accounting system. Map chart of accounts for revenue, expenses, and payment types. Run a test sync and verify data in both systems.',
+      },
+    ],
+  },
+  {
+    id: 'payroll',
+    title: 'Payroll',
+    description: 'Set up payroll integration for employee payments.',
+    type: 'rep_facing',
+    category: 'add-ons',
+    labels: ['add-ons', 'payroll', 'integration'],
+    repInstructions: 'Configure payroll integration for employee time tracking and payments.',
+    estimatedMinutes: 20,
+    contextSnippets: [
+      {
+        id: 'payroll-value',
+        title: 'Value Statement',
+        content: 'Integrated payroll uses the time tracking already happening in Housecall Pro. No more collecting timesheets - clock in/out data flows directly to payroll for accurate, hassle-free pay runs.',
+      },
+      {
+        id: 'payroll-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Payroll. Set up employee profiles with pay rates and tax info. Configure pay periods and direct deposit. Show how time tracking data flows to payroll. Run a test pay period before going live.',
+      },
+    ],
+  },
+  {
+    id: 'conquer',
+    title: 'Conquer',
+    description: 'Set up Conquer integration for sales enablement.',
+    type: 'rep_facing',
+    category: 'add-ons',
+    labels: ['add-ons', 'sales', 'integration'],
+    repInstructions: 'Explain and configure Conquer integration.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'conquer-value',
+        title: 'Value Statement',
+        content: 'Conquer helps your team close more deals with guided selling tools. Present professional proposals, handle objections, and upsell confidently with built-in sales playbooks.',
+      },
+      {
+        id: 'conquer-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Integrations > Conquer. Connect their Conquer account. Walk through how sales tools appear during estimate presentation. Review good-better-best presentation options. Practice a mock sales scenario.',
+      },
+    ],
+  },
+  {
+    id: 'inha-accounting',
+    title: 'INHA Accounting',
+    description: 'Set up INHA Accounting integration.',
+    type: 'rep_facing',
+    category: 'add-ons',
+    labels: ['add-ons', 'accounting', 'integration'],
+    repInstructions: 'Configure INHA Accounting integration for financial management.',
+    estimatedMinutes: 20,
+    contextSnippets: [
+      {
+        id: 'inha-accounting-value',
+        title: 'Value Statement',
+        content: 'INHA Accounting provides full-service bookkeeping tailored for home service businesses. Get clean books, tax-ready financials, and insights specific to your industry without hiring an in-house accountant.',
+      },
+      {
+        id: 'inha-accounting-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Integrations > INHA Accounting. Initiate the INHA onboarding process. Set up data sharing permissions. Schedule their intro call with INHA team. Review reporting cadence and deliverables.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // CATEGORY: ESTIMATES (5 items)
+  // ===========================================================================
+  {
+    id: 'customer-intake-estimates',
+    title: 'Customer Intake (If applicable)',
+    description: 'Set up customer intake process for estimates.',
+    type: 'rep_facing',
+    category: 'estimates',
+    labels: ['estimates', 'intake'],
+    repInstructions: 'Walk through customer intake workflow for estimate requests.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'customer-intake-estimates-value',
+        title: 'Value Statement',
+        content: 'A structured intake process ensures you gather all information needed to prepare accurate estimates. Reduce callbacks and surprise costs by asking the right questions upfront.',
+      },
+      {
+        id: 'customer-intake-estimates-guidance',
+        title: 'Guidance',
+        content: 'Show how to capture estimate requests from calls, online booking, or walk-ins. Create intake questions specific to their services. Link intake forms to estimate creation workflow. Set up notification for new estimate requests.',
+      },
+    ],
+  },
+  {
+    id: 'estimates-basics',
+    title: 'Estimates',
+    description: 'Learn the basics of creating and sending estimates.',
+    type: 'rep_facing',
+    category: 'estimates',
+    labels: ['estimates', 'core'],
+    repInstructions: 'Demonstrate creating, customizing, and sending estimates.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'estimates-basics-value',
+        title: 'Value Statement',
+        content: 'Professional estimates win more jobs. Customers can approve with one click, and approved estimates convert directly to jobs - no retyping required. Track your close rate and follow up on pending estimates.',
+      },
+      {
+        id: 'estimates-basics-guidance',
+        title: 'Guidance',
+        content: 'Create a sample estimate from scratch. Add line items from pricebook. Show how to add photos, notes, and terms. Send via email/SMS. Demonstrate customer approval flow. Show how approved estimate becomes a job.',
+      },
+    ],
+  },
+  {
+    id: 'estimate-templates',
+    title: 'Estimate Templates',
+    description: 'Create and use estimate templates for efficiency.',
+    type: 'rep_facing',
+    category: 'estimates',
+    labels: ['estimates', 'templates'],
+    repInstructions: 'Show how to create and use estimate templates for common job types.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'estimate-templates-value',
+        title: 'Value Statement',
+        content: 'Estimate templates let you quote common jobs in seconds instead of minutes. Techs in the field can send professional estimates immediately, closing deals before competitors even respond.',
+      },
+      {
+        id: 'estimate-templates-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Estimate Templates. Create templates for their top 5 most common services. Include typical line items, standard terms, and default notes. Show how techs select a template and adjust as needed.',
+      },
+    ],
+  },
+  {
+    id: 'multi-option-estimates',
+    title: 'Multi-Optioned Estimates',
+    description: 'Create estimates with multiple options for customers.',
+    type: 'rep_facing',
+    category: 'estimates',
+    labels: ['estimates', 'advanced'],
+    repInstructions: 'Demonstrate creating good-better-best style multi-option estimates.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'multi-option-estimates-value',
+        title: 'Value Statement',
+        content: 'Multi-option estimates (good/better/best) increase average ticket size by 20-40%. Customers appreciate choices and often select the middle or premium option when presented professionally.',
+      },
+      {
+        id: 'multi-option-estimates-guidance',
+        title: 'Guidance',
+        content: 'Create a multi-option estimate with 3 tiers. Name options clearly (Basic Repair, Standard + Warranty, Premium + Maintenance). Highlight value differences between tiers. Show how customer selects their preferred option.',
+      },
+    ],
+  },
+  {
+    id: 'sales-proposal-tool',
+    title: 'Sales Proposal Tool',
+    description: 'Use the sales proposal tool for professional presentations.',
+    type: 'rep_facing',
+    category: 'estimates',
+    labels: ['estimates', 'sales', 'advanced'],
+    repInstructions: 'Walk through the sales proposal tool for creating compelling presentations.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'sales-proposal-tool-value',
+        title: 'Value Statement',
+        content: 'The sales proposal tool transforms estimates into compelling presentations. Include photos, videos, and financing options. Perfect for big-ticket jobs where you need to sell the value, not just the price.',
+      },
+      {
+        id: 'sales-proposal-tool-guidance',
+        title: 'Guidance',
+        content: 'Create a proposal for a high-value service. Add before/after photos, equipment specs, and warranty information. Include financing calculator. Show presentation mode for in-home sales. Practice the customer-facing flow.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // CATEGORY: JOBS (9 items)
+  // ===========================================================================
+  {
+    id: 'customer-intake-jobs',
+    title: 'Customer Intake (If applicable)',
+    description: 'Set up customer intake process for jobs.',
+    type: 'rep_facing',
+    category: 'jobs',
+    labels: ['jobs', 'intake'],
+    repInstructions: 'Walk through customer intake workflow for job requests.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'customer-intake-jobs-value',
+        title: 'Value Statement',
+        content: 'Consistent intake ensures techs arrive prepared with the right parts and information. Reduce wasted trips and improve first-call resolution by capturing key details during booking.',
+      },
+      {
+        id: 'customer-intake-jobs-guidance',
+        title: 'Guidance',
+        content: 'Set up intake questions for their common job types. Configure required fields for job creation. Show how CSRs or online booking capture this info. Link intake data to job notes visible to techs.',
+      },
+    ],
+  },
+  {
+    id: 'jobs-basics',
+    title: 'Jobs',
+    description: 'Learn the basics of creating and managing jobs.',
+    type: 'rep_facing',
+    category: 'jobs',
+    labels: ['jobs', 'core'],
+    repInstructions: 'Demonstrate creating, scheduling, and completing jobs.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'jobs-basics-value',
+        title: 'Value Statement',
+        content: 'Jobs are the core of your business in Housecall Pro. Every job tracks work from booking to payment, building your customer history and feeding your invoicing and reporting automatically.',
+      },
+      {
+        id: 'jobs-basics-guidance',
+        title: 'Guidance',
+        content: 'Create a job from scratch: select customer, add details, schedule. Walk through job lifecycle: Scheduled → En Route → Working → Complete. Show how completing a job creates an invoice. Demonstrate mobile tech workflow.',
+      },
+    ],
+  },
+  {
+    id: 'job-tags',
+    title: 'Job Tags',
+    description: 'Use tags to organize and categorize jobs.',
+    type: 'rep_facing',
+    category: 'jobs',
+    labels: ['jobs', 'organization'],
+    repInstructions: 'Show how to create and use job tags for organization and reporting.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'job-tags-value',
+        title: 'Value Statement',
+        content: 'Job tags unlock powerful reporting and filtering. Tag by service type, urgency, or source to analyze which jobs are most profitable and where your work is coming from.',
+      },
+      {
+        id: 'job-tags-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Tags > Job Tags. Create tags for service types (Repair, Install, Maintenance), urgency (Emergency, Scheduled), and sources (Referral, Online, Repeat). Show how tags appear in reports and filters.',
+      },
+    ],
+  },
+  {
+    id: 'job-templates',
+    title: 'Job Templates',
+    description: 'Create and use job templates for efficiency.',
+    type: 'rep_facing',
+    category: 'jobs',
+    labels: ['jobs', 'templates'],
+    repInstructions: 'Demonstrate creating job templates for common service types.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'job-templates-value',
+        title: 'Value Statement',
+        content: 'Job templates speed up booking and ensure consistency. Pre-set duration, tags, checklists, and notes for common jobs so CSRs book accurately every time.',
+      },
+      {
+        id: 'job-templates-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Job Templates. Create templates for top services (tune-up, diagnostic, install). Set default duration, tags, and any attached checklists. Show how CSRs select templates during booking.',
+      },
+    ],
+  },
+  {
+    id: 'multi-day-appointments',
+    title: 'Multi-Day Appointments',
+    description: 'Schedule jobs that span multiple days.',
+    type: 'rep_facing',
+    category: 'jobs',
+    labels: ['jobs', 'scheduling', 'advanced'],
+    repInstructions: 'Show how to create and manage multi-day job appointments.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'multi-day-appointments-value',
+        title: 'Value Statement',
+        content: 'Multi-day jobs let you schedule large projects that span several days under one job. Keep all notes, photos, and billing together while blocking out accurate calendar time.',
+      },
+      {
+        id: 'multi-day-appointments-guidance',
+        title: 'Guidance',
+        content: 'Create a job and enable multi-day scheduling. Set start and end dates. Show how it appears on the calendar. Demonstrate updating progress across days. Explain how invoicing works for multi-day jobs.',
+      },
+    ],
+  },
+  {
+    id: 'segments',
+    title: 'Segments',
+    description: 'Use segments to break jobs into multiple parts.',
+    type: 'rep_facing',
+    category: 'jobs',
+    labels: ['jobs', 'advanced'],
+    repInstructions: 'Explain job segments for multi-part or phased work.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'segments-value',
+        title: 'Value Statement',
+        content: 'Segments break complex jobs into trackable phases. Perfect for diagnostic + repair, permit + install, or any job that requires multiple visits with different billing.',
+      },
+      {
+        id: 'segments-guidance',
+        title: 'Guidance',
+        content: 'Show how to add segments to a job. Create segments for different phases (Diagnostic, Parts Order, Repair). Explain how each segment can have its own schedule, tech, and line items. Demonstrate segment-based invoicing.',
+      },
+    ],
+  },
+  {
+    id: 'recurring-jobs',
+    title: 'Recurring Jobs',
+    description: 'Set up recurring jobs for regular maintenance.',
+    type: 'rep_facing',
+    category: 'jobs',
+    labels: ['jobs', 'recurring'],
+    repInstructions: 'Configure recurring job schedules for maintenance contracts.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'recurring-jobs-value',
+        title: 'Value Statement',
+        content: 'Recurring jobs build predictable revenue. Set up maintenance visits once and they auto-generate on schedule. Never forget a service call or lose a maintenance customer to a competitor.',
+      },
+      {
+        id: 'recurring-jobs-guidance',
+        title: 'Guidance',
+        content: 'Create a recurring job from a customer profile. Set frequency (weekly, monthly, quarterly, annually). Configure how far in advance jobs generate. Show recurring job management and how to modify the series.',
+      },
+    ],
+  },
+  {
+    id: 'scheduling-dispatching',
+    title: 'Scheduling/Dispatching',
+    description: 'Learn scheduling and dispatching best practices.',
+    type: 'rep_facing',
+    category: 'jobs',
+    labels: ['jobs', 'scheduling', 'dispatching'],
+    repInstructions: 'Walk through scheduling and dispatching workflows and best practices.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'scheduling-dispatching-value',
+        title: 'Value Statement',
+        content: 'Efficient dispatching maximizes billable hours. See all techs and jobs at a glance, minimize drive time, and respond quickly to emergencies without losing track of scheduled work.',
+      },
+      {
+        id: 'scheduling-dispatching-guidance',
+        title: 'Guidance',
+        content: 'Walk through the dispatch board. Show drag-and-drop scheduling. Explain color coding for job status. Demonstrate assigning jobs to techs. Use map view to optimize routes. Show notification settings for dispatch changes.',
+      },
+    ],
+  },
+  {
+    id: 'calendar-settings',
+    title: 'Calendar Settings',
+    description: 'Configure calendar settings and views.',
+    type: 'rep_facing',
+    category: 'jobs',
+    labels: ['jobs', 'calendar', 'settings'],
+    repInstructions: 'Set up calendar preferences including views, colors, and time slots.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'calendar-settings-value',
+        title: 'Value Statement',
+        content: 'Customized calendar settings make dispatching faster. Set your preferred views, time slots, and color coding so the calendar works the way your team thinks.',
+      },
+      {
+        id: 'calendar-settings-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Calendar. Configure default view (day, week, month). Set time slot increments (15, 30, 60 min). Assign colors to job types or techs. Set up calendar sync with Google/Outlook if needed.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // CATEGORY: INVOICING (7 items)
+  // ===========================================================================
+  {
+    id: 'processing-payments',
+    title: 'Processing Payments',
+    description: 'Learn how to process payments from customers.',
+    type: 'rep_facing',
+    category: 'invoicing',
+    labels: ['invoicing', 'payments'],
+    repInstructions: 'Demonstrate processing payments including cards, cash, and checks.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'processing-payments-value',
+        title: 'Value Statement',
+        content: 'Getting paid on the spot means better cash flow. Techs can process cards in the field, customers can pay via link, and all payments sync automatically to your accounting.',
+      },
+      {
+        id: 'processing-payments-guidance',
+        title: 'Guidance',
+        content: 'Show all payment methods: card on file, tap to pay, payment link, cash, and check. Demonstrate recording each type. Show how payments appear on invoices. Explain tip settings and receipt options.',
+      },
+    ],
+  },
+  {
+    id: 'progress-invoicing',
+    title: 'Progress Invoicing',
+    description: 'Set up progress invoicing for large projects.',
+    type: 'rep_facing',
+    category: 'invoicing',
+    labels: ['invoicing', 'advanced'],
+    repInstructions: 'Explain progress invoicing for milestone-based billing.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'progress-invoicing-value',
+        title: 'Value Statement',
+        content: 'Progress invoicing protects your cash flow on large jobs. Bill at milestones (deposit, rough-in, completion) so you\'re never too far out on materials or labor costs.',
+      },
+      {
+        id: 'progress-invoicing-guidance',
+        title: 'Guidance',
+        content: 'Show how to enable progress invoicing on a job. Set up billing milestones with amounts or percentages. Demonstrate sending milestone invoices. Explain how progress payments apply to the final invoice.',
+      },
+    ],
+  },
+  {
+    id: 'cancel-edit-invoice',
+    title: 'Cancel/Edit (Due date, Payment date, deleting/canceling a job)',
+    description: 'Learn how to cancel or edit invoices and jobs.',
+    type: 'rep_facing',
+    category: 'invoicing',
+    labels: ['invoicing', 'management'],
+    repInstructions: 'Show how to edit invoices, change dates, and properly cancel jobs/invoices.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'cancel-edit-invoice-value',
+        title: 'Value Statement',
+        content: 'Knowing how to properly edit and cancel keeps your records clean. Avoid duplicate invoices, maintain accurate reporting, and handle customer disputes professionally.',
+      },
+      {
+        id: 'cancel-edit-invoice-guidance',
+        title: 'Guidance',
+        content: 'Show how to edit invoice line items, due dates, and payment terms. Demonstrate canceling an invoice (vs. deleting). Explain when to void vs. refund. Walk through canceling a job and its impact on related invoices.',
+      },
+    ],
+  },
+  {
+    id: 'auto-invoicing',
+    title: 'Auto Invoicing',
+    description: 'Set up automatic invoice generation.',
+    type: 'rep_facing',
+    category: 'invoicing',
+    labels: ['invoicing', 'automation'],
+    repInstructions: 'Configure auto-invoicing settings for completed jobs.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'auto-invoicing-value',
+        title: 'Value Statement',
+        content: 'Auto-invoicing eliminates the delay between completing work and sending bills. Invoices go out immediately when jobs are marked complete, improving cash flow and reducing admin work.',
+      },
+      {
+        id: 'auto-invoicing-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Invoicing > Auto-Invoice. Enable auto-invoice on job completion. Set whether to auto-send or just create as draft. Configure which job types auto-invoice. Review timing and notification settings.',
+      },
+    ],
+  },
+  {
+    id: 'batched-invoices',
+    title: 'Batched Invoices',
+    description: 'Create batched invoices for multiple jobs.',
+    type: 'rep_facing',
+    category: 'invoicing',
+    labels: ['invoicing', 'advanced'],
+    repInstructions: 'Demonstrate creating batched invoices for commercial clients or property managers.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'batched-invoices-value',
+        title: 'Value Statement',
+        content: 'Batched invoicing simplifies billing for commercial clients. Send one invoice for all work done in a period, matching how property managers and businesses prefer to receive and process bills.',
+      },
+      {
+        id: 'batched-invoices-guidance',
+        title: 'Guidance',
+        content: 'Show how to select multiple completed jobs for one customer. Create a batched invoice combining all jobs. Review line item grouping options. Set up recurring batch invoicing for regular commercial accounts.',
+      },
+    ],
+  },
+  {
+    id: 'invoice-checklist',
+    title: 'Adding a checklist to an invoice',
+    description: 'Add checklists to invoices for work verification.',
+    type: 'rep_facing',
+    category: 'invoicing',
+    labels: ['invoicing', 'documentation'],
+    repInstructions: 'Show how to add checklists to invoices for documentation.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'invoice-checklist-value',
+        title: 'Value Statement',
+        content: 'Checklist visibility on invoices shows customers exactly what was done. It builds trust, reduces disputes, and provides documentation if questions arise later.',
+      },
+      {
+        id: 'invoice-checklist-guidance',
+        title: 'Guidance',
+        content: 'Show how completed job checklists appear on invoices. Configure which checklists are customer-visible vs. internal. Demonstrate how customers see the completed checklist when viewing their invoice.',
+      },
+    ],
+  },
+  {
+    id: 'invoice-attachments',
+    title: 'Adding attachments to an invoice',
+    description: 'Attach files and photos to invoices.',
+    type: 'rep_facing',
+    category: 'invoicing',
+    labels: ['invoicing', 'documentation'],
+    repInstructions: 'Demonstrate adding photos and file attachments to invoices.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'invoice-attachments-value',
+        title: 'Value Statement',
+        content: 'Photos on invoices prove the work was done. Before/after pictures, equipment model numbers, and warranty documents give customers confidence and protect you from disputes.',
+      },
+      {
+        id: 'invoice-attachments-guidance',
+        title: 'Guidance',
+        content: 'Show how to attach photos from job to invoice. Add PDFs like warranty docs or permits. Configure which attachments are customer-visible. Demonstrate customer view with attachments.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // CATEGORY: SERVICE PLANS (4 items)
+  // ===========================================================================
+  {
+    id: 'service-plans-settings',
+    title: 'Settings',
+    description: 'Configure service plan settings.',
+    type: 'rep_facing',
+    category: 'service-plans',
+    labels: ['service-plans', 'settings'],
+    repInstructions: 'Set up service plan configuration options and defaults.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'service-plans-settings-value',
+        title: 'Value Statement',
+        content: 'Service plan settings define how your membership program works. Get the foundation right with billing cycles, auto-renewal, and cancellation policies that protect your recurring revenue.',
+      },
+      {
+        id: 'service-plans-settings-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Service Plans. Configure default billing frequency (monthly, annual). Set auto-renewal preferences. Define cancellation policies and prorating rules. Set up payment failure handling.',
+      },
+    ],
+  },
+  {
+    id: 'service-plans-templates',
+    title: 'Templates',
+    description: 'Create service plan templates.',
+    type: 'rep_facing',
+    category: 'service-plans',
+    labels: ['service-plans', 'templates'],
+    repInstructions: 'Create service plan templates for different service tiers.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'service-plans-templates-value',
+        title: 'Value Statement',
+        content: 'Service plan templates make selling memberships easy. Create tiered options (Bronze, Silver, Gold) with clear benefits so techs can present and close membership sales in the field.',
+      },
+      {
+        id: 'service-plans-templates-guidance',
+        title: 'Guidance',
+        content: 'Create at least 2-3 plan tiers with different pricing and benefits. Define what\'s included: visits per year, discounts, priority scheduling. Set pricing and billing cycle for each tier. Create compelling plan names.',
+      },
+    ],
+  },
+  {
+    id: 'edit-delete-service-plan',
+    title: 'How to Edit/Delete a Service Plan',
+    description: 'Learn how to modify or remove service plans.',
+    type: 'rep_facing',
+    category: 'service-plans',
+    labels: ['service-plans', 'management'],
+    repInstructions: 'Show how to edit existing service plans and properly delete them.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'edit-delete-service-plan-value',
+        title: 'Value Statement',
+        content: 'Plans evolve as your business grows. Knowing how to properly modify or retire plans protects existing customers while letting you improve your offerings.',
+      },
+      {
+        id: 'edit-delete-service-plan-guidance',
+        title: 'Guidance',
+        content: 'Show how edits to templates affect existing vs. new subscribers. Demonstrate changing pricing and benefits. Explain how to retire a plan (hide from new sales) vs. delete. Walk through handling existing subscribers on retired plans.',
+      },
+    ],
+  },
+  {
+    id: 'add-service-plan-customer',
+    title: 'Add a Service Plan to a Customer',
+    description: 'Assign service plans to customers.',
+    type: 'rep_facing',
+    category: 'service-plans',
+    labels: ['service-plans', 'customers'],
+    repInstructions: 'Demonstrate adding service plans to customer accounts.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'add-service-plan-customer-value',
+        title: 'Value Statement',
+        content: 'Enrolling customers in service plans builds recurring revenue. Each new member represents predictable income and a customer committed to using your services long-term.',
+      },
+      {
+        id: 'add-service-plan-customer-guidance',
+        title: 'Guidance',
+        content: 'Go to customer profile > Service Plans > Add Plan. Select the plan tier. Set start date and payment method. Show how recurring jobs auto-generate. Demonstrate the customer\'s view of their membership benefits.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // CATEGORY: ADDITIONAL TOOLS (12 items with sub-items)
+  // ===========================================================================
+  {
+    id: 'pricebook',
+    title: 'Pricebook',
+    description: 'Set up and manage your pricebook.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'pricing'],
+    repInstructions: 'Walk through pricebook setup including services, materials, and pricing.',
+    estimatedMinutes: 20,
+    subItems: [
+      { id: 'flat-rate-pricing', title: 'Flat Rate Pricing' },
+    ],
+    contextSnippets: [
+      {
+        id: 'pricebook-value',
+        title: 'Value Statement',
+        content: 'A well-built pricebook is your sales team\'s best friend. Consistent pricing across all techs means fair quotes, better margins, and faster estimate creation.',
+      },
+      {
+        id: 'pricebook-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Pricebook. Organize into categories (Labor, Materials, Packages). Set prices with appropriate margins. Show how techs access pricebook on mobile. For flat-rate pricing, explain how to build task-based prices including labor.',
+      },
+    ],
+  },
+  {
+    id: 'material-detail-tracking',
+    title: 'Material Detail Tracking',
+    description: 'Track materials used on jobs.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'inventory'],
+    repInstructions: 'Set up material tracking for job costing and inventory management.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'material-detail-tracking-value',
+        title: 'Value Statement',
+        content: 'Material tracking reveals your true job costs. Know exactly what parts went into each job for accurate costing, warranty tracking, and inventory management.',
+      },
+      {
+        id: 'material-detail-tracking-guidance',
+        title: 'Guidance',
+        content: 'Enable material tracking in settings. Show how techs log materials used on jobs. Set up cost tracking for purchase vs. sell price. Review job costing reports showing material margins. Explain inventory alerts if applicable.',
+      },
+    ],
+  },
+  {
+    id: 'checklists',
+    title: 'Checklists',
+    description: 'Create and use checklists for quality control.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'quality'],
+    repInstructions: 'Create job checklists for consistent service delivery.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'checklists-value',
+        title: 'Value Statement',
+        content: 'Checklists ensure consistent service quality across your team. Every tech follows the same steps, nothing gets missed, and customers receive the same great experience every time.',
+      },
+      {
+        id: 'checklists-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Checklists. Create checklists for common job types (maintenance, install, diagnostic). Add required photos at key steps. Attach checklists to job templates. Show how techs complete checklists on mobile.',
+      },
+    ],
+  },
+  {
+    id: 'property-profile',
+    title: 'Property Profile',
+    description: 'Set up property profiles for detailed location information.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'customers'],
+    repInstructions: 'Configure property profiles with equipment, access codes, and history.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'property-profile-value',
+        title: 'Value Statement',
+        content: 'Property profiles store critical location details: gate codes, equipment locations, pet warnings, and service history. Techs arrive prepared, impressing customers and working more efficiently.',
+      },
+      {
+        id: 'property-profile-guidance',
+        title: 'Guidance',
+        content: 'Open a customer address > Property Profile. Show equipment tracking (model, serial, install date). Add access instructions and gate codes. Attach photos of equipment locations. Explain how techs see this info before arriving.',
+      },
+    ],
+  },
+  {
+    id: 'tasks',
+    title: 'Tasks',
+    description: 'Use tasks for follow-ups and internal work.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'productivity'],
+    repInstructions: 'Set up task management for internal follow-ups and reminders.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'tasks-value',
+        title: 'Value Statement',
+        content: 'Tasks keep your team organized beyond scheduled jobs. Follow-ups, parts orders, and internal to-dos all tracked in one place so nothing slips through the cracks.',
+      },
+      {
+        id: 'tasks-guidance',
+        title: 'Guidance',
+        content: 'Show how to create tasks from jobs, customers, or standalone. Assign to team members with due dates. Set up task notifications. Demonstrate task dashboard and filtering. Use tasks for estimate follow-ups and pending parts orders.',
+      },
+    ],
+  },
+  {
+    id: 'job-fields',
+    title: 'Job Fields',
+    description: 'Create custom fields for jobs.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'customization'],
+    repInstructions: 'Create custom job fields for capturing specific information.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'job-fields-value',
+        title: 'Value Statement',
+        content: 'Custom job fields capture the data unique to your business. Track permit numbers, warranty info, or anything else you need - then report on it all.',
+      },
+      {
+        id: 'job-fields-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Custom Fields > Jobs. Create fields relevant to their industry (Permit #, Equipment Type, Warranty Expiration). Set field types (text, number, date, dropdown). Make fields required or optional. Show how fields appear on jobs.',
+      },
+    ],
+  },
+  {
+    id: 'job-inbox',
+    title: 'Job Inbox',
+    description: 'Use the job inbox for managing incoming requests.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'intake'],
+    repInstructions: 'Configure and use the job inbox for lead management.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'job-inbox-value',
+        title: 'Value Statement',
+        content: 'Job inbox centralizes all incoming requests from online booking, forms, and integrations. Never miss a lead - every request lands in one place for quick response.',
+      },
+      {
+        id: 'job-inbox-guidance',
+        title: 'Guidance',
+        content: 'Go to Job Inbox from main menu. Show how requests flow in from online booking, integrations. Demonstrate converting a request to a job or estimate. Set up notifications for new inbox items. Review inbox for unprocessed leads.',
+      },
+    ],
+  },
+  {
+    id: 'time-tracking',
+    title: 'Time Tracking',
+    description: 'Track employee time for payroll and job costing.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'time'],
+    repInstructions: 'Set up time tracking for employees including clock in/out.',
+    estimatedMinutes: 10,
+    subItems: [
+      { id: 'time-on-job', title: 'Time on Job' },
+    ],
+    contextSnippets: [
+      {
+        id: 'time-tracking-value',
+        title: 'Value Statement',
+        content: 'Accurate time tracking feeds payroll and job costing. Know exactly how long jobs take, identify efficiency opportunities, and pay employees accurately without timesheet hassles.',
+      },
+      {
+        id: 'time-tracking-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Time Tracking. Enable GPS clock-in if desired. Show techs how to clock in/out on mobile. Demonstrate time-on-job tracking linked to specific jobs. Review time reports and export for payroll.',
+      },
+    ],
+  },
+  {
+    id: 'online-booking',
+    title: 'Online Booking',
+    description: 'Set up online booking for customers.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'booking'],
+    repInstructions: 'Configure online booking settings and availability.',
+    estimatedMinutes: 20,
+    subItems: [
+      { id: 'olb-windows', title: 'OLB Windows' },
+      { id: 'employee-availability', title: 'Employee Availability' },
+      { id: 'poc', title: 'POC' },
+      { id: 'services-available-olb', title: 'Services Available for OLB' },
+    ],
+    contextSnippets: [
+      {
+        id: 'online-booking-value',
+        title: 'Value Statement',
+        content: 'Online booking lets customers schedule 24/7 without calling. Capture after-hours leads, reduce phone time, and give customers the convenience they expect from modern businesses.',
+      },
+      {
+        id: 'online-booking-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Online Booking. Enable and configure booking windows (arrival time windows offered). Set employee availability for online jobs. Configure which services are bookable online. Add booking widget to website. Show POC (point of contact) settings.',
+      },
+    ],
+  },
+  {
+    id: 'reviews-tool',
+    title: 'Reviews',
+    description: 'Manage customer reviews and reputation.',
+    type: 'rep_facing',
+    category: 'additional-tools',
+    labels: ['additional-tools', 'reviews', 'reputation'],
+    repInstructions: 'Set up review requests and reputation management.',
+    estimatedMinutes: 15,
+    subItems: [
+      { id: 'reviews-google', title: 'Google Reviews' },
+      { id: 'reviews-gls', title: 'GLS Reviews' },
+      { id: 'reviews-facebook', title: 'Facebook Reviews' },
+      { id: 'reviews-settings', title: 'Reviews Settings' },
+    ],
+    contextSnippets: [
+      {
+        id: 'reviews-tool-value',
+        title: 'Value Statement',
+        content: 'Reviews drive new business. Automatically request reviews after great experiences, respond to feedback from one dashboard, and build the online reputation that wins new customers.',
+      },
+      {
+        id: 'reviews-tool-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Reviews. Connect Google Business Profile and Facebook. Enable automatic review requests after job completion. Set timing (same day, next day). Show the reviews dashboard. Demonstrate responding to reviews. Configure Google Local Services if applicable.',
+      },
+    ],
+  },
+
+  // ===========================================================================
+  // CATEGORY: REPORTING (7 items)
+  // ===========================================================================
+  {
+    id: 'dashboard',
+    title: 'Dashboard',
+    description: 'Learn to use and customize the dashboard.',
+    type: 'rep_facing',
+    category: 'reporting',
+    labels: ['reporting', 'analytics'],
+    repInstructions: 'Walk through dashboard features and key metrics.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'dashboard-value',
+        title: 'Value Statement',
+        content: 'Your dashboard is mission control for your business. See revenue, jobs, and key metrics at a glance. Spot problems early and celebrate wins as they happen.',
+      },
+      {
+        id: 'dashboard-guidance',
+        title: 'Guidance',
+        content: 'Walk through dashboard widgets: revenue, jobs today, outstanding invoices. Show how to customize widget layout. Explain each key metric and what it tells you. Set up date range comparisons to track growth.',
+      },
+    ],
+  },
+  {
+    id: 'filtering-tags',
+    title: 'Filtering Customer/Job Tags',
+    description: 'Use tags to filter reports and views.',
+    type: 'rep_facing',
+    category: 'reporting',
+    labels: ['reporting', 'filtering'],
+    repInstructions: 'Demonstrate using tags to filter reports and views.',
+    estimatedMinutes: 5,
+    contextSnippets: [
+      {
+        id: 'filtering-tags-value',
+        title: 'Value Statement',
+        content: 'Tag filtering lets you slice your data any way you need. See revenue by service type, jobs by lead source, or customers by segment - whatever matters to your business.',
+      },
+      {
+        id: 'filtering-tags-guidance',
+        title: 'Guidance',
+        content: 'Show how to filter customer list by tags. Filter jobs by service type tags. Apply tag filters in reports to isolate specific data. Save commonly used filter combinations for quick access.',
+      },
+    ],
+  },
+  {
+    id: 'tags-reporting',
+    title: 'Tags-Reporting',
+    description: 'Generate reports based on tags.',
+    type: 'rep_facing',
+    category: 'reporting',
+    labels: ['reporting', 'tags'],
+    repInstructions: 'Show how to create reports filtered by customer and job tags.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'tags-reporting-value',
+        title: 'Value Statement',
+        content: 'Tag-based reports reveal business insights you can\'t see otherwise. Which service types are most profitable? Which lead sources convert best? Tags hold the answers.',
+      },
+      {
+        id: 'tags-reporting-guidance',
+        title: 'Guidance',
+        content: 'Go to Reports. Create a report filtered by job tags. Show revenue breakdown by service type. Compare lead source performance. Export tag-based reports for deeper analysis or sharing with partners.',
+      },
+    ],
+  },
+  {
+    id: 'tech-leaderboard',
+    title: 'Tech Leaderboard',
+    description: 'Use the tech leaderboard for performance tracking.',
+    type: 'rep_facing',
+    category: 'reporting',
+    labels: ['reporting', 'performance'],
+    repInstructions: 'Explain the tech leaderboard and performance metrics.',
+    estimatedMinutes: 10,
+    contextSnippets: [
+      {
+        id: 'tech-leaderboard-value',
+        title: 'Value Statement',
+        content: 'The tech leaderboard drives healthy competition and identifies coaching opportunities. See who\'s crushing it and who needs support - all with objective, real-time data.',
+      },
+      {
+        id: 'tech-leaderboard-guidance',
+        title: 'Guidance',
+        content: 'Go to Reports > Tech Leaderboard. Review metrics: revenue, jobs completed, average ticket, membership sales. Explain how to use for team meetings and individual coaching. Show how techs can see their own stats on mobile.',
+      },
+    ],
+  },
+  {
+    id: 'job-costing',
+    title: 'Job Costing',
+    description: 'Track job costs and profitability.',
+    type: 'rep_facing',
+    category: 'reporting',
+    labels: ['reporting', 'costing'],
+    repInstructions: 'Set up job costing for tracking labor and materials.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'job-costing-value',
+        title: 'Value Statement',
+        content: 'Job costing reveals your true profit on every job. Know which services make money and which need repricing. Make data-driven decisions about what work to pursue.',
+      },
+      {
+        id: 'job-costing-guidance',
+        title: 'Guidance',
+        content: 'Go to Reports > Job Costing. Set up labor costs (loaded rate per tech or average). Configure material cost tracking. Review job profitability reports. Identify low-margin jobs and discuss pricing adjustments.',
+      },
+    ],
+  },
+  {
+    id: 'commissions',
+    title: 'Commissions',
+    description: 'Set up and track sales commissions.',
+    type: 'rep_facing',
+    category: 'reporting',
+    labels: ['reporting', 'commissions'],
+    repInstructions: 'Configure commission tracking and reporting.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'commissions-value',
+        title: 'Value Statement',
+        content: 'Automated commission tracking motivates your team and ensures accurate pay. Techs see their earnings in real-time, and you save hours calculating payouts.',
+      },
+      {
+        id: 'commissions-guidance',
+        title: 'Guidance',
+        content: 'Go to Settings > Commissions. Set up commission structures (flat fee, percentage, tiered). Assign to team members by role. Show commission reports. Demonstrate how techs see their commission earnings on mobile.',
+      },
+    ],
+  },
+  {
+    id: 'custom-reports',
+    title: 'Custom Reports',
+    description: 'Create custom reports for specific needs.',
+    type: 'rep_facing',
+    category: 'reporting',
+    labels: ['reporting', 'custom'],
+    repInstructions: 'Show how to create custom reports with specific filters and metrics.',
+    estimatedMinutes: 15,
+    contextSnippets: [
+      {
+        id: 'custom-reports-value',
+        title: 'Value Statement',
+        content: 'Custom reports answer the specific questions your business has. Build exactly the report you need, save it, and run it anytime to track what matters most to you.',
+      },
+      {
+        id: 'custom-reports-guidance',
+        title: 'Guidance',
+        content: 'Go to Reports > Custom Reports. Create a new report selecting fields that matter to them. Add filters and groupings. Save the report for future use. Set up scheduled email delivery for regular reports they need.',
+      },
+    ],
+  },
 ];
 
 // Helper to get an item by ID
@@ -470,6 +2003,11 @@ export function getOnboardingItemById(id: string): OnboardingItemDefinition | un
 // Helper to get items by type
 export function getOnboardingItemsByType(type: 'in_product' | 'rep_facing'): OnboardingItemDefinition[] {
   return onboardingItems.filter(item => item.type === type);
+}
+
+// Helper to get items by category
+export function getOnboardingItemsByCategory(category: string): OnboardingItemDefinition[] {
+  return onboardingItems.filter(item => item.category === category);
 }
 
 // Export item IDs for type-safe references
@@ -523,4 +2061,89 @@ export const ONBOARDING_ITEM_IDS = {
   REP_REVIEWED_ACCOUNT_HEALTH: 'rep-reviewed-account-health',
   REP_DOCUMENTED_GOALS: 'rep-documented-goals',
   REP_SENT_WELCOME_RESOURCES: 'rep-sent-welcome-resources',
+
+  // Account Setup
+  COMPANY_PROFILE: 'company-profile',
+  BUSINESS_HOURS: 'business-hours',
+  ADD_EMPLOYEES: 'add-employees',
+  NOTIFICATIONS_SETTINGS: 'notifications-settings',
+  CUSTOM_SMS: 'custom-sms',
+  ESTIMATES_SETTINGS: 'estimates-settings',
+  INVOICE_SETTINGS: 'invoice-settings',
+  CONNECT_BANK_ACCOUNT: 'connect-bank-account',
+  CONSUMER_FINANCING: 'consumer-financing',
+
+  // The Basics
+  ADD_NEW_CUSTOMERS: 'add-new-customers',
+  CUSTOMER_PROFILE_DETAILS: 'customer-profile-details',
+  CUSTOMER_PORTAL: 'customer-portal',
+  CUSTOMER_TAGS: 'customer-tags',
+  CC_ON_FILE: 'cc-on-file',
+  PARENT_CHILD_BILLING: 'parent-child-billing',
+  MULTIPLE_ADDRESSES: 'multiple-addresses',
+  CUSTOMER_NOTIFICATIONS: 'customer-notifications',
+
+  // Add Ons
+  PIPELINE: 'pipeline',
+  PROFIT_RHINO: 'profit-rhino',
+  MARKETING_CENTER: 'marketing-center',
+  VOICE_CALL_TRACKING: 'voice-call-tracking',
+  HCPA: 'hcpa',
+  PAYROLL: 'payroll',
+  CONQUER: 'conquer',
+  INHA_ACCOUNTING: 'inha-accounting',
+
+  // Estimates (category)
+  CUSTOMER_INTAKE_ESTIMATES: 'customer-intake-estimates',
+  ESTIMATES_BASICS: 'estimates-basics',
+  ESTIMATE_TEMPLATES: 'estimate-templates',
+  MULTI_OPTION_ESTIMATES: 'multi-option-estimates',
+  SALES_PROPOSAL_TOOL: 'sales-proposal-tool',
+
+  // Jobs
+  CUSTOMER_INTAKE_JOBS: 'customer-intake-jobs',
+  JOBS_BASICS: 'jobs-basics',
+  JOB_TAGS: 'job-tags',
+  JOB_TEMPLATES: 'job-templates',
+  MULTI_DAY_APPOINTMENTS: 'multi-day-appointments',
+  SEGMENTS: 'segments',
+  RECURRING_JOBS: 'recurring-jobs',
+  SCHEDULING_DISPATCHING: 'scheduling-dispatching',
+  CALENDAR_SETTINGS: 'calendar-settings',
+
+  // Invoicing (category)
+  PROCESSING_PAYMENTS: 'processing-payments',
+  PROGRESS_INVOICING: 'progress-invoicing',
+  CANCEL_EDIT_INVOICE: 'cancel-edit-invoice',
+  AUTO_INVOICING: 'auto-invoicing',
+  BATCHED_INVOICES: 'batched-invoices',
+  INVOICE_CHECKLIST: 'invoice-checklist',
+  INVOICE_ATTACHMENTS: 'invoice-attachments',
+
+  // Service Plans
+  SERVICE_PLANS_SETTINGS: 'service-plans-settings',
+  SERVICE_PLANS_TEMPLATES: 'service-plans-templates',
+  EDIT_DELETE_SERVICE_PLAN: 'edit-delete-service-plan',
+  ADD_SERVICE_PLAN_CUSTOMER: 'add-service-plan-customer',
+
+  // Additional Tools
+  PRICEBOOK: 'pricebook',
+  MATERIAL_DETAIL_TRACKING: 'material-detail-tracking',
+  CHECKLISTS: 'checklists',
+  PROPERTY_PROFILE: 'property-profile',
+  TASKS: 'tasks',
+  JOB_FIELDS: 'job-fields',
+  JOB_INBOX: 'job-inbox',
+  TIME_TRACKING: 'time-tracking',
+  ONLINE_BOOKING: 'online-booking',
+  REVIEWS_TOOL: 'reviews-tool',
+
+  // Reporting
+  DASHBOARD: 'dashboard',
+  FILTERING_TAGS: 'filtering-tags',
+  TAGS_REPORTING: 'tags-reporting',
+  TECH_LEADERBOARD: 'tech-leaderboard',
+  JOB_COSTING: 'job-costing',
+  COMMISSIONS: 'commissions',
+  CUSTOM_REPORTS: 'custom-reports',
 } as const;

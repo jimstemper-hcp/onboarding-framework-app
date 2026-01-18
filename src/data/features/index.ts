@@ -5,6 +5,13 @@ import { schedulingFeature } from './scheduling';
 import { estimatesFeature } from './estimates';
 import { csrAiFeature } from './csrAi';
 import { reviewsFeature } from './reviews';
+// New features for Frontline Onboarding Plan
+import { accountSetupFeature } from './accountSetup';
+import { customersFeature } from './customers';
+import { addOnsFeature } from './addOns';
+import { servicePlansFeature } from './servicePlans';
+import { onlineBookingFeature } from './onlineBooking';
+import { reportingFeature } from './reporting';
 import type { Feature } from '../../types';
 
 export const features: Feature[] = [
@@ -15,6 +22,13 @@ export const features: Feature[] = [
   estimatesFeature,
   csrAiFeature,
   reviewsFeature,
+  // New features for Frontline Onboarding Plan
+  accountSetupFeature,
+  customersFeature,
+  addOnsFeature,
+  servicePlansFeature,
+  onlineBookingFeature,
+  reportingFeature,
 ];
 
 export {
@@ -25,4 +39,11 @@ export {
   estimatesFeature,
   csrAiFeature,
   reviewsFeature,
+  // New features
+  accountSetupFeature,
+  customersFeature,
+  addOnsFeature,
+  servicePlansFeature,
+  onlineBookingFeature,
+  reportingFeature,
 };

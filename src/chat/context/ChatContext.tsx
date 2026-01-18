@@ -19,6 +19,8 @@ import type {
   ChatMode,
   ApiKeyConfig,
   AnthropicMessage,
+  FileAttachment,
+  AnthropicMessageContent,
 } from '../types';
 import {
   sendToAnthropic,
@@ -117,8 +119,46 @@ export function ChatProvider({ children }: ChatProviderProps) {
   // ACTIONS
   // ---------------------------------------------------------------------------
 
-  const sendMessage = useCallback(async (content: string) => {
-    if (!content.trim()) return;
+  /**
+   * Convert a ChatMessage with attachments to Anthropic message format.
+   */
+  const formatMessageForApi = useCallback((
+    content: string,
+    attachments?: FileAttachment[]
+  ): AnthropicMessageContent => {
+    // If no attachments, just return the text content
+    if (!attachments || attachments.length === 0) {
+      return content;
+    }
+
+    // Build content array with images first, then text
+    const contentBlocks: AnthropicMessageContent = [];
+
+    // Add image blocks
+    for (const attachment of attachments) {
+      contentBlocks.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: attachment.type,
+          data: attachment.base64Data,
+        },
+      });
+    }
+
+    // Add text block if there's content
+    if (content.trim()) {
+      contentBlocks.push({
+        type: 'text',
+        text: content.trim(),
+      });
+    }
+
+    return contentBlocks;
+  }, []);
+
+  const sendMessage = useCallback(async (content: string, attachments?: FileAttachment[]) => {
+    if (!content.trim() && (!attachments || attachments.length === 0)) return;
 
     // Clear any previous error
     setError(null);
@@ -129,6 +169,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
       role: 'user',
       content: content.trim(),
       timestamp: new Date().toISOString(),
+      attachments,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -144,7 +185,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
           features,
           getStageContext,
         };
-        response = await generateMockResponse(content.trim(), mockContext);
+        response = await generateMockResponse(content.trim(), mockContext, attachments);
       } else if (!apiKeyConfig.hasKey) {
         // No API key and not in demo mode (or no active pro)
         throw new Error('No API key configured. Please add your Anthropic API key to use the chat.');
@@ -153,9 +194,9 @@ export function ChatProvider({ children }: ChatProviderProps) {
         const conversationHistory: AnthropicMessage[] = [
           ...messages.map((m) => ({
             role: m.role as 'user' | 'assistant',
-            content: m.content,
+            content: formatMessageForApi(m.content, m.attachments),
           })),
-          { role: 'user', content: content.trim() },
+          { role: 'user', content: formatMessageForApi(content.trim(), attachments) },
         ];
 
         // Build system prompt based on current mode
@@ -180,7 +221,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, buildContext, apiKeyConfig.hasKey, mode, activePro, features, getStageContext]);
+  }, [messages, buildContext, apiKeyConfig.hasKey, mode, activePro, features, getStageContext, formatMessageForApi]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

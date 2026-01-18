@@ -11,10 +11,9 @@
 // - Mode preference is also persisted to localStorage
 // =============================================================================
 
-import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type {
   PlanningModeContextValue,
-  PlanningModeState,
   PlanningFeedback,
   PlanningTab,
   PlannableId,
@@ -31,18 +30,6 @@ const STORAGE_KEYS = {
   MODE: 'planning-mode-enabled',
   FEEDBACK: 'planning-mode-feedback',
 } as const;
-
-// -----------------------------------------------------------------------------
-// INITIAL STATE
-// -----------------------------------------------------------------------------
-
-const initialState: PlanningModeState = {
-  isPlanningMode: false,
-  activeElementId: null,
-  isModalOpen: false,
-  activeTab: 'spec',
-  feedbackItems: [],
-};
 
 // -----------------------------------------------------------------------------
 // CONTEXT

@@ -6,7 +6,7 @@
 // =============================================================================
 
 import { useState, useCallback } from 'react';
-import { Box, Paper, Alert, Button, AlertTitle } from '@mui/material';
+import { Paper, Alert, Button, AlertTitle } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';

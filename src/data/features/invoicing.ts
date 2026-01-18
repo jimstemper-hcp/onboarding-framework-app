@@ -148,6 +148,11 @@ Key points to emphasize:
           title: 'Sample Data Option',
           content: 'Offer to walk through with sample data to demonstrate the full invoice workflow without affecting real customer data.',
         },
+        {
+          id: 'image-upload-capability',
+          title: 'Invoice Image Upload',
+          content: 'Users can upload a photo or screenshot of an existing invoice, receipt, or estimate. The AI will use the extract_invoice_from_image tool to analyze the image and extract: customer name, address, phone, email, line items with descriptions and prices, and totals. After extraction, show the data in a structured preview and ask for confirmation before creating the customer, job, and invoice using the hcp_create_customer, hcp_create_job, and hcp_complete_job tools.',
+        },
       ],
 
       navigation: [
@@ -209,9 +214,100 @@ If REAL:
 - Collect info conversationally OR say "You can also take a photo of any existing paperwork and I'll extract the details."
 - Same preview/confirm/execute flow
 
+## INVOICE IMAGE UPLOAD WORKFLOW
+
+When user uploads an image (photo of invoice, receipt, estimate, or any document):
+
+1. **Acknowledge the upload**: "I see you've uploaded an image. Let me analyze it to extract the invoice details."
+
+2. **Extract data using extract_invoice_from_image tool**:
+   - Customer info: first name, last name, address (street, city, state, zip), phone, email
+   - Service address (may be different from billing address)
+   - Line items: service name, description, quantity, unit price
+   - Totals: subtotal, tax (if any), total amount due
+   - Job details: job number, due date, payment terms
+
+3. **Display extracted data in structured format**:
+   Show the extracted information in clear markdown tables:
+
+   **Customer Information**
+   | Field | Value |
+   |-------|-------|
+   | Name | [First] [Last] |
+   | Address | [Street], [City], [State] [Zip] |
+   | Phone | [Phone] |
+   | Email | [Email] |
+
+   **Service Details**
+   | Service | Description | Qty | Price |
+   |---------|-------------|-----|-------|
+   | [Service name] | [Description] | [Qty] | $[Price] |
+
+   **Totals**
+   | | Amount |
+   |------|--------|
+   | Subtotal | $[Amount] |
+   | Total | $[Amount] |
+
+4. **Ask for confirmation**: "Does this information look correct? Reply 'yes' to create this customer and invoice, or let me know what needs to be changed."
+
+5. **On confirmation, execute in sequence**:
+   a. Call hcp_create_customer with extracted customer data
+   b. Call hcp_create_job with customer_id and line_items
+   c. Call hcp_complete_job to generate the invoice
+   d. Show success message with created IDs and next action options
+
+6. **Offer next steps**:
+   - "Send Invoice" - to email/text to customer
+   - "View Invoice" - link to invoice page
+   - "View Customer" - link to customer page
+
 Always show structured previews before executing actions and get explicit confirmation.`,
 
       tools: [
+        {
+          name: 'extract_invoice_from_image',
+          description: 'Analyze an uploaded invoice image and extract customer info, line items, and totals',
+          parameters: {
+            imageBase64: { type: 'string', description: 'Base64-encoded image data', required: true },
+            mediaType: { type: 'string', description: 'Image MIME type (image/jpeg, image/png)', required: true },
+          },
+        },
+        {
+          name: 'hcp_create_customer',
+          description: 'Create a new customer in Housecall Pro with name, contact info, and address',
+          parameters: {
+            first_name: { type: 'string', description: 'Customer first name', required: true },
+            last_name: { type: 'string', description: 'Customer last name', required: true },
+            email: { type: 'string', description: 'Customer email address' },
+            mobile_number: { type: 'string', description: 'Customer phone number' },
+            company: { type: 'string', description: 'Company name if business customer' },
+            street: { type: 'string', description: 'Street address' },
+            city: { type: 'string', description: 'City' },
+            state: { type: 'string', description: 'State abbreviation' },
+            zip: { type: 'string', description: 'ZIP code' },
+            notifications_enabled: { type: 'boolean', description: 'Enable SMS/email notifications' },
+          },
+        },
+        {
+          name: 'hcp_create_job',
+          description: 'Create a new job in Housecall Pro linked to a customer and address',
+          parameters: {
+            customer_id: { type: 'string', description: 'ID of existing customer', required: true },
+            address_id: { type: 'string', description: 'ID of customer address', required: true },
+            description: { type: 'string', description: 'Job description/notes' },
+            scheduled_start: { type: 'string', description: 'ISO datetime for scheduled start' },
+            scheduled_end: { type: 'string', description: 'ISO datetime for scheduled end' },
+            line_items: { type: 'array', description: 'Array of {name, description, unit_price, quantity}' },
+          },
+        },
+        {
+          name: 'hcp_complete_job',
+          description: 'Mark a job as completed, which generates the invoice',
+          parameters: {
+            job_id: { type: 'string', description: 'ID of the job to complete', required: true },
+          },
+        },
         {
           name: 'create_sample_customer',
           description: 'Create a sample customer for demo purposes',
@@ -358,6 +454,22 @@ Key actions to offer:
 
       tools: [
         {
+          name: 'extract_invoice_from_image',
+          description: 'Analyze an uploaded invoice image and extract customer info, line items, and totals',
+          parameters: {
+            imageBase64: { type: 'string', description: 'Base64-encoded image data', required: true },
+            mediaType: { type: 'string', description: 'Image MIME type (image/jpeg, image/png)', required: true },
+          },
+        },
+        {
+          name: 'hcp_send_invoice',
+          description: 'Send an invoice to the customer via email or SMS',
+          parameters: {
+            invoice_id: { type: 'string', description: 'ID of the invoice to send', required: true },
+            method: { type: 'string', description: 'Delivery method: email or sms' },
+          },
+        },
+        {
           name: 'upload_logo',
           description: 'Navigate to logo upload for invoices',
           parameters: {
@@ -487,6 +599,57 @@ Advanced features to highlight:
 - Payment analytics and insights`,
 
       tools: [
+        {
+          name: 'extract_invoice_from_image',
+          description: 'Analyze an uploaded invoice image and extract customer info, line items, and totals',
+          parameters: {
+            imageBase64: { type: 'string', description: 'Base64-encoded image data', required: true },
+            mediaType: { type: 'string', description: 'Image MIME type (image/jpeg, image/png)', required: true },
+          },
+        },
+        {
+          name: 'hcp_create_customer',
+          description: 'Create a new customer in Housecall Pro with name, contact info, and address',
+          parameters: {
+            first_name: { type: 'string', description: 'Customer first name', required: true },
+            last_name: { type: 'string', description: 'Customer last name', required: true },
+            email: { type: 'string', description: 'Customer email address' },
+            mobile_number: { type: 'string', description: 'Customer phone number' },
+            company: { type: 'string', description: 'Company name if business customer' },
+            street: { type: 'string', description: 'Street address' },
+            city: { type: 'string', description: 'City' },
+            state: { type: 'string', description: 'State abbreviation' },
+            zip: { type: 'string', description: 'ZIP code' },
+            notifications_enabled: { type: 'boolean', description: 'Enable SMS/email notifications' },
+          },
+        },
+        {
+          name: 'hcp_create_job',
+          description: 'Create a new job in Housecall Pro linked to a customer and address',
+          parameters: {
+            customer_id: { type: 'string', description: 'ID of existing customer', required: true },
+            address_id: { type: 'string', description: 'ID of customer address', required: true },
+            description: { type: 'string', description: 'Job description/notes' },
+            scheduled_start: { type: 'string', description: 'ISO datetime for scheduled start' },
+            scheduled_end: { type: 'string', description: 'ISO datetime for scheduled end' },
+            line_items: { type: 'array', description: 'Array of {name, description, unit_price, quantity}' },
+          },
+        },
+        {
+          name: 'hcp_complete_job',
+          description: 'Mark a job as completed, which generates the invoice',
+          parameters: {
+            job_id: { type: 'string', description: 'ID of the job to complete', required: true },
+          },
+        },
+        {
+          name: 'hcp_send_invoice',
+          description: 'Send an invoice to the customer via email or SMS',
+          parameters: {
+            invoice_id: { type: 'string', description: 'ID of the invoice to send', required: true },
+            method: { type: 'string', description: 'Delivery method: email or sms' },
+          },
+        },
         {
           name: 'create_invoice_via_chat',
           description: 'Create invoice through conversational flow',

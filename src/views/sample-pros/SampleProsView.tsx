@@ -25,17 +25,14 @@ import {
   Tabs,
   Tab,
   Card,
-  CardContent,
   alpha,
   Tooltip,
-  Divider,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import * as MuiIcons from '@mui/icons-material';
 import { useOnboarding } from '../../context';
@@ -415,68 +412,11 @@ function FeatureStatusEditor({ featureStatus, onChange }: FeatureStatusEditorPro
 }
 
 // =============================================================================
-// QUICK PRESETS
-// =============================================================================
-
-interface QuickPresetsProps {
-  onApply: (featureStatus: Record<FeatureId, FeatureStatus>) => void;
-}
-
-function QuickPresets({ onApply }: QuickPresetsProps) {
-  const presets = [
-    { label: 'New Pro', stage: 'not_attached' as AdoptionStage, description: 'All features not attached' },
-    { label: 'Just Signed Up', stage: 'attached' as AdoptionStage, description: 'All features attached, no tasks done' },
-    { label: 'Partially Onboarded', stage: null, description: 'Mix of stages' },
-    { label: 'Power User', stage: 'engaged' as AdoptionStage, description: 'All features engaged' },
-  ];
-
-  const handlePreset = (stage: AdoptionStage | null) => {
-    if (stage === null) {
-      // Mixed stages preset
-      const now = new Date().toISOString().split('T')[0];
-      const mixed: Record<FeatureId, FeatureStatus> = {
-        invoicing: { stage: 'engaged', completedTasks: ['task-1', 'task-2'], usageCount: 50, attachedAt: now, activatedAt: now, engagedAt: now },
-        payments: { stage: 'activated', completedTasks: ['task-1'], usageCount: 15, attachedAt: now, activatedAt: now },
-        'automated-comms': { stage: 'attached', completedTasks: [], usageCount: 0, attachedAt: now },
-        scheduling: { stage: 'engaged', completedTasks: ['task-1', 'task-2', 'task-3'], usageCount: 100, attachedAt: now, activatedAt: now, engagedAt: now },
-        estimates: { stage: 'attached', completedTasks: [], usageCount: 0, attachedAt: now },
-        'csr-ai': { stage: 'not_attached', completedTasks: [], usageCount: 0 },
-        reviews: { stage: 'activated', completedTasks: ['task-1'], usageCount: 5, attachedAt: now, activatedAt: now },
-      };
-      onApply(mixed);
-    } else {
-      onApply(createAllFeatureStatuses(stage));
-    }
-  };
-
-  return (
-    <Stack direction="row" spacing={1}>
-      <AutoFixHighIcon sx={{ color: palette.secondary }} />
-      <Typography variant="body2" fontWeight={500} sx={{ mr: 1 }}>
-        Quick Presets:
-      </Typography>
-      {presets.map((preset) => (
-        <Tooltip key={preset.label} title={preset.description}>
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={() => handlePreset(preset.stage)}
-            sx={{ textTransform: 'none' }}
-          >
-            {preset.label}
-          </Button>
-        </Tooltip>
-      ))}
-    </Stack>
-  );
-}
-
-// =============================================================================
 // MAIN VIEW
 // =============================================================================
 
 export function SampleProsView() {
-  const { pros, features, addPro, updatePro, deletePro } = useOnboarding();
+  const { pros, features: _features, addPro, updatePro, deletePro } = useOnboarding();
   const [editingPro, setEditingPro] = useState<ProAccount | null>(null);
   const [isNew, setIsNew] = useState(false);
 

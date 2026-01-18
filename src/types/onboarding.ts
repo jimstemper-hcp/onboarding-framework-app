@@ -17,9 +17,42 @@ export type FeatureId =
   | 'scheduling'
   | 'estimates'
   | 'csr-ai'
-  | 'reviews';
+  | 'reviews'
+  // New features for Frontline Onboarding Plan:
+  | 'account-setup'
+  | 'customers'
+  | 'add-ons'
+  | 'service-plans'
+  | 'online-booking'
+  | 'reporting';
 
 export type AdoptionStage = 'not_attached' | 'attached' | 'activated' | 'engaged';
+
+// -----------------------------------------------------------------------------
+// ONBOARDING CATEGORY TYPES (for Frontline Onboarding Plan)
+// -----------------------------------------------------------------------------
+
+export type OnboardingCategoryId =
+  | 'account-setup'
+  | 'the-basics'
+  | 'add-ons'
+  | 'estimates'
+  | 'jobs'
+  | 'invoicing'
+  | 'service-plans'
+  | 'additional-tools'
+  | 'reporting';
+
+export interface OnboardingSubItem {
+  id: string;
+  title: string;
+}
+
+export interface OnboardingCategory {
+  id: OnboardingCategoryId;
+  label: string;
+  icon: string;
+}
 
 // -----------------------------------------------------------------------------
 // SUPPORTING TYPES
@@ -225,6 +258,8 @@ export interface OnboardingItemDefinition {
 
   // Categorization
   labels?: string[];
+  category?: OnboardingCategoryId;  // Primary category for Onboarding Plan
+  subItems?: OnboardingSubItem[];   // Nested sub-items
 
   // Context for AI/LLM (first two are "LLM Description" and "Value Statement")
   contextSnippets?: ContextSnippet[];

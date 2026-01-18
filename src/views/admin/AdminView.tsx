@@ -29,7 +29,6 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider,
   alpha,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
@@ -64,7 +63,6 @@ import type {
   NavigationStatus,
   NavigationTypeData,
   ContextSnippet,
-  OnboardingItemAssignment,
   OnboardingItemDefinition,
   OnboardingItemStatus,
   OnboardingItemType,
@@ -1421,7 +1419,7 @@ function NavigationEditModal({
   useEffect(() => {
     if (item) {
       // Ensure contextSnippets has at least the LLM Description
-      const snippets = item.contextSnippets?.length > 0
+      const snippets = (item.contextSnippets && item.contextSnippets.length > 0)
         ? item.contextSnippets
         : [{ id: 'llm-desc', title: 'LLM Description', content: item.description || '' }];
       setEditedItem({
@@ -1447,7 +1445,8 @@ function NavigationEditModal({
 
   // Update context snippets
   const handleSnippetChange = (index: number, field: 'title' | 'content', value: string) => {
-    const updated = [...editedItem.contextSnippets];
+    const snippets = editedItem.contextSnippets || [];
+    const updated = [...snippets];
     updated[index] = { ...updated[index], [field]: value };
     // Also update description from first snippet
     const newDesc = index === 0 && field === 'content' ? value : editedItem.description;
@@ -1456,17 +1455,19 @@ function NavigationEditModal({
 
   const handleAddSnippet = () => {
     const newId = `snippet-${Date.now()}`;
+    const snippets = editedItem.contextSnippets || [];
     setEditedItem({
       ...editedItem,
-      contextSnippets: [...editedItem.contextSnippets, { id: newId, title: 'New Context', content: '' }],
+      contextSnippets: [...snippets, { id: newId, title: 'New Context', content: '' }],
     });
   };
 
   const handleRemoveSnippet = (index: number) => {
     if (index === 0) return; // Can't remove LLM Description
+    const snippets = editedItem.contextSnippets || [];
     setEditedItem({
       ...editedItem,
-      contextSnippets: editedItem.contextSnippets.filter((_, i) => i !== index),
+      contextSnippets: snippets.filter((_, i) => i !== index),
     });
   };
 
@@ -1488,7 +1489,8 @@ function NavigationEditModal({
   const handleSave = () => {
     // Derive url from typeData
     const url = getNavigationUrl(editedItem);
-    onSave({ ...editedItem, url, description: editedItem.contextSnippets[0]?.content || '' });
+    const snippets = editedItem.contextSnippets || [];
+    onSave({ ...editedItem, url, description: snippets[0]?.content || '' });
     onClose();
   };
 
@@ -1633,12 +1635,12 @@ function NavigationEditModal({
         {/* Tab 1: Important Context */}
         {activeTab === 1 && (
           <Paper sx={{ p: 3 }}>
-            <SectionHeader icon={<TextSnippetIcon />} title="Important Context" count={editedItem.contextSnippets.length} />
+            <SectionHeader icon={<TextSnippetIcon />} title="Important Context" count={(editedItem.contextSnippets || []).length} />
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Context snippets help the AI understand when and how to use this navigation resource.
             </Typography>
             <Stack spacing={2}>
-              {editedItem.contextSnippets.map((snippet, index) => (
+              {(editedItem.contextSnippets || []).map((snippet, index) => (
                 <Paper key={snippet.id} variant="outlined" sx={{ p: 2 }}>
                   <Stack spacing={1.5}>
                     <Stack direction="row" spacing={1} alignItems="center">
@@ -1803,7 +1805,7 @@ function NavigationManagementPage() {
     index: number;
   } | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
+  const [, setIsCreating] = useState(false);
 
   // Collect all navigation items across all features/stages
   const allNavItems: {
