@@ -1938,6 +1938,39 @@ function FeaturesListPage({
         )}
       </Box>
 
+      {/* Feature Stage Summary */}
+      <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <CategoryIcon sx={{ color: palette.primary }} />
+          <Typography variant="subtitle1" fontWeight={600}>
+            Feature Stage Summary
+          </Typography>
+        </Stack>
+
+        <Stack direction="row" spacing={2}>
+          {(Object.entries(featuresByStage) as [AdoptionStage, Feature[]][]).map(([stage, featuresAtStage]) => (
+            <Paper
+              key={stage}
+              variant="outlined"
+              sx={{
+                flex: 1,
+                p: 2,
+                textAlign: 'center',
+                borderColor: alpha(stageColors[stage], 0.3),
+                bgcolor: alpha(stageColors[stage], 0.02),
+              }}
+            >
+              <Typography variant="h4" fontWeight={700} sx={{ color: stageColors[stage] }}>
+                {featuresAtStage.length}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {stageLabels[stage]}
+              </Typography>
+            </Paper>
+          ))}
+        </Stack>
+      </Paper>
+
       {/* Stage sections */}
       <Box>
         {stageOrder.map((stage) => (
@@ -1974,10 +2007,8 @@ function FeaturesListPage({
 
 function InformationPage({
   selectedPro,
-  features,
 }: {
   selectedPro: ProAccount | undefined;
-  features: Feature[];
 }) {
   if (!selectedPro) {
     return (
@@ -1989,17 +2020,37 @@ function InformationPage({
     );
   }
 
-  // Get stage statistics
-  const stageCounts: Record<AdoptionStage, number> = {
-    not_attached: 0,
-    attached: 0,
-    activated: 0,
-    engaged: 0,
-  };
+  // Helper to render a read-only field
+  const ReadOnlyField = ({ label, value, isChip = false, chipColor }: { label: string; value: string | number | boolean | undefined | null; isChip?: boolean; chipColor?: string }) => {
+    if (value === undefined || value === null || value === '') return null;
+    const displayValue = typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value);
 
-  Object.values(selectedPro.featureStatus).forEach((status) => {
-    stageCounts[status.stage]++;
-  });
+    return (
+      <Box>
+        <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          {label}
+        </Typography>
+        {isChip ? (
+          <Chip
+            label={displayValue}
+            size="small"
+            sx={{
+              mt: 0.5,
+              display: 'block',
+              width: 'fit-content',
+              bgcolor: chipColor ? alpha(chipColor, 0.1) : palette.grey[100],
+              color: chipColor || palette.grey[600],
+              fontWeight: 600,
+            }}
+          />
+        ) : (
+          <Typography variant="body1" fontWeight={500}>
+            {displayValue}
+          </Typography>
+        )}
+      </Box>
+    );
+  };
 
   return (
     <Box>
@@ -2009,16 +2060,16 @@ function InformationPage({
           Organization Information
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Complete profile and feature status for {selectedPro.companyName}
+          Complete Pro Data profile for {selectedPro.companyName}
         </Typography>
       </Box>
 
-      {/* Pro Details Card */}
+      {/* Basic Information */}
       <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
           <PersonIcon sx={{ color: palette.primary }} />
           <Typography variant="subtitle1" fontWeight={600}>
-            Account Details
+            Basic Information
           </Typography>
         </Stack>
 
@@ -2027,263 +2078,135 @@ function InformationPage({
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
           gap: 3
         }}>
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Company Name
-            </Typography>
-            <Typography variant="body1" fontWeight={500}>
-              {selectedPro.companyName}
-            </Typography>
-          </Box>
-
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Owner Name
-            </Typography>
-            <Typography variant="body1" fontWeight={500}>
-              {selectedPro.ownerName}
-            </Typography>
-          </Box>
-
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Business Type
-            </Typography>
-            <Typography variant="body1" fontWeight={500} sx={{ textTransform: 'capitalize' }}>
-              {selectedPro.businessType}
-            </Typography>
-          </Box>
-
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Plan
-            </Typography>
-            <Chip
-              label={selectedPro.plan}
-              size="small"
-              sx={{
-                mt: 0.5,
-                textTransform: 'capitalize',
-                bgcolor: selectedPro.plan === 'max' ? alpha(palette.primary, 0.1) : palette.grey[100],
-                color: selectedPro.plan === 'max' ? palette.primary : palette.grey[600],
-                fontWeight: 600,
-              }}
-            />
-          </Box>
-
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Goal
-            </Typography>
-            <Chip
-              label={selectedPro.goal}
-              size="small"
-              variant="outlined"
-              sx={{
-                mt: 0.5,
-                textTransform: 'capitalize',
-                fontWeight: 500,
-              }}
-            />
-          </Box>
-
-          <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              Created At
-            </Typography>
-            <Typography variant="body1" fontWeight={500}>
-              {selectedPro.createdAt}
-            </Typography>
-          </Box>
+          <ReadOnlyField label="Company Name" value={selectedPro.companyName} />
+          <ReadOnlyField label="Owner Name" value={selectedPro.ownerName} />
+          <ReadOnlyField label="Plan" value={selectedPro.plan} isChip chipColor={selectedPro.plan === 'max' ? palette.primary : undefined} />
+          <ReadOnlyField label="Company Goal" value={selectedPro.goal} isChip />
+          <ReadOnlyField label="Created At" value={selectedPro.createdAt} />
         </Box>
       </Paper>
 
-      {/* Stage Summary */}
+      {/* Organization IDs */}
+      <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <LabelIcon sx={{ color: palette.primary }} />
+          <Typography variant="subtitle1" fontWeight={600}>
+            Organization IDs
+          </Typography>
+        </Stack>
+
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: 3
+        }}>
+          <ReadOnlyField label="Business ID" value={selectedPro.businessId} />
+          <ReadOnlyField label="Organization UUID" value={selectedPro.organizationUuid} />
+          <ReadOnlyField label="Salesforce Account ID" value={selectedPro.salesforceAccountId} />
+          <ReadOnlyField label="Salesforce Lead ID" value={selectedPro.salesforceLeadId} />
+        </Box>
+      </Paper>
+
+      {/* Industry & Segment */}
       <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
           <CategoryIcon sx={{ color: palette.primary }} />
           <Typography variant="subtitle1" fontWeight={600}>
-            Feature Stage Summary
+            Industry & Segment
           </Typography>
         </Stack>
 
-        <Stack direction="row" spacing={2}>
-          {(Object.entries(stageCounts) as [AdoptionStage, number][]).map(([stage, count]) => (
-            <Paper
-              key={stage}
-              variant="outlined"
-              sx={{
-                flex: 1,
-                p: 2,
-                textAlign: 'center',
-                borderColor: alpha(stageColors[stage], 0.3),
-                bgcolor: alpha(stageColors[stage], 0.02),
-              }}
-            >
-              <Typography variant="h4" fontWeight={700} sx={{ color: stageColors[stage] }}>
-                {count}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {stageLabels[stage]}
-              </Typography>
-            </Paper>
-          ))}
-        </Stack>
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 3
+        }}>
+          <ReadOnlyField label="Industry" value={selectedPro.industry} />
+          <ReadOnlyField label="Industry Standardized" value={selectedPro.industryStandardized} isChip />
+          <ReadOnlyField label="Industry Type" value={selectedPro.industryType} isChip />
+          <ReadOnlyField label="Segment" value={selectedPro.segment} isChip chipColor={palette.primary} />
+          <ReadOnlyField label="Organization Bin Size" value={selectedPro.organizationBinSize} isChip />
+          <ReadOnlyField label="Organization Size" value={selectedPro.organizationSize} />
+          <ReadOnlyField label="Tech Readiness" value={selectedPro.techReadiness} isChip chipColor={selectedPro.techReadiness ? palette.success : palette.grey[400]} />
+        </Box>
       </Paper>
 
-      {/* Feature Status Table */}
-      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: palette.grey[50] }}>
-          <Stack direction="row" spacing={1} alignItems="center">
-            <ChecklistIcon sx={{ color: palette.primary }} />
+      {/* Status Information */}
+      <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <AssignmentIcon sx={{ color: palette.primary }} />
+          <Typography variant="subtitle1" fontWeight={600}>
+            Status Information
+          </Typography>
+        </Stack>
+
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 3
+        }}>
+          <ReadOnlyField
+            label="Billing Status"
+            value={selectedPro.billingStatus}
+            isChip
+            chipColor={selectedPro.billingStatus === 'enrolled' ? palette.success : selectedPro.billingStatus === 'trial' ? palette.warning : undefined}
+          />
+          <ReadOnlyField label="Organization Status" value={selectedPro.organizationStatus?.replace(/_/g, ' ')} isChip />
+          <ReadOnlyField label="Customer Status" value={selectedPro.customerStatusDisplayName} />
+          <ReadOnlyField label="Lead Status" value={selectedPro.leadStatus?.replace(/_/g, ' ')} isChip />
+          <ReadOnlyField
+            label="Fraud Status"
+            value={selectedPro.fraudStatus?.replace(/_/g, ' ')}
+            isChip
+            chipColor={selectedPro.fraudStatus === 'risk_review_approved' ? palette.success : selectedPro.fraudStatus === 'risk_review_denied' ? palette.error : undefined}
+          />
+          <ReadOnlyField label="Retention Status" value={selectedPro.retentionStatus} isChip />
+        </Box>
+      </Paper>
+
+      {/* Pain Points */}
+      {selectedPro.painPoints && selectedPro.painPoints.length > 0 && (
+        <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+            <InfoOutlinedIcon sx={{ color: palette.primary }} />
             <Typography variant="subtitle1" fontWeight={600}>
-              Feature Status Details
+              Pain Points
             </Typography>
           </Stack>
-        </Box>
 
-        <Stack spacing={0} divider={<Divider />}>
-          {features.map((feature) => {
-            const status = selectedPro.featureStatus[feature.id];
-            if (!status) return null;
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {selectedPro.painPoints.map((painPoint) => (
+              <Chip
+                key={painPoint}
+                label={painPoint}
+                size="small"
+                sx={{
+                  bgcolor: alpha(palette.warning, 0.1),
+                  color: palette.warning,
+                  fontWeight: 500,
+                }}
+              />
+            ))}
+          </Stack>
+        </Paper>
+      )}
 
-            const color = stageColors[status.stage];
-            const stageKey = getStageKey(status.stage);
-            const stageContext = feature.stages[stageKey];
-            const assignments = stageContext.onboardingItems || [];
-            const completedCount = assignments.filter((a) => status.completedTasks?.includes(a.itemId)).length;
-
-            return (
-              <Box key={feature.id} sx={{ p: 2 }}>
-                <Stack direction="row" spacing={2} alignItems="flex-start">
-                  {/* Feature Icon */}
-                  <Avatar
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: alpha(color, 0.1),
-                      color: color,
-                    }}
-                  >
-                    <FeatureIcon iconName={feature.icon} sx={{ fontSize: 20 }} />
-                  </Avatar>
-
-                  {/* Feature Info */}
-                  <Box sx={{ flex: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        {feature.name}
-                      </Typography>
-                      <Chip
-                        label={stageLabels[status.stage]}
-                        size="small"
-                        sx={{
-                          height: 22,
-                          fontSize: '0.7rem',
-                          fontWeight: 600,
-                          bgcolor: alpha(color, 0.15),
-                          color: color,
-                        }}
-                      />
-                    </Stack>
-
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                      {feature.description}
-                    </Typography>
-
-                    {/* Status Details Grid */}
-                    <Box sx={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                      gap: 2,
-                      mt: 1.5,
-                      p: 1.5,
-                      bgcolor: palette.grey[50],
-                      borderRadius: 1,
-                    }}>
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Usage Count
-                        </Typography>
-                        <Typography variant="body2" fontWeight={600}>
-                          {status.usageCount}
-                        </Typography>
-                      </Box>
-
-                      {assignments.length > 0 && (
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            Tasks Completed
-                          </Typography>
-                          <Typography variant="body2" fontWeight={600}>
-                            {completedCount}/{assignments.length}
-                          </Typography>
-                        </Box>
-                      )}
-
-                      {status.attachedAt && (
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            Attached At
-                          </Typography>
-                          <Typography variant="body2" fontWeight={600}>
-                            {status.attachedAt}
-                          </Typography>
-                        </Box>
-                      )}
-
-                      {status.activatedAt && (
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            Activated At
-                          </Typography>
-                          <Typography variant="body2" fontWeight={600}>
-                            {status.activatedAt}
-                          </Typography>
-                        </Box>
-                      )}
-
-                      {status.engagedAt && (
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            Engaged At
-                          </Typography>
-                          <Typography variant="body2" fontWeight={600}>
-                            {status.engagedAt}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-
-                    {/* Completed Tasks */}
-                    {status.completedTasks && status.completedTasks.length > 0 && (
-                      <Box sx={{ mt: 1.5 }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                          Completed Task IDs
-                        </Typography>
-                        <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                          {status.completedTasks.map((taskId) => (
-                            <Chip
-                              key={taskId}
-                              label={taskId}
-                              size="small"
-                              sx={{
-                                height: 20,
-                                fontSize: '0.65rem',
-                                bgcolor: alpha(palette.success, 0.1),
-                                color: palette.success,
-                              }}
-                            />
-                          ))}
-                        </Stack>
-                      </Box>
-                    )}
-                  </Box>
-                </Stack>
-              </Box>
-            );
-          })}
+      {/* Legacy Fields */}
+      <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <ComputerIcon sx={{ color: palette.grey[400] }} />
+          <Typography variant="subtitle1" fontWeight={600} color="text.secondary">
+            Legacy Fields
+          </Typography>
         </Stack>
+
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 3
+        }}>
+          <ReadOnlyField label="Business Type" value={selectedPro.businessType} isChip />
+        </Box>
       </Paper>
     </Box>
   );
@@ -2506,7 +2429,6 @@ export function FrontlineView() {
         return (
           <InformationPage
             selectedPro={selectedPro}
-            features={features}
           />
         );
       case 'onboarding-plan':
