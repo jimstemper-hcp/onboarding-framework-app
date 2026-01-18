@@ -31,6 +31,7 @@ import {
   type PlanningModeContext,
   type DemoModeContext,
 } from '../services/contextBuilder';
+import { generateMockResponse, type MockContext } from '../services/mockService';
 import { usePlanningMode } from '../../planning/context/PlanningContext';
 import { useOnboarding, useActivePro } from '../../context/OnboardingContext';
 
@@ -82,6 +83,9 @@ export function ChatProvider({ children }: ChatProviderProps) {
   // Chat mode is determined by planning mode toggle
   const mode: ChatMode = isPlanningMode ? 'planning' : 'demo';
 
+  // Mock mode is active when no API key is configured (for demo purposes)
+  const isMockMode = !apiKeyConfig.hasKey;
+
   // ---------------------------------------------------------------------------
   // CONTEXT BUILDERS
   // ---------------------------------------------------------------------------
@@ -131,20 +135,35 @@ export function ChatProvider({ children }: ChatProviderProps) {
     setIsLoading(true);
 
     try {
-      // Build conversation history for API
-      const conversationHistory: AnthropicMessage[] = [
-        ...messages.map((m) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-        })),
-        { role: 'user', content: content.trim() },
-      ];
+      let response: string;
 
-      // Build system prompt based on current mode
-      const systemPrompt = buildContext();
+      // Use mock mode if no API key and in demo mode with an active pro
+      if (!apiKeyConfig.hasKey && mode === 'demo' && activePro) {
+        const mockContext: MockContext = {
+          activePro,
+          features,
+          getStageContext,
+        };
+        response = await generateMockResponse(content.trim(), mockContext);
+      } else if (!apiKeyConfig.hasKey) {
+        // No API key and not in demo mode (or no active pro)
+        throw new Error('No API key configured. Please add your Anthropic API key to use the chat.');
+      } else {
+        // Build conversation history for API
+        const conversationHistory: AnthropicMessage[] = [
+          ...messages.map((m) => ({
+            role: m.role as 'user' | 'assistant',
+            content: m.content,
+          })),
+          { role: 'user', content: content.trim() },
+        ];
 
-      // Send to Anthropic
-      const response = await sendToAnthropic(conversationHistory, systemPrompt);
+        // Build system prompt based on current mode
+        const systemPrompt = buildContext();
+
+        // Send to Anthropic
+        response = await sendToAnthropic(conversationHistory, systemPrompt);
+      }
 
       // Add assistant message
       const assistantMessage: ChatMessage = {
@@ -161,7 +180,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, buildContext]);
+  }, [messages, buildContext, apiKeyConfig.hasKey, mode, activePro, features, getStageContext]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
@@ -210,6 +229,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
       isLoading,
       error,
       mode,
+      isMockMode,
       apiKeyConfig,
       sendMessage,
       clearMessages,
@@ -222,6 +242,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
       isLoading,
       error,
       mode,
+      isMockMode,
       apiKeyConfig,
       sendMessage,
       clearMessages,

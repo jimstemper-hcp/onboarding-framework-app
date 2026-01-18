@@ -23,6 +23,7 @@ import {
   Select,
   MenuItem,
   FormControl,
+  InputLabel,
   List,
   ListItem,
   ListItemButton,
@@ -68,6 +69,7 @@ import type {
   OnboardingItemStatus,
   OnboardingItemType,
   CompletionApi,
+  ChatExperience,
 } from '../../types';
 
 // =============================================================================
@@ -392,6 +394,87 @@ function AccessConditionsEditor({
 }
 
 // =============================================================================
+// CHAT EXPERIENCE EDITOR
+// =============================================================================
+
+function ChatExperienceEditor({
+  chatExperience,
+  onChange,
+}: {
+  chatExperience?: ChatExperience;
+  onChange: (experience: ChatExperience) => void;
+}) {
+  const defaultExperience: ChatExperience = {
+    detectionResponse: '',
+    priorityAction: 'onboarding',
+    actionPrompt: '',
+    suggestedCta: '',
+  };
+
+  const experience = chatExperience || defaultExperience;
+
+  const handleChange = (field: keyof ChatExperience, value: string) => {
+    onChange({ ...experience, [field]: value });
+  };
+
+  return (
+    <Box>
+      <SectionHeader icon={<SmartToyIcon />} title="Chat Experience" />
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Configure how the AI responds when users ask about this feature at this stage.
+      </Typography>
+
+      <Stack spacing={2}>
+        <TextField
+          fullWidth
+          label="Detection Response"
+          multiline
+          rows={2}
+          value={experience.detectionResponse}
+          onChange={(e) => handleChange('detectionResponse', e.target.value)}
+          helperText="What the AI says when it detects the user asking about this feature"
+          placeholder="e.g., I see you're asking about invoicing! You have access but haven't sent your first invoice yet."
+        />
+
+        <FormControl fullWidth>
+          <InputLabel>Priority Action</InputLabel>
+          <Select
+            value={experience.priorityAction}
+            label="Priority Action"
+            onChange={(e) => handleChange('priorityAction', e.target.value)}
+          >
+            <MenuItem value="onboarding">Onboarding Task</MenuItem>
+            <MenuItem value="call">Schedule Call</MenuItem>
+            <MenuItem value="navigation">Go to Page</MenuItem>
+            <MenuItem value="tip">Share Tip</MenuItem>
+          </Select>
+        </FormControl>
+
+        <TextField
+          fullWidth
+          label="Action Prompt"
+          multiline
+          rows={2}
+          value={experience.actionPrompt}
+          onChange={(e) => handleChange('actionPrompt', e.target.value)}
+          helperText="The specific guidance or call-to-action the AI should offer"
+          placeholder="e.g., Let's get you to that first invoice! You need to create a customer, create a job, and complete it."
+        />
+
+        <TextField
+          fullWidth
+          label="Suggested CTA"
+          value={experience.suggestedCta}
+          onChange={(e) => handleChange('suggestedCta', e.target.value)}
+          helperText="Button text for the call-to-action (e.g., Complete Setup, Talk to Sales)"
+          placeholder="e.g., Complete Setup"
+        />
+      </Stack>
+    </Box>
+  );
+}
+
+// =============================================================================
 // SIMPLIFIED STAGE EDITOR (uses reference tables)
 // =============================================================================
 
@@ -644,6 +727,14 @@ function SimplifiedStageEditor({
           value={context.prompt || ''}
           onChange={(e) => updateContext({ prompt: e.target.value })}
           placeholder="AI prompt for this stage..."
+        />
+      </Paper>
+
+      {/* Chat Experience */}
+      <Paper sx={{ p: 3 }}>
+        <ChatExperienceEditor
+          chatExperience={context.chatExperience}
+          onChange={(chatExperience) => updateContext({ chatExperience })}
         />
       </Paper>
 

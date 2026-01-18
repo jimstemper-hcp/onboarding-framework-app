@@ -24,6 +24,7 @@ export function ChatContainer() {
     isLoading,
     error,
     mode,
+    isMockMode,
     apiKeyConfig,
     sendMessage,
     clearMessages,
@@ -49,8 +50,10 @@ export function ChatContainer() {
     [sendMessage]
   );
 
-  // Determine if chat should be disabled
-  const isDisabled = isLoading || !apiKeyConfig.hasKey;
+  // In demo mode, we can use mock responses without an API key
+  // In planning mode, we need an API key
+  const needsApiKey = mode === 'planning' && !apiKeyConfig.hasKey;
+  const isDisabled = isLoading || needsApiKey;
 
   return (
     <Paper
@@ -69,13 +72,14 @@ export function ChatContainer() {
       {/* Header */}
       <ChatHeader
         mode={mode}
+        isMockMode={isMockMode}
         onSettingsClick={handleSettingsOpen}
         onClearClick={clearMessages}
         hasMessages={messages.length > 0}
       />
 
-      {/* API Key Warning */}
-      {!apiKeyConfig.hasKey && (
+      {/* API Key Warning - only show in planning mode */}
+      {needsApiKey && (
         <Alert
           severity="warning"
           sx={{ m: 2, mb: 0 }}
@@ -86,7 +90,7 @@ export function ChatContainer() {
           }
         >
           <AlertTitle>API Key Required</AlertTitle>
-          Please configure your Anthropic API key to use the chat assistant.
+          Planning mode requires an Anthropic API key. Demo mode works without one.
         </Alert>
       )}
 
@@ -118,8 +122,8 @@ export function ChatContainer() {
         onSend={handleSend}
         disabled={isDisabled}
         placeholder={
-          !apiKeyConfig.hasKey
-            ? 'Configure API key to start chatting...'
+          needsApiKey
+            ? 'Configure API key for planning mode...'
             : isLoading
               ? 'Waiting for response...'
               : mode === 'planning'

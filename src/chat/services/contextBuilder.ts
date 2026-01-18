@@ -13,6 +13,7 @@ import type {
   FeatureId,
   AdoptionStage,
   StageContext,
+  ChatExperience,
 } from '../../types';
 import type { PlannableElement, PlanningFeedback } from '../../planning/types';
 
@@ -119,6 +120,144 @@ ${feedbackSummary}
 
 Be helpful, accurate, and concise. If you're unsure about something, say so.
 Focus on helping reviewers understand the prototype and collect valuable feedback.`;
+}
+
+// -----------------------------------------------------------------------------
+// CONVERSATIONAL FLOW INSTRUCTIONS
+// -----------------------------------------------------------------------------
+
+/**
+ * Build the enhanced conversational flow instructions.
+ * This instructs the AI on the proper response pattern:
+ * 1. Help content first (always)
+ * 2. Stage-specific actions
+ * 3. Confirmation flows for data creation
+ * 4. Next step suggestions
+ */
+function buildConversationalFlowInstructions(): string {
+  return `
+## Conversational Response Pattern
+
+When a user asks about a feature, ALWAYS follow this pattern:
+
+### Step 1: Help Content First (Required)
+- Start with a helpful explanation of the feature
+- Reference relevant help articles with links
+- Include video tutorial links when available
+- Format: 📖 [Article Title](url) and 🎥 [Video Title](url)
+
+### Step 2: Stage-Specific Action
+Based on the user's current stage for that feature:
+
+**not_attached** (doesn't have access):
+- Explain the value proposition
+- Offer to schedule a demo call with sales
+- Provide Calendly link
+
+**attached** (has access, needs setup):
+- Ask: "Would you like to try with **sample data** or your **real information**?"
+- Wait for their choice before proceeding
+- Sample flow: create demo data with previews
+- Real flow: collect info conversationally
+
+**activated** (setup complete, ready to use):
+- Offer specific action options (numbered list)
+- Upload logo, review settings, send test, etc.
+- Guide them to the next step
+
+**engaged** (actively using):
+- Share advanced tips and best practices
+- Offer to help through conversation
+- Suggest related features
+
+### Step 3: Confirmation Flow (for data creation)
+When creating data (sample or real):
+1. Show a structured preview table FIRST
+2. Ask: "Does this look good? Reply 'yes' to create."
+3. Wait for explicit confirmation
+4. Execute only after confirmation
+5. Show success message with result
+
+**Preview Table Format:**
+| Field | Value |
+|-------|-------|
+| Name  | Jane Smith |
+| Email | jane@example.com |
+
+### Step 4: Next Steps
+After any completed action, suggest 2-3 logical follow-up actions.
+
+## Tool Execution Protocol
+
+NEVER execute tools that modify data without showing a preview first.
+ALWAYS get explicit user confirmation ("yes") before executing.
+
+Pattern:
+1. Generate preview → 2. Show to user → 3. Ask for confirmation → 4. Execute on "yes"
+
+For "no" responses: "No problem! Let me know when you're ready or if you'd like to do something else."
+`;
+}
+
+// -----------------------------------------------------------------------------
+// FEATURE DETECTION INSTRUCTIONS
+// -----------------------------------------------------------------------------
+
+/**
+ * Build feature detection instructions for the AI.
+ * This section tells the AI how to detect when a user is asking about
+ * a specific feature and what action to offer based on their stage.
+ */
+function buildFeatureDetectionInstructions(
+  features: Feature[],
+  activePro: ProAccount,
+  getStageContext: (featureId: FeatureId, stage: AdoptionStage) => StageContext | undefined
+): string {
+  const featureInstructions = features
+    .map((feature) => {
+      const status = activePro.featureStatus[feature.id];
+      const stageContext = getStageContext(feature.id, status.stage);
+      const chatExp = stageContext?.chatExperience;
+
+      // Skip if no chat experience configured
+      if (!chatExp) {
+        return null;
+      }
+
+      const stageName = status.stage.replace('_', ' ');
+      const actionTypeLabels: Record<ChatExperience['priorityAction'], string> = {
+        onboarding: 'Onboarding Task',
+        call: 'Schedule Call',
+        navigation: 'Navigate to Page',
+        tip: 'Share Tip',
+      };
+
+      // Get help articles from navigation
+      const helpLinks = stageContext?.navigation
+        .filter(n => n.navigationType === 'hcp_help' || n.navigationType === 'hcp_video')
+        .slice(0, 2)
+        .map(n => `    - ${n.navigationType === 'hcp_video' ? '🎥' : '📖'} ${n.name}: ${n.url}`)
+        .join('\n') || '';
+
+      return `### ${feature.name} (User is: ${stageName})
+Stage Behavior: ${actionTypeLabels[chatExp.priorityAction]}
+Detection Response: "${chatExp.detectionResponse}"
+Action to Offer: "${chatExp.actionPrompt}"
+Suggested CTA: "${chatExp.suggestedCta}"
+${helpLinks ? `Help Resources:\n${helpLinks}` : ''}`;
+    })
+    .filter(Boolean)
+    .join('\n\n');
+
+  if (!featureInstructions) {
+    return '';
+  }
+
+  return `
+## Feature-Specific Context
+
+${featureInstructions}
+`;
 }
 
 // -----------------------------------------------------------------------------
@@ -243,7 +382,9 @@ When guiding to actions:
 - For help articles: Share the help center link
 - For live help: Offer the appropriate Calendly booking link
 
-Remember: You're their onboarding assistant, here to help them succeed with Housecall Pro!`;
+Remember: You're their onboarding assistant, here to help them succeed with Housecall Pro!
+${buildConversationalFlowInstructions()}
+${buildFeatureDetectionInstructions(features, activePro, getStageContext)}`;
 }
 
 // -----------------------------------------------------------------------------

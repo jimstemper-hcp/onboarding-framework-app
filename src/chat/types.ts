@@ -35,6 +35,8 @@ export interface ChatState {
   isLoading: boolean;
   error: string | null;
   mode: ChatMode;
+  /** True when using mock responses (no API key available) */
+  isMockMode: boolean;
 }
 
 /**

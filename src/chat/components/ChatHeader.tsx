@@ -17,6 +17,7 @@ import type { ChatMode } from '../types';
 
 interface ChatHeaderProps {
   mode: ChatMode;
+  isMockMode: boolean;
   onSettingsClick: () => void;
   onClearClick: () => void;
   hasMessages: boolean;
@@ -28,6 +29,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({
   mode,
+  isMockMode,
   onSettingsClick,
   onClearClick,
   hasMessages,
@@ -55,10 +57,25 @@ export function ChatHeader({
           size="small"
           variant="filled"
         />
+        {isMockMode && !isPlanningMode && (
+          <Chip
+            label="Simulated"
+            size="small"
+            variant="outlined"
+            sx={{
+              fontSize: '0.7rem',
+              height: 20,
+              color: 'warning.main',
+              borderColor: 'warning.main',
+            }}
+          />
+        )}
         <Typography variant="body2" color="text.secondary">
           {isPlanningMode
             ? 'Reviewing prototype specs & feedback'
-            : 'Onboarding assistant for active pro'}
+            : isMockMode
+              ? 'Demo responses (no API key)'
+              : 'Onboarding assistant for active pro'}
         </Typography>
       </Box>
 
