@@ -64,7 +64,7 @@ import type { Feature, AdoptionStage, FeatureId, ProAccount, OnboardingItemAssig
 // TYPES
 // =============================================================================
 
-type FrontlinePage = 'onboarding-plan' | 'features-list' | 'calls';
+type FrontlinePage = 'information' | 'onboarding-plan' | 'features-list' | 'calls';
 
 type CategoryStatus = 'not-covered' | 'in-progress' | 'completed';
 
@@ -1279,28 +1279,571 @@ function OnboardingPlanPage({
 }
 
 // =============================================================================
-// FEATURES LIST PAGE (current content)
+// FEATURE DETAIL MODAL
+// =============================================================================
+
+function FeatureDetailModal({
+  feature,
+  stage,
+  open,
+  onClose,
+  completedTaskIds,
+  onToggleTask,
+}: {
+  feature: Feature | null;
+  stage: AdoptionStage | null;
+  open: boolean;
+  onClose: () => void;
+  completedTaskIds: string[];
+  onToggleTask: (taskId: string) => void;
+}) {
+  if (!feature || !stage) return null;
+
+  const stageKey = getStageKey(stage);
+  const stageContext = feature.stages[stageKey];
+  const color = stageColors[stage];
+  const assignments = stageContext.onboardingItems || [];
+  const completedCount = assignments.filter((a) => completedTaskIds.includes(a.itemId)).length;
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 2, maxHeight: '90vh' },
+      }}
+    >
+      <DialogTitle sx={{ pb: 1 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar sx={{ width: 48, height: 48, bgcolor: alpha(color, 0.15), color: color }}>
+              <FeatureIcon iconName={feature.icon} sx={{ fontSize: 24 }} />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight={600}>
+                {feature.name}
+              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Chip
+                  label={stageLabels[stage]}
+                  size="small"
+                  sx={{
+                    height: 22,
+                    fontWeight: 600,
+                    bgcolor: alpha(color, 0.15),
+                    color: color,
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary">
+                  v{feature.version}
+                </Typography>
+              </Stack>
+            </Box>
+          </Stack>
+          <IconButton size="small" onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
+        </Stack>
+      </DialogTitle>
+
+      <DialogContent dividers sx={{ p: 0 }}>
+        <Stack spacing={0}>
+          {/* Feature Description */}
+          <Box sx={{ p: 3, bgcolor: alpha(palette.grey[400], 0.02) }}>
+            <Typography variant="body2" color="text.secondary">
+              {feature.description}
+            </Typography>
+          </Box>
+
+          {/* Context Snippets */}
+          {stageContext.contextSnippets && stageContext.contextSnippets.length > 0 && (
+            <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                <TextSnippetIcon sx={{ fontSize: 18, color: palette.primary }} />
+                <Typography variant="subtitle2" fontWeight={600}>
+                  Important Context
+                </Typography>
+              </Stack>
+              <Stack spacing={1.5}>
+                {stageContext.contextSnippets.map((snippet) => (
+                  <Paper key={snippet.id} variant="outlined" sx={{ p: 2, bgcolor: alpha(palette.primary, 0.02) }}>
+                    <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      {snippet.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      {snippet.content}
+                    </Typography>
+                  </Paper>
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {/* Onboarding Items */}
+          {assignments.length > 0 && (
+            <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                <ChecklistIcon sx={{ fontSize: 18, color: palette.success }} />
+                <Typography variant="subtitle2" fontWeight={600}>
+                  Onboarding Items ({completedCount}/{assignments.length} completed)
+                </Typography>
+              </Stack>
+              <LinearProgress
+                variant="determinate"
+                value={assignments.length > 0 ? (completedCount / assignments.length) * 100 : 0}
+                sx={{
+                  mb: 2,
+                  height: 6,
+                  borderRadius: 3,
+                  bgcolor: palette.grey[200],
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: palette.success,
+                    borderRadius: 3,
+                  },
+                }}
+              />
+              <Stack spacing={1}>
+                {assignments.map((assignment) => {
+                  const itemDef = allOnboardingItems.find((i) => i.id === assignment.itemId);
+                  if (!itemDef) return null;
+                  const isCompleted = completedTaskIds.includes(assignment.itemId);
+                  const isRepFacing = itemDef.type === 'rep_facing';
+
+                  return (
+                    <Paper
+                      key={assignment.itemId}
+                      variant="outlined"
+                      sx={{
+                        p: 1.5,
+                        cursor: 'pointer',
+                        bgcolor: isCompleted ? alpha(palette.success, 0.04) : 'white',
+                        borderColor: isCompleted ? alpha(palette.success, 0.3) : 'divider',
+                        transition: 'all 0.15s ease',
+                        '&:hover': {
+                          borderColor: palette.primary,
+                          bgcolor: alpha(palette.primary, 0.02),
+                        },
+                      }}
+                      onClick={() => onToggleTask(assignment.itemId)}
+                    >
+                      <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                        <Checkbox
+                          checked={isCompleted}
+                          onChange={() => onToggleTask(assignment.itemId)}
+                          icon={<RadioButtonUncheckedIcon />}
+                          checkedIcon={<CheckCircleIcon />}
+                          sx={{
+                            p: 0,
+                            color: palette.grey[400],
+                            '&.Mui-checked': { color: palette.success },
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <Box sx={{ flex: 1 }}>
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography
+                              variant="body2"
+                              fontWeight={500}
+                              sx={{
+                                textDecoration: isCompleted ? 'line-through' : 'none',
+                                color: isCompleted ? 'text.secondary' : 'text.primary',
+                              }}
+                            >
+                              {itemDef.title}
+                            </Typography>
+                            {assignment.required && (
+                              <Chip
+                                label="Required"
+                                size="small"
+                                sx={{ height: 18, fontSize: '0.6rem', bgcolor: alpha(palette.error, 0.1), color: palette.error }}
+                              />
+                            )}
+                          </Stack>
+                          <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
+                            <Chip
+                              icon={isRepFacing ? <PersonIcon sx={{ fontSize: '14px !important' }} /> : <ComputerIcon sx={{ fontSize: '14px !important' }} />}
+                              label={isRepFacing ? 'Rep Task' : 'In-Product'}
+                              size="small"
+                              sx={{
+                                height: 18,
+                                fontSize: '0.6rem',
+                                bgcolor: isRepFacing ? alpha(palette.secondary, 0.1) : alpha(palette.primary, 0.1),
+                                color: isRepFacing ? palette.secondary : palette.primary,
+                                '& .MuiChip-icon': { ml: 0.5 },
+                              }}
+                            />
+                          </Stack>
+                          {assignment.stageSpecificNote && (
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                              {assignment.stageSpecificNote}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  );
+                })}
+              </Stack>
+            </Box>
+          )}
+
+          {/* Navigation Links */}
+          {stageContext.navigation && stageContext.navigation.length > 0 && (
+            <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                <LinkIcon sx={{ fontSize: 18, color: palette.warning }} />
+                <Typography variant="subtitle2" fontWeight={600}>
+                  Navigation & Resources
+                </Typography>
+              </Stack>
+              <Stack spacing={1}>
+                {stageContext.navigation.map((item, index) => (
+                  <Paper key={index} variant="outlined" sx={{ p: 1.5 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                      <Box sx={{ flex: 1 }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="body2" fontWeight={500}>
+                            {item.name}
+                          </Typography>
+                          <Chip
+                            label={item.navigationType.replace('hcp_', '').replace(/_/g, ' ')}
+                            size="small"
+                            sx={{ height: 18, fontSize: '0.6rem' }}
+                          />
+                        </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.description}
+                        </Typography>
+                      </Box>
+                      <Tooltip title="Open link">
+                        <IconButton size="small" onClick={() => window.open(item.url, '_blank')}>
+                          <OpenInNewIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                  </Paper>
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {/* Calendly Links */}
+          {stageContext.calendlyTypes && stageContext.calendlyTypes.length > 0 && (
+            <Box sx={{ p: 3, borderBottom: 1, borderColor: 'divider' }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                <CalendarMonthIcon sx={{ fontSize: 18, color: palette.secondary }} />
+                <Typography variant="subtitle2" fontWeight={600}>
+                  Schedule a Call
+                </Typography>
+              </Stack>
+              <Stack spacing={1}>
+                {stageContext.calendlyTypes.map((calendly, index) => (
+                  <Button
+                    key={index}
+                    variant="outlined"
+                    startIcon={<CalendarMonthIcon />}
+                    endIcon={<OpenInNewIcon sx={{ fontSize: 16 }} />}
+                    onClick={() => window.open(calendly.url, '_blank')}
+                    sx={{
+                      justifyContent: 'flex-start',
+                      textTransform: 'none',
+                      py: 1,
+                      px: 2,
+                      borderColor: alpha(palette.secondary, 0.3),
+                      '&:hover': {
+                        borderColor: palette.secondary,
+                        bgcolor: alpha(palette.secondary, 0.04),
+                      },
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'left', flex: 1 }}>
+                      <Typography variant="body2" fontWeight={500}>
+                        {calendly.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {calendly.team} team
+                      </Typography>
+                    </Box>
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {/* AI Prompt */}
+          {stageContext.prompt && (
+            <Box sx={{ p: 3 }}>
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                <SmartToyIcon sx={{ fontSize: 18, color: palette.primary }} />
+                <Typography variant="subtitle2" fontWeight={600}>
+                  AI Guidance Prompt
+                </Typography>
+              </Stack>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 2,
+                  bgcolor: alpha(palette.primary, 0.02),
+                  fontFamily: 'monospace',
+                  fontSize: '0.75rem',
+                  whiteSpace: 'pre-wrap',
+                  color: palette.grey[600],
+                  maxHeight: 150,
+                  overflow: 'auto',
+                }}
+              >
+                {stageContext.prompt}
+              </Paper>
+            </Box>
+          )}
+        </Stack>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =============================================================================
+// FEATURE STAGE SECTION (Expandable Accordion for Features List)
+// =============================================================================
+
+function FeatureStageSection({
+  stage,
+  featuresAtStage,
+  selectedPro,
+  expandedFeatureId,
+  onToggleFeatureExpanded,
+  onOpenFeatureDetail,
+  expanded,
+  onToggleExpanded,
+}: {
+  stage: AdoptionStage;
+  featuresAtStage: Feature[];
+  selectedPro: ProAccount;
+  expandedFeatureId: FeatureId | null;
+  onToggleFeatureExpanded: (featureId: FeatureId) => void;
+  onOpenFeatureDetail: (feature: Feature) => void;
+  expanded: boolean;
+  onToggleExpanded: () => void;
+}) {
+  const color = stageColors[stage];
+  const featureCount = featuresAtStage.length;
+
+  // Calculate total onboarding items progress for this stage
+  let totalItems = 0;
+  let completedItems = 0;
+  featuresAtStage.forEach((feature) => {
+    const status = selectedPro.featureStatus[feature.id];
+    const stageKey = getStageKey(stage);
+    const stageContext = feature.stages[stageKey];
+    const assignments = stageContext.onboardingItems || [];
+    totalItems += assignments.length;
+    completedItems += assignments.filter((a) => status?.completedTasks?.includes(a.itemId)).length;
+  });
+
+  return (
+    <Accordion
+      expanded={expanded}
+      onChange={onToggleExpanded}
+      elevation={0}
+      sx={{
+        border: '1px solid',
+        borderColor: expanded ? color : 'divider',
+        borderRadius: '8px !important',
+        '&:before': { display: 'none' },
+        mb: 1.5,
+        overflow: 'hidden',
+      }}
+    >
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        sx={{
+          bgcolor: expanded ? alpha(color, 0.02) : 'white',
+          '& .MuiAccordionSummary-content': { my: 1.5 },
+        }}
+      >
+        <Stack direction="row" spacing={2} alignItems="center" sx={{ flex: 1, pr: 2 }}>
+          <Avatar
+            sx={{
+              width: 40,
+              height: 40,
+              bgcolor: alpha(color, 0.15),
+              color: color,
+            }}
+          >
+            {stage === 'not_attached' ? (
+              <LockOutlinedIcon sx={{ fontSize: 20 }} />
+            ) : stage === 'attached' ? (
+              <PlayArrowIcon sx={{ fontSize: 20 }} />
+            ) : stage === 'activated' ? (
+              <CheckCircleIcon sx={{ fontSize: 20 }} />
+            ) : (
+              <CheckCircleIcon sx={{ fontSize: 20 }} />
+            )}
+          </Avatar>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="subtitle1" fontWeight={600}>
+                {stageLabels[stage]}
+              </Typography>
+              <Chip
+                label={`${featureCount} feature${featureCount !== 1 ? 's' : ''}`}
+                size="small"
+                sx={{
+                  height: 22,
+                  fontSize: '0.7rem',
+                  fontWeight: 600,
+                  bgcolor: alpha(color, 0.15),
+                  color: color,
+                }}
+              />
+            </Stack>
+            {totalItems > 0 && (
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 0.5 }}>
+                <Typography variant="caption" color="text.secondary">
+                  {completedItems}/{totalItems} items completed
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={totalItems > 0 ? (completedItems / totalItems) * 100 : 0}
+                  sx={{
+                    flex: 1,
+                    maxWidth: 120,
+                    height: 4,
+                    borderRadius: 2,
+                    bgcolor: palette.grey[200],
+                    '& .MuiLinearProgress-bar': {
+                      bgcolor: palette.success,
+                      borderRadius: 2,
+                    },
+                  }}
+                />
+              </Stack>
+            )}
+          </Box>
+        </Stack>
+      </AccordionSummary>
+
+      <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+        <Divider sx={{ mb: 2 }} />
+        {featuresAtStage.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+            No features at this stage
+          </Typography>
+        ) : (
+          <Stack spacing={1}>
+            {featuresAtStage.map((feature) => {
+              const status = selectedPro.featureStatus[feature.id];
+              const stageKey = getStageKey(stage);
+              const stageContext = feature.stages[stageKey];
+              const assignments = stageContext.onboardingItems || [];
+              const completedCount = assignments.filter((a) => status?.completedTasks?.includes(a.itemId)).length;
+
+              return (
+                <Paper
+                  key={feature.id}
+                  variant="outlined"
+                  onClick={() => onOpenFeatureDetail(feature)}
+                  sx={{
+                    p: 1.5,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      borderColor: color,
+                      bgcolor: alpha(color, 0.02),
+                    },
+                  }}
+                >
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    {/* Feature Icon */}
+                    <Avatar
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        bgcolor: alpha(color, 0.1),
+                        color: color,
+                      }}
+                    >
+                      <FeatureIcon iconName={feature.icon} sx={{ fontSize: 18 }} />
+                    </Avatar>
+
+                    {/* Feature Info */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="body2" fontWeight={600}>
+                        {feature.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" noWrap>
+                        {feature.description}
+                      </Typography>
+                      {assignments.length > 0 && (
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+                          <Typography variant="caption" color="text.secondary">
+                            {completedCount}/{assignments.length} items
+                          </Typography>
+                          <LinearProgress
+                            variant="determinate"
+                            value={assignments.length > 0 ? (completedCount / assignments.length) * 100 : 0}
+                            sx={{
+                              width: 60,
+                              height: 3,
+                              borderRadius: 1.5,
+                              bgcolor: palette.grey[200],
+                              '& .MuiLinearProgress-bar': {
+                                bgcolor: palette.success,
+                                borderRadius: 1.5,
+                              },
+                            }}
+                          />
+                        </Stack>
+                      )}
+                    </Box>
+
+                    {/* View Details affordance */}
+                    <Tooltip title="View feature details">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenFeatureDetail(feature);
+                        }}
+                        sx={{
+                          color: palette.grey[400],
+                          '&:hover': { color: color, bgcolor: alpha(color, 0.1) },
+                        }}
+                      >
+                        <InfoOutlinedIcon sx={{ fontSize: 20 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                </Paper>
+              );
+            })}
+          </Stack>
+        )}
+      </AccordionDetails>
+    </Accordion>
+  );
+}
+
+// =============================================================================
+// FEATURES LIST PAGE (stage-based sections design)
 // =============================================================================
 
 function FeaturesListPage({
   features,
   selectedPro,
-  selectedFeatureId,
-  onSelectFeature,
-  completedTaskIds,
   onToggleTask,
 }: {
   features: Feature[];
   selectedPro: ProAccount | undefined;
-  selectedFeatureId: FeatureId | null;
-  onSelectFeature: (featureId: FeatureId) => void;
-  completedTaskIds: string[];
-  onToggleTask: (taskId: string) => void;
+  onToggleTask: (taskId: string, featureId: FeatureId) => void;
 }) {
-  const selectedFeature = features.find((f) => f.id === selectedFeatureId);
-  const selectedFeatureStatus = selectedPro && selectedFeatureId
-    ? selectedPro.featureStatus[selectedFeatureId]
-    : null;
+  const [expandedStage, setExpandedStage] = useState<AdoptionStage | null>('attached');
+  const [expandedFeature, setExpandedFeature] = useState<FeatureId | null>(null);
+  const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
+  const [selectedStage, setSelectedStage] = useState<AdoptionStage | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   if (!selectedPro) {
     return (
@@ -1312,77 +1855,437 @@ function FeaturesListPage({
     );
   }
 
+  // Filter features that have a valid status for this pro
+  const activeFeatures = features.filter((f) => selectedPro.featureStatus[f.id] !== undefined);
+
+  // Group features by their current stage
+  const featuresByStage: Record<AdoptionStage, Feature[]> = {
+    not_attached: [],
+    attached: [],
+    activated: [],
+    engaged: [],
+  };
+  activeFeatures.forEach((feature) => {
+    const status = selectedPro.featureStatus[feature.id];
+    if (status) {
+      featuresByStage[status.stage].push(feature);
+    }
+  });
+
+  // Calculate overall progress
+  let totalItems = 0;
+  let totalCompleted = 0;
+  activeFeatures.forEach((feature) => {
+    const status = selectedPro.featureStatus[feature.id];
+    if (status) {
+      const stageKey = getStageKey(status.stage);
+      const stageContext = feature.stages[stageKey];
+      const assignments = stageContext.onboardingItems || [];
+      totalItems += assignments.length;
+      totalCompleted += assignments.filter((a) => status.completedTasks?.includes(a.itemId)).length;
+    }
+  });
+
+  const handleOpenDetail = (feature: Feature) => {
+    const status = selectedPro.featureStatus[feature.id];
+    setSelectedFeature(feature);
+    setSelectedStage(status?.stage || 'not_attached');
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
+  };
+
+  // Stage order for display
+  const stageOrder: AdoptionStage[] = ['not_attached', 'attached', 'activated', 'engaged'];
+
   return (
-    <Stack direction="row" spacing={3}>
-      {/* Left Column - Pro Overview + Feature Grid */}
-      <Box sx={{ flex: 1, minWidth: 0 }}>
-        {/* Pro Overview */}
-        <ProOverviewCard pro={selectedPro} features={features} />
-
-        {/* Feature Grid */}
-        <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 3, mb: 2 }}>
-          Feature Stages
+    <Box>
+      {/* Page header */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" fontWeight={600}>
+          Features List
         </Typography>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: 2,
-          }}
-        >
-          {features.map((feature) => {
-            const status = selectedPro.featureStatus[feature.id];
-            if (!status) return null;
-            return (
-              <FeatureStageCard
-                key={feature.id}
-                feature={feature}
-                stage={status.stage}
-                isSelected={selectedFeatureId === feature.id}
-                onClick={() => onSelectFeature(feature.id)}
-              />
-            );
-          })}
-        </Box>
-
-        {/* Quick Actions */}
-        {!selectedFeatureId && (
-          <Paper
-            variant="outlined"
-            sx={{ mt: 3, p: 3, textAlign: 'center', bgcolor: palette.grey[50] }}
-          >
-            <PlayArrowIcon sx={{ fontSize: 40, color: palette.grey[400], mb: 1 }} />
-            <Typography variant="body1" color="text.secondary">
-              Select a feature to view stage-specific context and onboarding items
+        <Typography variant="body2" color="text.secondary">
+          View {selectedPro.companyName}'s feature adoption across {activeFeatures.length} features
+        </Typography>
+        {/* Overall progress */}
+        {totalItems > 0 && (
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2 }}>
+            <Typography variant="body2" fontWeight={500}>
+              Overall Progress: {totalCompleted}/{totalItems}
             </Typography>
-          </Paper>
+            <LinearProgress
+              variant="determinate"
+              value={totalItems > 0 ? (totalCompleted / totalItems) * 100 : 0}
+              sx={{
+                flex: 1,
+                maxWidth: 300,
+                height: 8,
+                borderRadius: 4,
+                bgcolor: palette.grey[200],
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: palette.success,
+                  borderRadius: 4,
+                },
+              }}
+            />
+            <Typography variant="body2" color="text.secondary">
+              {totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0}%
+            </Typography>
+          </Stack>
         )}
       </Box>
 
-      {/* Right Column - Feature Detail Panel */}
-      {selectedFeature && selectedFeatureStatus && (
-        <Paper
-          elevation={0}
-          sx={{
-            width: 420,
-            flexShrink: 0,
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 2,
-            p: 3,
-            maxHeight: 'calc(100vh - 180px)',
-            overflow: 'auto',
-          }}
-        >
-          <ContextDetailPanel
-            feature={selectedFeature}
-            stage={selectedFeatureStatus.stage}
-            completedTaskIds={completedTaskIds}
-            onToggleTask={onToggleTask}
+      {/* Stage sections */}
+      <Box>
+        {stageOrder.map((stage) => (
+          <FeatureStageSection
+            key={stage}
+            stage={stage}
+            featuresAtStage={featuresByStage[stage]}
+            selectedPro={selectedPro}
+            expandedFeatureId={expandedFeature}
+            onToggleFeatureExpanded={(featureId) => setExpandedFeature(expandedFeature === featureId ? null : featureId)}
+            onOpenFeatureDetail={handleOpenDetail}
+            expanded={expandedStage === stage}
+            onToggleExpanded={() => setExpandedStage(expandedStage === stage ? null : stage)}
           />
-        </Paper>
-      )}
-    </Stack>
+        ))}
+      </Box>
+
+      {/* Feature Detail Modal */}
+      <FeatureDetailModal
+        feature={selectedFeature}
+        stage={selectedStage}
+        open={modalOpen}
+        onClose={handleCloseModal}
+        completedTaskIds={selectedFeature && selectedPro ? (selectedPro.featureStatus[selectedFeature.id]?.completedTasks || []) : []}
+        onToggleTask={(taskId) => selectedFeature && onToggleTask(taskId, selectedFeature.id)}
+      />
+    </Box>
+  );
+}
+
+// =============================================================================
+// INFORMATION PAGE
+// =============================================================================
+
+function InformationPage({
+  selectedPro,
+  features,
+}: {
+  selectedPro: ProAccount | undefined;
+  features: Feature[];
+}) {
+  if (!selectedPro) {
+    return (
+      <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
+        <Typography color="text.secondary">
+          Select a pro account to view their information
+        </Typography>
+      </Paper>
+    );
+  }
+
+  // Get stage statistics
+  const stageCounts: Record<AdoptionStage, number> = {
+    not_attached: 0,
+    attached: 0,
+    activated: 0,
+    engaged: 0,
+  };
+
+  Object.values(selectedPro.featureStatus).forEach((status) => {
+    stageCounts[status.stage]++;
+  });
+
+  return (
+    <Box>
+      {/* Page header */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" fontWeight={600}>
+          Organization Information
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Complete profile and feature status for {selectedPro.companyName}
+        </Typography>
+      </Box>
+
+      {/* Pro Details Card */}
+      <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <PersonIcon sx={{ color: palette.primary }} />
+          <Typography variant="subtitle1" fontWeight={600}>
+            Account Details
+          </Typography>
+        </Stack>
+
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 3
+        }}>
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Company Name
+            </Typography>
+            <Typography variant="body1" fontWeight={500}>
+              {selectedPro.companyName}
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Owner Name
+            </Typography>
+            <Typography variant="body1" fontWeight={500}>
+              {selectedPro.ownerName}
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Business Type
+            </Typography>
+            <Typography variant="body1" fontWeight={500} sx={{ textTransform: 'capitalize' }}>
+              {selectedPro.businessType}
+            </Typography>
+          </Box>
+
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Plan
+            </Typography>
+            <Chip
+              label={selectedPro.plan}
+              size="small"
+              sx={{
+                mt: 0.5,
+                textTransform: 'capitalize',
+                bgcolor: selectedPro.plan === 'max' ? alpha(palette.primary, 0.1) : palette.grey[100],
+                color: selectedPro.plan === 'max' ? palette.primary : palette.grey[600],
+                fontWeight: 600,
+              }}
+            />
+          </Box>
+
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Goal
+            </Typography>
+            <Chip
+              label={selectedPro.goal}
+              size="small"
+              variant="outlined"
+              sx={{
+                mt: 0.5,
+                textTransform: 'capitalize',
+                fontWeight: 500,
+              }}
+            />
+          </Box>
+
+          <Box>
+            <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Created At
+            </Typography>
+            <Typography variant="body1" fontWeight={500}>
+              {selectedPro.createdAt}
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Stage Summary */}
+      <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
+          <CategoryIcon sx={{ color: palette.primary }} />
+          <Typography variant="subtitle1" fontWeight={600}>
+            Feature Stage Summary
+          </Typography>
+        </Stack>
+
+        <Stack direction="row" spacing={2}>
+          {(Object.entries(stageCounts) as [AdoptionStage, number][]).map(([stage, count]) => (
+            <Paper
+              key={stage}
+              variant="outlined"
+              sx={{
+                flex: 1,
+                p: 2,
+                textAlign: 'center',
+                borderColor: alpha(stageColors[stage], 0.3),
+                bgcolor: alpha(stageColors[stage], 0.02),
+              }}
+            >
+              <Typography variant="h4" fontWeight={700} sx={{ color: stageColors[stage] }}>
+                {count}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {stageLabels[stage]}
+              </Typography>
+            </Paper>
+          ))}
+        </Stack>
+      </Paper>
+
+      {/* Feature Status Table */}
+      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', bgcolor: palette.grey[50] }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <ChecklistIcon sx={{ color: palette.primary }} />
+            <Typography variant="subtitle1" fontWeight={600}>
+              Feature Status Details
+            </Typography>
+          </Stack>
+        </Box>
+
+        <Stack spacing={0} divider={<Divider />}>
+          {features.map((feature) => {
+            const status = selectedPro.featureStatus[feature.id];
+            if (!status) return null;
+
+            const color = stageColors[status.stage];
+            const stageKey = getStageKey(status.stage);
+            const stageContext = feature.stages[stageKey];
+            const assignments = stageContext.onboardingItems || [];
+            const completedCount = assignments.filter((a) => status.completedTasks?.includes(a.itemId)).length;
+
+            return (
+              <Box key={feature.id} sx={{ p: 2 }}>
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  {/* Feature Icon */}
+                  <Avatar
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      bgcolor: alpha(color, 0.1),
+                      color: color,
+                    }}
+                  >
+                    <FeatureIcon iconName={feature.icon} sx={{ fontSize: 20 }} />
+                  </Avatar>
+
+                  {/* Feature Info */}
+                  <Box sx={{ flex: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                      <Typography variant="subtitle2" fontWeight={600}>
+                        {feature.name}
+                      </Typography>
+                      <Chip
+                        label={stageLabels[status.stage]}
+                        size="small"
+                        sx={{
+                          height: 22,
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          bgcolor: alpha(color, 0.15),
+                          color: color,
+                        }}
+                      />
+                    </Stack>
+
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                      {feature.description}
+                    </Typography>
+
+                    {/* Status Details Grid */}
+                    <Box sx={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                      gap: 2,
+                      mt: 1.5,
+                      p: 1.5,
+                      bgcolor: palette.grey[50],
+                      borderRadius: 1,
+                    }}>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Usage Count
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600}>
+                          {status.usageCount}
+                        </Typography>
+                      </Box>
+
+                      {assignments.length > 0 && (
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Tasks Completed
+                          </Typography>
+                          <Typography variant="body2" fontWeight={600}>
+                            {completedCount}/{assignments.length}
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {status.attachedAt && (
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Attached At
+                          </Typography>
+                          <Typography variant="body2" fontWeight={600}>
+                            {status.attachedAt}
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {status.activatedAt && (
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Activated At
+                          </Typography>
+                          <Typography variant="body2" fontWeight={600}>
+                            {status.activatedAt}
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {status.engagedAt && (
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Engaged At
+                          </Typography>
+                          <Typography variant="body2" fontWeight={600}>
+                            {status.engagedAt}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Box>
+
+                    {/* Completed Tasks */}
+                    {status.completedTasks && status.completedTasks.length > 0 && (
+                      <Box sx={{ mt: 1.5 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                          Completed Task IDs
+                        </Typography>
+                        <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                          {status.completedTasks.map((taskId) => (
+                            <Chip
+                              key={taskId}
+                              label={taskId}
+                              size="small"
+                              sx={{
+                                height: 20,
+                                fontSize: '0.65rem',
+                                bgcolor: alpha(palette.success, 0.1),
+                                color: palette.success,
+                              }}
+                            />
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
+                  </Box>
+                </Stack>
+              </Box>
+            );
+          })}
+        </Stack>
+      </Paper>
+    </Box>
   );
 }
 
@@ -1538,6 +2441,7 @@ function CallsPage({ selectedPro }: { selectedPro: ProAccount | undefined }) {
 // =============================================================================
 
 const menuItems: { id: FrontlinePage; label: string; icon: React.ReactNode }[] = [
+  { id: 'information', label: 'Information', icon: <InfoOutlinedIcon /> },
   { id: 'onboarding-plan', label: 'Onboarding Plan', icon: <AssignmentIcon /> },
   { id: 'features-list', label: 'Features List', icon: <CategoryIcon /> },
   { id: 'calls', label: 'Calls', icon: <PhoneIcon /> },
@@ -1550,8 +2454,7 @@ const menuItems: { id: FrontlinePage; label: string; icon: React.ReactNode }[] =
 export function FrontlineView() {
   const { features, pros, completeTask, uncompleteTask } = useOnboarding();
   const [selectedProId, setSelectedProId] = useState<string | null>(pros[0]?.id || null);
-  const [selectedFeatureId, setSelectedFeatureId] = useState<FeatureId | null>(null);
-  const [currentPage, setCurrentPage] = useState<FrontlinePage>('onboarding-plan');
+  const [currentPage, setCurrentPage] = useState<FrontlinePage>('information');
 
   // Track category statuses (in a real app, this would be persisted per pro)
   const [categoryStatuses, setCategoryStatuses] = useState<Record<OnboardingCategoryId, CategoryStatus>>({
@@ -1570,18 +2473,15 @@ export function FrontlineView() {
   const [completedOnboardingItems, setCompletedOnboardingItems] = useState<string[]>([]);
 
   const selectedPro = pros.find((p) => p.id === selectedProId);
-  const selectedFeatureStatus = selectedPro && selectedFeatureId
-    ? selectedPro.featureStatus[selectedFeatureId]
-    : null;
 
-  const handleToggleTask = (taskId: string) => {
-    if (!selectedPro || !selectedFeatureId) return;
-    const status = selectedPro.featureStatus[selectedFeatureId];
+  const handleToggleTask = (taskId: string, featureId: FeatureId) => {
+    if (!selectedPro || !featureId) return;
+    const status = selectedPro.featureStatus[featureId];
     if (!status) return;
     if (status.completedTasks.includes(taskId)) {
-      uncompleteTask(selectedPro.id, selectedFeatureId, taskId);
+      uncompleteTask(selectedPro.id, featureId, taskId);
     } else {
-      completeTask(selectedPro.id, selectedFeatureId, taskId);
+      completeTask(selectedPro.id, featureId, taskId);
     }
   };
 
@@ -1602,6 +2502,13 @@ export function FrontlineView() {
 
   const renderPage = () => {
     switch (currentPage) {
+      case 'information':
+        return (
+          <InformationPage
+            selectedPro={selectedPro}
+            features={features}
+          />
+        );
       case 'onboarding-plan':
         return (
           <OnboardingPlanPage
@@ -1617,9 +2524,6 @@ export function FrontlineView() {
           <FeaturesListPage
             features={features}
             selectedPro={selectedPro}
-            selectedFeatureId={selectedFeatureId}
-            onSelectFeature={setSelectedFeatureId}
-            completedTaskIds={selectedFeatureStatus?.completedTasks || []}
             onToggleTask={handleToggleTask}
           />
         );
