@@ -261,6 +261,104 @@ ${featureInstructions}
 }
 
 // -----------------------------------------------------------------------------
+// IMAGE ANALYSIS INSTRUCTIONS
+// -----------------------------------------------------------------------------
+
+/**
+ * Build instructions for analyzing uploaded invoice images.
+ * This tells the AI exactly how to extract data from invoice images
+ * and what output format to use.
+ */
+function buildImageAnalysisInstructions(
+  features: Feature[],
+  activePro: ProAccount,
+  getStageContext: (featureId: FeatureId, stage: AdoptionStage) => StageContext | undefined
+): string {
+  // Find the invoicing feature
+  const invoicingFeature = features.find(f => f.id === 'invoicing');
+  if (!invoicingFeature) {
+    return '';
+  }
+
+  // Get the pro's current stage for invoicing
+  const invoicingStatus = activePro.featureStatus['invoicing'];
+  if (!invoicingStatus) {
+    return '';
+  }
+
+  // Get the stage context to check for the extract_invoice_from_image tool
+  const stageContext = getStageContext('invoicing', invoicingStatus.stage);
+  if (!stageContext) {
+    return '';
+  }
+
+  // Check if the extract_invoice_from_image tool is available for this stage
+  const hasImageExtractionTool = stageContext.tools?.some(
+    tool => tool.name === 'extract_invoice_from_image'
+  );
+
+  if (!hasImageExtractionTool) {
+    return '';
+  }
+
+  return `
+## Invoice Image Analysis
+
+When a user uploads an invoice image (photo, screenshot, or scanned document), analyze it and extract the data.
+
+### How to Analyze the Image
+
+1. **Acknowledge the upload**: "I see you've uploaded an invoice image. Let me analyze it to extract the details..."
+
+2. **Extract all available data**:
+   - **Customer Information**: First name, last name, company (if business), email, phone
+   - **Address**: Street, city, state, ZIP code
+   - **Line Items**: Service name, description, quantity, unit price for each item
+   - **Totals**: Subtotal, tax (if shown), total amount due
+   - **Other Details**: Invoice number, date, payment terms (if visible)
+
+3. **Display extracted data in structured tables**:
+
+   **Customer Information**
+   | Field | Value |
+   |-------|-------|
+   | Name | [First] [Last] |
+   | Email | [Email] |
+   | Phone | [Phone] |
+   | Address | [Street], [City], [State] [Zip] |
+
+   **Service Details**
+   | Service | Description | Qty | Price |
+   |---------|-------------|-----|-------|
+   | [Name] | [Description] | [Qty] | $[Price] |
+
+   **Totals**
+   | | Amount |
+   |------|--------|
+   | Subtotal | $[Amount] |
+   | Total | **$[Amount]** |
+
+4. **Ask for confirmation**: "Does this information look correct? Reply **'yes'** to create this customer and invoice, or let me know what needs to be changed."
+
+5. **On confirmation, execute these tools in sequence**:
+   a. \`hcp_create_customer\` - Create the customer record with extracted info
+   b. \`hcp_create_job\` - Create the job with line items
+   c. \`hcp_complete_job\` - Complete the job to generate the invoice
+
+6. **Show success summary** with created IDs and offer next actions:
+   - Send Invoice (email/text)
+   - View Invoice
+   - View Customer
+
+### Important Guidelines
+- Always show a structured preview before creating any records
+- Wait for explicit "yes" confirmation before executing tools
+- If data is unclear or missing, ask the user to clarify
+- Handle corrections gracefully - let users update individual fields
+`;
+}
+
+// -----------------------------------------------------------------------------
 // DEMO MODE PROMPT
 // -----------------------------------------------------------------------------
 
@@ -384,7 +482,8 @@ When guiding to actions:
 
 Remember: You're their onboarding assistant, here to help them succeed with Housecall Pro!
 ${buildConversationalFlowInstructions()}
-${buildFeatureDetectionInstructions(features, activePro, getStageContext)}`;
+${buildFeatureDetectionInstructions(features, activePro, getStageContext)}
+${buildImageAnalysisInstructions(features, activePro, getStageContext)}`;
 }
 
 // -----------------------------------------------------------------------------

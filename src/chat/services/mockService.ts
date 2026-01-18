@@ -7,6 +7,7 @@
 // =============================================================================
 
 import type { Feature, ProAccount, FeatureId, AdoptionStage, StageContext } from '../../types';
+import type { FileAttachment } from '../types';
 
 // -----------------------------------------------------------------------------
 // TYPES
@@ -25,12 +26,37 @@ interface DetectedFeature {
 }
 
 /**
+ * Extracted invoice data from image analysis.
+ */
+export interface ExtractedInvoiceData {
+  customer: {
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    address?: {
+      street: string;
+      city: string;
+      state: string;
+      zip: string;
+    };
+  };
+  lineItems: Array<{
+    service: string;
+    description?: string;
+    quantity: number;
+    unitPrice: number;
+  }>;
+  total: number;
+}
+
+/**
  * Conversation state for multi-turn flows.
  */
 export interface ConversationState {
   currentFeature?: FeatureId;
   currentStage?: AdoptionStage;
-  flowState: 'initial' | 'awaiting_choice' | 'awaiting_confirmation' | 'awaiting_input';
+  flowState: 'initial' | 'awaiting_choice' | 'awaiting_confirmation' | 'awaiting_input' | 'awaiting_invoice_confirmation';
   pendingAction?: {
     toolName: string;
     preview: Record<string, unknown>;
@@ -40,6 +66,7 @@ export interface ConversationState {
   dataChoice?: 'sample' | 'real';
   awaitingField?: string;
   collectedData?: Record<string, unknown>;
+  extractedInvoice?: ExtractedInvoiceData;
 }
 
 // Global conversation state (persisted across calls within session)
@@ -115,7 +142,7 @@ function detectFeature(
  * Generate help content section using stageContext data.
  * Now pulls from the admin-editable feature definitions instead of hardcoded data.
  */
-function generateHelpContent(stageContext: StageContext | undefined, featureName: string): string {
+function generateHelpContent(stageContext: StageContext | undefined, _featureName: string): string {
   if (!stageContext) return '';
 
   // Get explanation from contextSnippets (value proposition or setup overview)
@@ -259,6 +286,369 @@ const sampleDataGenerators: Record<FeatureId, () => {
   }),
 };
 
+// -----------------------------------------------------------------------------
+// INVOICE EXTRACTION SIMULATION
+// -----------------------------------------------------------------------------
+
+/**
+ * Sample invoices for demo extraction.
+ * These represent realistic extracted data from different invoice types.
+ */
+const sampleExtractedInvoices: ExtractedInvoiceData[] = [
+  // Sample 1: Home services invoice (matches user's provided sample)
+  {
+    customer: {
+      firstName: 'Contact',
+      lastName: 'Us',
+      email: 'jim.stemper@housecallpro.com',
+      phone: '(414) 899-0758',
+      address: {
+        street: '2330 N 90th St',
+        city: 'Wauwatosa',
+        state: 'WI',
+        zip: '53226',
+      },
+    },
+    lineItems: [
+      {
+        service: 'Home services',
+        description: 'This is a description for home services. Square footage: 501 - 1000, Bathrooms: 0',
+        quantity: 1,
+        unitPrice: 200.00,
+      },
+    ],
+    total: 200.00,
+  },
+  // Sample 2: HVAC service invoice
+  {
+    customer: {
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      email: 'sarah.johnson@example.com',
+      phone: '(555) 234-5678',
+      address: {
+        street: '456 Oak Avenue',
+        city: 'Springfield',
+        state: 'IL',
+        zip: '62701',
+      },
+    },
+    lineItems: [
+      {
+        service: 'HVAC Tune-Up',
+        description: 'Annual maintenance service - checked refrigerant levels, cleaned coils',
+        quantity: 1,
+        unitPrice: 149.00,
+      },
+      {
+        service: 'Air Filter Replacement',
+        description: 'MERV 13 high-efficiency filter',
+        quantity: 2,
+        unitPrice: 24.99,
+      },
+    ],
+    total: 198.98,
+  },
+  // Sample 3: Plumbing service invoice
+  {
+    customer: {
+      firstName: 'Michael',
+      lastName: 'Chen',
+      email: 'mchen@example.com',
+      phone: '(555) 876-5432',
+      address: {
+        street: '789 Pine Street',
+        city: 'Lakewood',
+        state: 'CO',
+        zip: '80226',
+      },
+    },
+    lineItems: [
+      {
+        service: 'Drain Cleaning',
+        description: 'Kitchen sink main drain - snaked and cleared blockage',
+        quantity: 1,
+        unitPrice: 125.00,
+      },
+      {
+        service: 'Faucet Repair',
+        description: 'Replaced washers and cartridge in bathroom faucet',
+        quantity: 1,
+        unitPrice: 85.00,
+      },
+      {
+        service: 'Service Call',
+        description: 'Standard service call fee',
+        quantity: 1,
+        unitPrice: 49.00,
+      },
+    ],
+    total: 259.00,
+  },
+];
+
+/**
+ * Simulated invoice extraction from image.
+ * In reality, this would use the vision API to analyze the image.
+ * For demo purposes, we return a realistic sample that demonstrates the capability.
+ */
+function simulateInvoiceExtraction(): ExtractedInvoiceData {
+  // For demo, use the first sample (matches user's provided invoice format)
+  // In production with real API, this would analyze the actual image
+  return sampleExtractedInvoices[0];
+}
+
+/**
+ * Format extracted invoice data as markdown preview.
+ */
+function formatExtractedInvoicePreview(data: ExtractedInvoiceData): string {
+  let preview = '## Extracted Invoice Details\n\n';
+  preview += '*(Using `extract_invoice_from_image` tool)*\n\n';
+
+  // Customer info
+  preview += '### Customer Information\n\n';
+  preview += `| Field | Value |\n`;
+  preview += `|-------|-------|\n`;
+  preview += `| Name | ${data.customer.firstName} ${data.customer.lastName} |\n`;
+  if (data.customer.email) {
+    preview += `| Email | ${data.customer.email} |\n`;
+  }
+  if (data.customer.phone) {
+    preview += `| Phone | ${data.customer.phone} |\n`;
+  }
+  if (data.customer.address) {
+    const addr = data.customer.address;
+    preview += `| Address | ${addr.street} |\n`;
+    preview += `| City/State/Zip | ${addr.city}, ${addr.state} ${addr.zip} |\n`;
+  }
+
+  // Line items with descriptions
+  preview += '\n### Service Details\n\n';
+  preview += '| Service | Description | Qty | Price |\n';
+  preview += '|---------|-------------|-----|-------|\n';
+
+  for (const item of data.lineItems) {
+    const desc = item.description ? item.description.substring(0, 50) + (item.description.length > 50 ? '...' : '') : '-';
+    preview += `| ${item.service} | ${desc} | ${item.quantity} | $${item.unitPrice.toFixed(2)} |\n`;
+  }
+
+  // Totals
+  preview += '\n### Totals\n\n';
+  preview += `| | Amount |\n`;
+  preview += `|------|--------|\n`;
+
+  const subtotal = data.lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  preview += `| Subtotal | $${subtotal.toFixed(2)} |\n`;
+  preview += `| **Total** | **$${data.total.toFixed(2)}** |\n`;
+
+  return preview;
+}
+
+/**
+ * Handle invoice image upload - explains limitations in mock mode and offers choices.
+ * In mock mode (no API key), we can't actually analyze the image, so we:
+ * 1. Acknowledge the upload
+ * 2. Explain that real analysis requires an API key
+ * 3. Offer: "demo" to see the workflow with sample data, or "api key" for setup instructions
+ */
+function handleInvoiceImageUpload(_proName: string): string {
+  // Update conversation state to await the demo/api-key choice
+  conversationState = {
+    ...conversationState,
+    flowState: 'awaiting_choice',
+    currentFeature: 'invoicing',
+    dataChoice: undefined, // Will be set based on user's choice
+  };
+
+  let response = `I received your invoice image.\n\n`;
+  response += `**Note:** Real image analysis requires an API key to use Claude's vision capabilities. `;
+  response += `Without an API key, I can't extract the actual data from your image.\n\n`;
+  response += `---\n\n`;
+  response += `**What would you like to do?**\n\n`;
+  response += `- **"demo"** - See how the invoice extraction workflow works using sample data\n`;
+  response += `- **"api key"** - Learn how to add an API key to enable real image analysis\n`;
+
+  return response;
+}
+
+/**
+ * Handle the demo flow for invoice image upload.
+ * Shows the extraction workflow with sample data and clear "simulated" messaging.
+ */
+function handleInvoiceImageDemoFlow(proName: string): string {
+  // Get sample data
+  const extractedData = simulateInvoiceExtraction();
+
+  // Store in conversation state for confirmation
+  conversationState = {
+    ...conversationState,
+    flowState: 'awaiting_invoice_confirmation',
+    currentFeature: 'invoicing',
+    extractedInvoice: extractedData,
+  };
+
+  let response = `## Simulated Invoice Extraction Demo\n\n`;
+  response += `*This is a demonstration using sample data. With an API key, I would extract real data from your uploaded image.*\n\n`;
+  response += `---\n\n`;
+  response += `Here's what the extraction workflow looks like:\n\n`;
+  response += formatExtractedInvoicePreview(extractedData);
+  response += '\n---\n\n';
+  response += `**Does this sample data look good for the demo?**\n\n`;
+  response += `Reply **"yes"** to see how the customer and invoice creation works:\n`;
+  response += `- \`hcp_create_customer\` - Create the customer record\n`;
+  response += `- \`hcp_create_job\` - Create the job with line items\n`;
+  response += `- \`hcp_complete_job\` - Complete the job and generate the invoice\n\n`;
+  response += `Or reply **"no"** to cancel the demo.`;
+
+  return response;
+}
+
+/**
+ * Handle the API key instructions flow.
+ * Provides information about how to add an API key for real image analysis.
+ */
+function handleApiKeyInstructions(): string {
+  // Reset conversation state
+  conversationState = {
+    ...conversationState,
+    flowState: 'initial',
+  };
+
+  let response = `## How to Enable Real Image Analysis\n\n`;
+  response += `To analyze actual invoice images, you need to add an Anthropic API key.\n\n`;
+  response += `### Steps to get an API key:\n\n`;
+  response += `1. **Create an Anthropic account** at [console.anthropic.com](https://console.anthropic.com)\n`;
+  response += `2. **Generate an API key** in the API Keys section\n`;
+  response += `3. **Add the key** to your environment or application settings\n\n`;
+  response += `### What you'll get with an API key:\n\n`;
+  response += `- **Real image analysis** - Extract actual data from uploaded invoice photos\n`;
+  response += `- **Claude's vision capabilities** - Accurate text and structure recognition\n`;
+  response += `- **Automatic data extraction** - Customer info, line items, and totals\n\n`;
+  response += `---\n\n`;
+  response += `Once you have an API key configured, just upload an invoice image and I'll extract the real data from it.\n\n`;
+  response += `Is there anything else I can help you with?`;
+
+  return response;
+}
+
+/**
+ * Handle confirmation for extracted invoice.
+ */
+function handleInvoiceConfirmation(message: string, context: MockContext): string {
+  const lowerMessage = message.toLowerCase().trim();
+  const proName = context.activePro.ownerName.split(' ')[0];
+  const { extractedInvoice } = conversationState;
+
+  if (!extractedInvoice) {
+    conversationState.flowState = 'initial';
+    return "I'm not sure what we're confirming. Would you like to upload an invoice image?";
+  }
+
+  if (lowerMessage === 'yes' || lowerMessage === 'y' || lowerMessage === 'confirm') {
+    return executeInvoiceCreation(extractedInvoice, proName);
+  }
+
+  if (lowerMessage === 'no' || lowerMessage === 'n' || lowerMessage === 'cancel') {
+    conversationState.flowState = 'initial';
+    conversationState.extractedInvoice = undefined;
+    return `No problem! Let me know when you're ready to try again, or if you'd like to do something else.`;
+  }
+
+  // Handle partial corrections
+  if (lowerMessage.includes('change') || lowerMessage.includes('wrong') || lowerMessage.includes('update')) {
+    return `I can update the details. What would you like to change?\n\n` +
+      `You can say things like:\n` +
+      `- "Change the email to john@example.com"\n` +
+      `- "The name should be John Doe"\n` +
+      `- "Remove the filter line item"\n`;
+  }
+
+  return `I didn't catch that. Reply "yes" to proceed with creating the customer and invoice, or "no" to cancel. You can also tell me what needs to be changed.`;
+}
+
+/**
+ * Execute the invoice creation from extracted data.
+ */
+function executeInvoiceCreation(data: ExtractedInvoiceData, _proName: string): string {
+  // Generate IDs for created items
+  const customerId = `cust-${Math.random().toString(36).substr(2, 8)}`;
+  const addressId = `addr-${Math.random().toString(36).substr(2, 8)}`;
+  const jobId = `job-${Math.random().toString(36).substr(2, 8)}`;
+  const invoiceId = `inv-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  // Store created items
+  conversationState.createdItems.push(
+    { type: 'customer', id: customerId, data: data.customer as unknown as Record<string, unknown> },
+    { type: 'job', id: jobId, data: { lineItems: data.lineItems } as unknown as Record<string, unknown> },
+    { type: 'invoice', id: invoiceId, data: { total: data.total } as unknown as Record<string, unknown> }
+  );
+
+  const addr = data.customer.address;
+
+  let response = `## Creating Records from Extracted Data\n\n`;
+
+  // Step 1: Create Customer
+  response += `### Step 1: \`hcp_create_customer\`\n`;
+  response += `\`\`\`json\n`;
+  response += `{\n`;
+  response += `  "first_name": "${data.customer.firstName}",\n`;
+  response += `  "last_name": "${data.customer.lastName}",\n`;
+  response += `  "email": "${data.customer.email || ''}",\n`;
+  response += `  "mobile_number": "${data.customer.phone || ''}",\n`;
+  if (addr) {
+    response += `  "street": "${addr.street}",\n`;
+    response += `  "city": "${addr.city}",\n`;
+    response += `  "state": "${addr.state}",\n`;
+    response += `  "zip": "${addr.zip}"\n`;
+  }
+  response += `}\n`;
+  response += `\`\`\`\n`;
+  response += `✅ Customer created: **${data.customer.firstName} ${data.customer.lastName}** (ID: \`${customerId}\`)\n\n`;
+
+  // Step 2: Create Job
+  response += `### Step 2: \`hcp_create_job\`\n`;
+  response += `\`\`\`json\n`;
+  response += `{\n`;
+  response += `  "customer_id": "${customerId}",\n`;
+  response += `  "address_id": "${addressId}",\n`;
+  response += `  "line_items": [\n`;
+  data.lineItems.forEach((item, idx) => {
+    response += `    { "name": "${item.service}", "quantity": ${item.quantity}, "unit_price": ${item.unitPrice} }${idx < data.lineItems.length - 1 ? ',' : ''}\n`;
+  });
+  response += `  ]\n`;
+  response += `}\n`;
+  response += `\`\`\`\n`;
+  response += `✅ Job created: **${data.lineItems.map(i => i.service).join(', ')}** (ID: \`${jobId}\`)\n\n`;
+
+  // Step 3: Complete Job
+  response += `### Step 3: \`hcp_complete_job\`\n`;
+  response += `\`\`\`json\n`;
+  response += `{ "job_id": "${jobId}" }\n`;
+  response += `\`\`\`\n`;
+  response += `✅ Job completed - Invoice generated: **#${invoiceId}** for **$${data.total.toFixed(2)}**\n\n`;
+
+  response += `---\n\n`;
+  response += `## Summary\n\n`;
+  response += `| Resource | ID | Details |\n`;
+  response += `|----------|----|---------|\n`;
+  response += `| Customer | \`${customerId}\` | ${data.customer.firstName} ${data.customer.lastName} |\n`;
+  response += `| Job | \`${jobId}\` | ${data.lineItems.map(i => i.service).join(', ')} |\n`;
+  response += `| Invoice | \`${invoiceId}\` | $${data.total.toFixed(2)} |\n\n`;
+
+  response += `**What's next?**\n\n`;
+  response += `- 📤 **Send Invoice** - Use \`hcp_send_invoice\` to email or text the invoice\n`;
+  response += `- 📄 **[View Invoice](/invoices/${invoiceId})** - Preview the invoice\n`;
+  response += `- 👤 **[View Customer](/customers/${customerId})** - See customer details\n`;
+
+  // Reset conversation state
+  conversationState = {
+    flowState: 'initial',
+    createdItems: conversationState.createdItems,
+  };
+
+  return response;
+}
+
 /**
  * Format data as a markdown table preview.
  */
@@ -304,7 +694,7 @@ function formatLineItemsPreview(lineItems: Array<Record<string, unknown>>): stri
 /**
  * Generate response for not_attached stage.
  */
-function generateNotAttachedResponse(detected: DetectedFeature, proName: string): string {
+function generateNotAttachedResponse(detected: DetectedFeature, _proName: string): string {
   const { feature, stageContext } = detected;
   const helpContent = generateHelpContent(stageContext, feature.name);
 
@@ -392,8 +782,7 @@ function generateActivatedResponse(detected: DetectedFeature, proName: string): 
  * Generate response for engaged stage.
  */
 function generateEngagedResponse(detected: DetectedFeature, proName: string): string {
-  const { feature, stageContext } = detected;
-  const chatExp = stageContext?.chatExperience;
+  const { feature } = detected;
 
   let response = `You're using ${feature.name.toLowerCase()} like a pro, ${proName}! `;
 
@@ -419,6 +808,7 @@ function generateEngagedResponse(detected: DetectedFeature, proName: string): st
 
 /**
  * Handle sample/real choice response.
+ * Also handles "demo" and "api key" choices for invoice image upload flow.
  */
 function handleChoiceResponse(message: string, context: MockContext): string {
   const lowerMessage = message.toLowerCase().trim();
@@ -430,6 +820,19 @@ function handleChoiceResponse(message: string, context: MockContext): string {
   }
 
   const proName = context.activePro.ownerName.split(' ')[0];
+
+  // Handle demo/api-key choices for invoice image upload (mock mode)
+  if (currentFeature === 'invoicing') {
+    // Check for "demo" choice - show simulated extraction workflow
+    if (lowerMessage === 'demo' || lowerMessage.includes('demo')) {
+      return handleInvoiceImageDemoFlow(proName);
+    }
+
+    // Check for "api key" choice - show setup instructions
+    if (lowerMessage === 'api key' || lowerMessage.includes('api key') || lowerMessage.includes('apikey') || lowerMessage === 'api') {
+      return handleApiKeyInstructions();
+    }
+  }
 
   // Check for sample/real choice
   if (lowerMessage.includes('sample') || lowerMessage === '1') {
@@ -445,6 +848,14 @@ function handleChoiceResponse(message: string, context: MockContext): string {
   // Handle activated stage choices (numbered options)
   if (conversationState.currentStage === 'activated') {
     return handleActivatedChoice(lowerMessage, currentFeature, proName);
+  }
+
+  // Check if we're in the invoice image upload context (waiting for demo/api key choice)
+  // This provides a more helpful re-prompt for that specific flow
+  if (currentFeature === 'invoicing' && !conversationState.currentStage) {
+    return `I didn't catch that. Would you like to:\n\n` +
+      `- **"demo"** - See the invoice extraction workflow with sample data\n` +
+      `- **"api key"** - Learn how to enable real image analysis\n`;
   }
 
   // If unclear, re-prompt
@@ -951,9 +1362,8 @@ function generateReviewResponseFlow(proName: string): string {
 /**
  * Handle user input for real data collection.
  */
-function handleInputResponse(message: string, context: MockContext): string {
+function handleInputResponse(message: string, _context: MockContext): string {
   const { currentFeature, awaitingField, collectedData } = conversationState;
-  const proName = context.activePro.ownerName.split(' ')[0];
 
   if (!currentFeature) {
     conversationState.flowState = 'initial';
@@ -1017,7 +1427,7 @@ function handleInputResponse(message: string, context: MockContext): string {
 /**
  * Generate a feature-aware response using chatExperience data and conversation state.
  */
-function generateFeatureResponse(detected: DetectedFeature, message: string, context: MockContext): string {
+function generateFeatureResponse(detected: DetectedFeature, _message: string, context: MockContext): string {
   const { feature, stage } = detected;
   const proName = context.activePro.ownerName.split(' ')[0];
 
@@ -1093,20 +1503,70 @@ function generateGeneralResponse(message: string, activePro: ProAccount): string
 // -----------------------------------------------------------------------------
 
 /**
+ * Check if user is asking about uploading or converting an invoice image.
+ */
+function isInvoiceUploadIntent(message: string): boolean {
+  const lowerMessage = message.toLowerCase();
+  const invoiceKeywords = ['invoice', 'receipt', 'bill'];
+  const uploadKeywords = ['upload', 'picture', 'photo', 'image', 'convert', 'scan', 'attached', 'here is', 'here\'s'];
+
+  const hasInvoiceKeyword = invoiceKeywords.some(k => lowerMessage.includes(k));
+  const hasUploadKeyword = uploadKeywords.some(k => lowerMessage.includes(k));
+
+  return hasInvoiceKeyword && hasUploadKeyword;
+}
+
+/**
  * Generate a mock AI response based on the user's message and pro context.
  * This simulates the AI behavior without requiring an API key.
  * Supports multi-turn conversational flows with sample/real data options.
+ * Supports image attachments for invoice extraction flow.
  */
 export async function generateMockResponse(
   message: string,
-  context: MockContext
+  context: MockContext,
+  attachments?: FileAttachment[]
 ): Promise<string> {
   const { activePro, features, getStageContext } = context;
+  const proName = activePro.ownerName.split(' ')[0];
 
   // Simulate a brief delay to feel more natural
   await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
 
+  // Check for image attachments - trigger invoice extraction flow
+  if (attachments && attachments.length > 0) {
+    // Check if any attachment is an image
+    const hasImageAttachment = attachments.some(att =>
+      att.type.startsWith('image/')
+    );
+
+    if (hasImageAttachment) {
+      // If user mentions invoice/convert/etc OR we're in invoicing context, extract invoice
+      const lowerMessage = message.toLowerCase();
+      const isInvoiceRelated = isInvoiceUploadIntent(message) ||
+        lowerMessage.includes('invoice') ||
+        lowerMessage.includes('convert') ||
+        lowerMessage.includes('create') ||
+        conversationState.currentFeature === 'invoicing' ||
+        message.trim() === ''; // Just uploaded an image with no text
+
+      if (isInvoiceRelated || message.trim() === '') {
+        return handleInvoiceImageUpload(proName);
+      }
+
+      // For other image uploads, acknowledge and ask about intent
+      return `I see you've uploaded an image. Would you like me to:\n\n` +
+        `1. **Extract invoice details** - If this is an invoice or receipt\n` +
+        `2. **Something else** - Let me know what you need help with\n\n` +
+        `Just let me know!`;
+    }
+  }
+
   // Check conversation state for pending flows
+  if (conversationState.flowState === 'awaiting_invoice_confirmation') {
+    return handleInvoiceConfirmation(message, context);
+  }
+
   if (conversationState.flowState === 'awaiting_confirmation') {
     return handleConfirmationResponse(message, context);
   }
@@ -1117,6 +1577,16 @@ export async function generateMockResponse(
 
   if (conversationState.flowState === 'awaiting_input') {
     return handleInputResponse(message, context);
+  }
+
+  // Check if user is asking about uploading an invoice (without attachment)
+  if (isInvoiceUploadIntent(message)) {
+    return `I'd be happy to help convert your invoice! Upload your invoice image using the 📎 button and I'll extract all the details for you.\n\n` +
+      `I can read:\n` +
+      `- Photos of paper invoices\n` +
+      `- Screenshots of digital invoices\n` +
+      `- Scanned documents\n\n` +
+      `Once you upload the image, I'll extract the customer info, line items, and totals automatically.`;
   }
 
   // Try to detect a feature mention
