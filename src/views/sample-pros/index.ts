@@ -1,0 +1,1 @@
+export { SampleProsView } from './SampleProsView';

@@ -2,12 +2,13 @@
 // MESSAGE BUBBLE COMPONENT
 // =============================================================================
 // Renders a single chat message with role-appropriate styling.
-// Provides basic text formatting for assistant messages.
+// Uses MarkdownRenderer for assistant messages to display formatted content.
 // =============================================================================
 
 import { Box, Paper, Typography, Avatar } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import type { ChatMessage } from '../types';
 
 // -----------------------------------------------------------------------------
@@ -59,24 +60,21 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           borderTopRightRadius: isUser ? 0 : 2,
         }}
       >
-        <Typography
-          variant="body1"
-          component="div"
-          sx={{
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            '& code': {
-              bgcolor: isUser ? 'rgba(255,255,255,0.1)' : 'rgba(0, 0, 0, 0.06)',
-              px: 0.5,
-              py: 0.25,
-              borderRadius: 0.5,
-              fontFamily: 'monospace',
-              fontSize: '0.9em',
-            },
-          }}
-        >
-          {message.content}
-        </Typography>
+        {/* Message content - use markdown for assistant, plain text for user */}
+        {isUser ? (
+          <Typography
+            variant="body1"
+            component="div"
+            sx={{
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}
+          >
+            {message.content}
+          </Typography>
+        ) : (
+          <MarkdownRenderer content={message.content} isUserMessage={false} />
+        )}
 
         {/* Timestamp */}
         <Typography

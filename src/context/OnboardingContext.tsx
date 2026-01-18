@@ -190,6 +190,44 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   }, []);
 
   // ---------------------------------------------------------------------------
+  // PRO CRUD MUTATIONS (for Sample Pros view)
+  // ---------------------------------------------------------------------------
+
+  const addPro = useCallback((pro: ProAccount) => {
+    setPros((currentPros) => [...currentPros, pro]);
+  }, []);
+
+  const updatePro = useCallback((updatedPro: ProAccount) => {
+    setPros((currentPros) =>
+      currentPros.map((pro) =>
+        pro.id === updatedPro.id ? updatedPro : pro
+      )
+    );
+  }, []);
+
+  const deletePro = useCallback((proId: string) => {
+    setPros((currentPros) => currentPros.filter((pro) => pro.id !== proId));
+  }, []);
+
+  const updateProFeatureStatus = useCallback(
+    (proId: string, featureId: FeatureId, status: FeatureStatus) => {
+      setPros((currentPros) =>
+        currentPros.map((pro) => {
+          if (pro.id !== proId) return pro;
+          return {
+            ...pro,
+            featureStatus: {
+              ...pro.featureStatus,
+              [featureId]: status,
+            },
+          };
+        })
+      );
+    },
+    []
+  );
+
+  // ---------------------------------------------------------------------------
   // DERIVED DATA HELPERS
   // ---------------------------------------------------------------------------
 
@@ -258,6 +296,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setFeatureStage,
       incrementUsage,
 
+      // Pro CRUD mutations
+      addPro,
+      updatePro,
+      deletePro,
+      updateProFeatureStatus,
+
       // Feature mutations
       updateFeature,
 
@@ -280,6 +324,10 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       uncompleteTask,
       setFeatureStage,
       incrementUsage,
+      addPro,
+      updatePro,
+      deletePro,
+      updateProFeatureStatus,
       updateFeature,
       getFeatureById,
       getProById,

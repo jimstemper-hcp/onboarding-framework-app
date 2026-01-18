@@ -1,0 +1,719 @@
+import { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Stack,
+  Chip,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Tabs,
+  Tab,
+  Card,
+  CardContent,
+  alpha,
+  Tooltip,
+  Divider,
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
+import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import * as MuiIcons from '@mui/icons-material';
+import { useOnboarding } from '../../context';
+import { PlanningWrapper } from '../../planning';
+import type {
+  ProAccount,
+  FeatureId,
+  FeatureStatus,
+  AdoptionStage,
+  BusinessType,
+  PlanTier,
+  ProGoal,
+} from '../../types';
+
+// =============================================================================
+// PALETTE
+// =============================================================================
+
+const palette = {
+  primary: '#0062FF',
+  secondary: '#7C3AED',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  grey: {
+    50: '#F8FAFC',
+    100: '#F1F5F9',
+    200: '#E2E8F0',
+    300: '#CBD5E1',
+    400: '#94A3B8',
+    600: '#475569',
+    800: '#1E293B',
+  },
+};
+
+const stageColors: Record<AdoptionStage, string> = {
+  not_attached: palette.grey[400],
+  attached: palette.warning,
+  activated: palette.primary,
+  engaged: palette.success,
+};
+
+const stageLabels: Record<AdoptionStage, string> = {
+  not_attached: 'Not Attached',
+  attached: 'Attached',
+  activated: 'Activated',
+  engaged: 'Engaged',
+};
+
+const allFeatureIds: FeatureId[] = [
+  'invoicing',
+  'payments',
+  'automated-comms',
+  'scheduling',
+  'estimates',
+  'csr-ai',
+  'reviews',
+];
+
+const businessTypes: BusinessType[] = ['plumber', 'electrician', 'hvac', 'landscaper', 'cleaning', 'general'];
+const planTiers: PlanTier[] = ['basic', 'essentials', 'max'];
+const proGoals: ProGoal[] = ['growth', 'efficiency'];
+const stages: AdoptionStage[] = ['not_attached', 'attached', 'activated', 'engaged'];
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+function FeatureIcon({ iconName, ...props }: { iconName: string } & Record<string, unknown>) {
+  const Icon = (MuiIcons as Record<string, React.ComponentType<Record<string, unknown>>>)[iconName] || MuiIcons.HelpOutlineRounded;
+  return <Icon {...props} />;
+}
+
+function createDefaultFeatureStatus(): FeatureStatus {
+  return {
+    stage: 'not_attached',
+    completedTasks: [],
+    usageCount: 0,
+  };
+}
+
+function createAllFeatureStatuses(stage: AdoptionStage): Record<FeatureId, FeatureStatus> {
+  const now = new Date().toISOString().split('T')[0];
+  const status: FeatureStatus = {
+    stage,
+    completedTasks: [],
+    usageCount: stage === 'engaged' ? 50 : stage === 'activated' ? 10 : 0,
+    ...(stage !== 'not_attached' && { attachedAt: now }),
+    ...((stage === 'activated' || stage === 'engaged') && { activatedAt: now }),
+    ...(stage === 'engaged' && { engagedAt: now }),
+  };
+
+  return {
+    invoicing: { ...status },
+    payments: { ...status },
+    'automated-comms': { ...status },
+    scheduling: { ...status },
+    estimates: { ...status },
+    'csr-ai': { ...status },
+    reviews: { ...status },
+  };
+}
+
+function generateProId(): string {
+  return `pro-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+}
+
+// =============================================================================
+// PRO EDITOR DIALOG
+// =============================================================================
+
+interface ProEditorDialogProps {
+  open: boolean;
+  pro: ProAccount | null;
+  onSave: (pro: ProAccount) => void;
+  onClose: () => void;
+  isNew: boolean;
+}
+
+function ProEditorDialog({ open, pro, onSave, onClose, isNew }: ProEditorDialogProps) {
+  const [editedPro, setEditedPro] = useState<ProAccount | null>(pro);
+  const [activeTab, setActiveTab] = useState(0);
+
+  // Reset state when dialog opens with new pro
+  useState(() => {
+    setEditedPro(pro);
+    setActiveTab(0);
+  });
+
+  if (!editedPro) return null;
+
+  const handleSave = () => {
+    onSave(editedPro);
+    onClose();
+  };
+
+  const handleFieldChange = (field: keyof ProAccount, value: string) => {
+    setEditedPro({ ...editedPro, [field]: value });
+  };
+
+  const handleFeatureStatusChange = (featureId: FeatureId, status: FeatureStatus) => {
+    setEditedPro({
+      ...editedPro,
+      featureStatus: {
+        ...editedPro.featureStatus,
+        [featureId]: status,
+      },
+    });
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {isNew ? <PersonAddIcon color="primary" /> : <EditIcon color="primary" />}
+        {isNew ? 'Add New Sample Pro' : `Edit: ${editedPro.companyName}`}
+      </DialogTitle>
+      <DialogContent>
+        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Tab label="Pro Details" />
+          <Tab label="Feature Status" />
+        </Tabs>
+
+        {activeTab === 0 && (
+          <Stack spacing={2} sx={{ mt: 2 }}>
+            <TextField
+              label="Company Name"
+              value={editedPro.companyName}
+              onChange={(e) => handleFieldChange('companyName', e.target.value)}
+              fullWidth
+            />
+            <TextField
+              label="Owner Name"
+              value={editedPro.ownerName}
+              onChange={(e) => handleFieldChange('ownerName', e.target.value)}
+              fullWidth
+            />
+            <Stack direction="row" spacing={2}>
+              <FormControl fullWidth>
+                <InputLabel>Business Type</InputLabel>
+                <Select
+                  value={editedPro.businessType}
+                  label="Business Type"
+                  onChange={(e) => handleFieldChange('businessType', e.target.value)}
+                >
+                  {businessTypes.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Plan</InputLabel>
+                <Select
+                  value={editedPro.plan}
+                  label="Plan"
+                  onChange={(e) => handleFieldChange('plan', e.target.value)}
+                >
+                  {planTiers.map((tier) => (
+                    <MenuItem key={tier} value={tier}>
+                      {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Stack>
+            <Stack direction="row" spacing={2}>
+              <FormControl fullWidth>
+                <InputLabel>Goal</InputLabel>
+                <Select
+                  value={editedPro.goal}
+                  label="Goal"
+                  onChange={(e) => handleFieldChange('goal', e.target.value)}
+                >
+                  {proGoals.map((goal) => (
+                    <MenuItem key={goal} value={goal}>
+                      {goal.charAt(0).toUpperCase() + goal.slice(1)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                label="Created At"
+                type="date"
+                value={editedPro.createdAt}
+                onChange={(e) => handleFieldChange('createdAt', e.target.value)}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+            </Stack>
+          </Stack>
+        )}
+
+        {activeTab === 1 && (
+          <Box sx={{ mt: 2 }}>
+            <FeatureStatusEditor
+              featureStatus={editedPro.featureStatus}
+              onChange={handleFeatureStatusChange}
+            />
+          </Box>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSave} variant="contained">
+          {isNew ? 'Add Pro' : 'Save Changes'}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+// =============================================================================
+// FEATURE STATUS EDITOR
+// =============================================================================
+
+interface FeatureStatusEditorProps {
+  featureStatus: Record<FeatureId, FeatureStatus>;
+  onChange: (featureId: FeatureId, status: FeatureStatus) => void;
+}
+
+function FeatureStatusEditor({ featureStatus, onChange }: FeatureStatusEditorProps) {
+  const { features } = useOnboarding();
+
+  const handleStageChange = (featureId: FeatureId, stage: AdoptionStage) => {
+    const current = featureStatus[featureId];
+    const now = new Date().toISOString().split('T')[0];
+
+    const updated: FeatureStatus = {
+      ...current,
+      stage,
+      ...(stage !== 'not_attached' && !current.attachedAt && { attachedAt: now }),
+      ...((stage === 'activated' || stage === 'engaged') && !current.activatedAt && { activatedAt: now }),
+      ...(stage === 'engaged' && !current.engagedAt && { engagedAt: now }),
+    };
+
+    onChange(featureId, updated);
+  };
+
+  const handleUsageChange = (featureId: FeatureId, usageCount: number) => {
+    onChange(featureId, {
+      ...featureStatus[featureId],
+      usageCount,
+    });
+  };
+
+  const handleCompletedTasksChange = (featureId: FeatureId, tasks: string[]) => {
+    onChange(featureId, {
+      ...featureStatus[featureId],
+      completedTasks: tasks,
+    });
+  };
+
+  return (
+    <Stack spacing={2}>
+      {allFeatureIds.map((featureId) => {
+        const feature = features.find((f) => f.id === featureId);
+        const status = featureStatus[featureId] || createDefaultFeatureStatus();
+
+        return (
+          <Card key={featureId} variant="outlined" sx={{ p: 2 }}>
+            <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+              <FeatureIcon iconName={feature?.icon || 'HelpOutlineRounded'} sx={{ color: stageColors[status.stage] }} />
+              <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
+                {feature?.name || featureId}
+              </Typography>
+              <Chip
+                label={stageLabels[status.stage]}
+                size="small"
+                sx={{
+                  bgcolor: alpha(stageColors[status.stage], 0.1),
+                  color: stageColors[status.stage],
+                  fontWeight: 600,
+                }}
+              />
+            </Stack>
+
+            <Stack direction="row" spacing={2} alignItems="flex-start">
+              <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel>Stage</InputLabel>
+                <Select
+                  value={status.stage}
+                  label="Stage"
+                  onChange={(e) => handleStageChange(featureId, e.target.value as AdoptionStage)}
+                >
+                  {stages.map((stage) => (
+                    <MenuItem key={stage} value={stage}>
+                      {stageLabels[stage]}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Usage Count"
+                type="number"
+                size="small"
+                value={status.usageCount}
+                onChange={(e) => handleUsageChange(featureId, parseInt(e.target.value) || 0)}
+                sx={{ width: 120 }}
+              />
+
+              <TextField
+                label="Completed Tasks (comma-separated)"
+                size="small"
+                value={status.completedTasks.join(', ')}
+                onChange={(e) => handleCompletedTasksChange(featureId, e.target.value.split(',').map((t) => t.trim()).filter(Boolean))}
+                sx={{ flex: 1 }}
+                placeholder="task-1, task-2"
+              />
+            </Stack>
+
+            {status.stage !== 'not_attached' && (
+              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+                {status.attachedAt && (
+                  <Typography variant="caption" color="text.secondary">
+                    Attached: {status.attachedAt}
+                  </Typography>
+                )}
+                {status.activatedAt && (
+                  <Typography variant="caption" color="text.secondary">
+                    Activated: {status.activatedAt}
+                  </Typography>
+                )}
+                {status.engagedAt && (
+                  <Typography variant="caption" color="text.secondary">
+                    Engaged: {status.engagedAt}
+                  </Typography>
+                )}
+              </Stack>
+            )}
+          </Card>
+        );
+      })}
+    </Stack>
+  );
+}
+
+// =============================================================================
+// QUICK PRESETS
+// =============================================================================
+
+interface QuickPresetsProps {
+  onApply: (featureStatus: Record<FeatureId, FeatureStatus>) => void;
+}
+
+function QuickPresets({ onApply }: QuickPresetsProps) {
+  const presets = [
+    { label: 'New Pro', stage: 'not_attached' as AdoptionStage, description: 'All features not attached' },
+    { label: 'Just Signed Up', stage: 'attached' as AdoptionStage, description: 'All features attached, no tasks done' },
+    { label: 'Partially Onboarded', stage: null, description: 'Mix of stages' },
+    { label: 'Power User', stage: 'engaged' as AdoptionStage, description: 'All features engaged' },
+  ];
+
+  const handlePreset = (stage: AdoptionStage | null) => {
+    if (stage === null) {
+      // Mixed stages preset
+      const now = new Date().toISOString().split('T')[0];
+      const mixed: Record<FeatureId, FeatureStatus> = {
+        invoicing: { stage: 'engaged', completedTasks: ['task-1', 'task-2'], usageCount: 50, attachedAt: now, activatedAt: now, engagedAt: now },
+        payments: { stage: 'activated', completedTasks: ['task-1'], usageCount: 15, attachedAt: now, activatedAt: now },
+        'automated-comms': { stage: 'attached', completedTasks: [], usageCount: 0, attachedAt: now },
+        scheduling: { stage: 'engaged', completedTasks: ['task-1', 'task-2', 'task-3'], usageCount: 100, attachedAt: now, activatedAt: now, engagedAt: now },
+        estimates: { stage: 'attached', completedTasks: [], usageCount: 0, attachedAt: now },
+        'csr-ai': { stage: 'not_attached', completedTasks: [], usageCount: 0 },
+        reviews: { stage: 'activated', completedTasks: ['task-1'], usageCount: 5, attachedAt: now, activatedAt: now },
+      };
+      onApply(mixed);
+    } else {
+      onApply(createAllFeatureStatuses(stage));
+    }
+  };
+
+  return (
+    <Stack direction="row" spacing={1}>
+      <AutoFixHighIcon sx={{ color: palette.secondary }} />
+      <Typography variant="body2" fontWeight={500} sx={{ mr: 1 }}>
+        Quick Presets:
+      </Typography>
+      {presets.map((preset) => (
+        <Tooltip key={preset.label} title={preset.description}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => handlePreset(preset.stage)}
+            sx={{ textTransform: 'none' }}
+          >
+            {preset.label}
+          </Button>
+        </Tooltip>
+      ))}
+    </Stack>
+  );
+}
+
+// =============================================================================
+// MAIN VIEW
+// =============================================================================
+
+export function SampleProsView() {
+  const { pros, features, addPro, updatePro, deletePro } = useOnboarding();
+  const [editingPro, setEditingPro] = useState<ProAccount | null>(null);
+  const [isNew, setIsNew] = useState(false);
+
+  const handleAddPro = () => {
+    const newPro: ProAccount = {
+      id: generateProId(),
+      companyName: 'New Company',
+      ownerName: 'New Owner',
+      businessType: 'general',
+      plan: 'essentials',
+      goal: 'growth',
+      createdAt: new Date().toISOString().split('T')[0],
+      featureStatus: createAllFeatureStatuses('not_attached'),
+    };
+    setEditingPro(newPro);
+    setIsNew(true);
+  };
+
+  const handleEditPro = (pro: ProAccount) => {
+    setEditingPro({ ...pro });
+    setIsNew(false);
+  };
+
+  const handleSavePro = (pro: ProAccount) => {
+    if (isNew) {
+      addPro(pro);
+    } else {
+      updatePro(pro);
+    }
+    setEditingPro(null);
+  };
+
+  const handleDeletePro = (proId: string) => {
+    if (window.confirm('Are you sure you want to delete this sample pro?')) {
+      deletePro(proId);
+    }
+  };
+
+  const handleApplyPreset = (pro: ProAccount, featureStatus: Record<FeatureId, FeatureStatus>) => {
+    updatePro({
+      ...pro,
+      featureStatus,
+    });
+  };
+
+  const getStageStats = (pro: ProAccount) => {
+    const counts = { not_attached: 0, attached: 0, activated: 0, engaged: 0 };
+    allFeatureIds.forEach((featureId) => {
+      const stage = pro.featureStatus[featureId]?.stage || 'not_attached';
+      counts[stage]++;
+    });
+    return counts;
+  };
+
+  return (
+    <PlanningWrapper elementId="view-sample-pros">
+      <Box>
+        {/* Header */}
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <SettingsApplicationsIcon sx={{ fontSize: 32, color: palette.primary }} />
+            <Box>
+              <Typography variant="h5" fontWeight={600}>
+                Sample Pro Configurations
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Configure sample pro accounts for testing different scenarios
+              </Typography>
+            </Box>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddPro}
+          >
+            Add Sample Pro
+          </Button>
+        </Stack>
+
+        {/* Pro Table */}
+        <TableContainer component={Paper} elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: palette.grey[50] }}>
+                <TableCell sx={{ fontWeight: 600 }}>Company</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Owner</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Plan</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Goal</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Feature Stages</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Quick Preset</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {pros.map((pro) => {
+                const stats = getStageStats(pro);
+                return (
+                  <TableRow key={pro.id} hover>
+                    <TableCell>
+                      <Typography fontWeight={500}>{pro.companyName}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {pro.businessType}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>{pro.ownerName}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={pro.plan}
+                        size="small"
+                        sx={{
+                          textTransform: 'capitalize',
+                          bgcolor: pro.plan === 'max' ? alpha(palette.primary, 0.1) : palette.grey[100],
+                          color: pro.plan === 'max' ? palette.primary : palette.grey[600],
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={pro.goal}
+                        size="small"
+                        variant="outlined"
+                        sx={{ textTransform: 'capitalize' }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.5}>
+                        {stats.not_attached > 0 && (
+                          <Chip
+                            label={stats.not_attached}
+                            size="small"
+                            sx={{ bgcolor: alpha(stageColors.not_attached, 0.1), color: stageColors.not_attached, minWidth: 28 }}
+                          />
+                        )}
+                        {stats.attached > 0 && (
+                          <Chip
+                            label={stats.attached}
+                            size="small"
+                            sx={{ bgcolor: alpha(stageColors.attached, 0.1), color: stageColors.attached, minWidth: 28 }}
+                          />
+                        )}
+                        {stats.activated > 0 && (
+                          <Chip
+                            label={stats.activated}
+                            size="small"
+                            sx={{ bgcolor: alpha(stageColors.activated, 0.1), color: stageColors.activated, minWidth: 28 }}
+                          />
+                        )}
+                        {stats.engaged > 0 && (
+                          <Chip
+                            label={stats.engaged}
+                            size="small"
+                            sx={{ bgcolor: alpha(stageColors.engaged, 0.1), color: stageColors.engaged, minWidth: 28 }}
+                          />
+                        )}
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={0.5}>
+                        <Tooltip title="Set all to Not Attached">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleApplyPreset(pro, createAllFeatureStatuses('not_attached'))}
+                          >
+                            <Typography variant="caption" sx={{ color: stageColors.not_attached }}>N</Typography>
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Set all to Attached">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleApplyPreset(pro, createAllFeatureStatuses('attached'))}
+                          >
+                            <Typography variant="caption" sx={{ color: stageColors.attached }}>A</Typography>
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Set all to Activated">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleApplyPreset(pro, createAllFeatureStatuses('activated'))}
+                          >
+                            <Typography variant="caption" sx={{ color: stageColors.activated }}>V</Typography>
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Set all to Engaged">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleApplyPreset(pro, createAllFeatureStatuses('engaged'))}
+                          >
+                            <CheckCircleIcon sx={{ fontSize: 16, color: stageColors.engaged }} />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton size="small" onClick={() => handleEditPro(pro)}>
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDeletePro(pro.id)} color="error">
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Legend */}
+        <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Typography variant="caption" color="text.secondary">Stage Legend:</Typography>
+          {stages.map((stage) => (
+            <Chip
+              key={stage}
+              label={stageLabels[stage]}
+              size="small"
+              sx={{
+                bgcolor: alpha(stageColors[stage], 0.1),
+                color: stageColors[stage],
+                fontWeight: 500,
+              }}
+            />
+          ))}
+        </Box>
+
+        {/* Editor Dialog */}
+        {editingPro && (
+          <ProEditorDialog
+            open={Boolean(editingPro)}
+            pro={editingPro}
+            onSave={handleSavePro}
+            onClose={() => setEditingPro(null)}
+            isNew={isNew}
+          />
+        )}
+      </Box>
+    </PlanningWrapper>
+  );
+}
+
+export default SampleProsView;

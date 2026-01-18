@@ -9,6 +9,7 @@ import { AdminView } from './views/admin';
 import { FrontlineView } from './views/frontline';
 import { PortalView } from './views/portal';
 import { ChatView } from './views/chat';
+import { SampleProsView } from './views/sample-pros';
 
 // View router component
 function ViewRouter() {
@@ -23,6 +24,8 @@ function ViewRouter() {
       return <PortalView />;
     case 'chat':
       return <ChatView />;
+    case 'sample-pros':
+      return <SampleProsView />;
     default:
       return <PortalView />;
   }

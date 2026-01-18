@@ -3524,10 +3524,10 @@ export function AdminView() {
       >
         <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
           <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
-            ADMIN
+            @HCP
           </Typography>
           <Typography variant="h6" fontWeight={600}>
-            Manage Content
+            Context Manager
           </Typography>
         </Box>
         <List sx={{ p: 1 }}>

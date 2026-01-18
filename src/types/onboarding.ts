@@ -361,7 +361,7 @@ export interface ProAccount {
 // VIEW TYPES
 // -----------------------------------------------------------------------------
 
-export type ViewType = 'admin' | 'frontline' | 'portal' | 'chat';
+export type ViewType = 'admin' | 'frontline' | 'portal' | 'chat' | 'sample-pros';
 
 // -----------------------------------------------------------------------------
 // CONTEXT STATE & ACTIONS
@@ -395,6 +395,12 @@ export interface OnboardingContextActions {
   uncompleteTask: (proId: string, featureId: FeatureId, taskId: string) => void;
   setFeatureStage: (proId: string, featureId: FeatureId, stage: AdoptionStage) => void;
   incrementUsage: (proId: string, featureId: FeatureId) => void;
+
+  // Pro CRUD mutations (for Sample Pros view)
+  addPro: (pro: ProAccount) => void;
+  updatePro: (pro: ProAccount) => void;
+  deletePro: (proId: string) => void;
+  updateProFeatureStatus: (proId: string, featureId: FeatureId, status: FeatureStatus) => void;
 
   // Feature mutations (for Admin view)
   updateFeature: (feature: Feature) => void;

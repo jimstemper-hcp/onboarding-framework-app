@@ -112,64 +112,51 @@ function detectFeature(
 // -----------------------------------------------------------------------------
 
 /**
- * Help article references for each feature.
+ * Generate help content section using stageContext data.
+ * Now pulls from the admin-editable feature definitions instead of hardcoded data.
  */
-const featureHelpArticles: Record<FeatureId, Array<{ title: string; url: string; type: 'article' | 'video' }>> = {
-  'invoicing': [
-    { title: 'Getting Started with Invoicing', url: 'https://help.housecallpro.com/invoicing-getting-started', type: 'article' },
-    { title: 'Invoice Best Practices', url: 'https://www.youtube.com/watch?v=hcp-invoice-tips', type: 'video' },
-  ],
-  'payments': [
-    { title: 'Payment Processing Setup', url: 'https://help.housecallpro.com/payments-setup', type: 'article' },
-    { title: 'Getting Paid Faster Guide', url: 'https://www.youtube.com/watch?v=hcp-payments', type: 'video' },
-  ],
-  'automated-comms': [
-    { title: 'Automated Messaging Guide', url: 'https://help.housecallpro.com/auto-messaging', type: 'article' },
-    { title: 'Setting Up On-My-Way Texts', url: 'https://www.youtube.com/watch?v=hcp-omw', type: 'video' },
-  ],
-  'scheduling': [
-    { title: 'Scheduling & Calendar Overview', url: 'https://help.housecallpro.com/scheduling-overview', type: 'article' },
-    { title: 'Dispatch Board Tutorial', url: 'https://www.youtube.com/watch?v=hcp-dispatch', type: 'video' },
-  ],
-  'estimates': [
-    { title: 'Creating Winning Estimates', url: 'https://help.housecallpro.com/estimates-guide', type: 'article' },
-    { title: 'Good/Better/Best Pricing', url: 'https://www.youtube.com/watch?v=hcp-gbb', type: 'video' },
-  ],
-  'csr-ai': [
-    { title: 'AI Voice Agent Setup', url: 'https://help.housecallpro.com/ai-voice-setup', type: 'article' },
-    { title: 'Hear AI Voice in Action', url: 'https://www.youtube.com/watch?v=hcp-ai-demo', type: 'video' },
-  ],
-  'reviews': [
-    { title: 'Building Your Online Reputation', url: 'https://help.housecallpro.com/reviews-guide', type: 'article' },
-    { title: 'Getting More 5-Star Reviews', url: 'https://www.youtube.com/watch?v=hcp-reviews', type: 'video' },
-  ],
-};
+function generateHelpContent(stageContext: StageContext | undefined, featureName: string): string {
+  if (!stageContext) return '';
 
-/**
- * Generate help content section with article references.
- */
-function generateHelpContent(featureId: FeatureId, stage: AdoptionStage): string {
-  const articles = featureHelpArticles[featureId] || [];
-  if (articles.length === 0) return '';
+  // Get explanation from contextSnippets (value proposition or setup overview)
+  const valueSnippet = stageContext.contextSnippets?.find(s =>
+    s.id === 'value-prop' || s.id === 'setup-overview' || s.id === 'optimization-overview' || s.id === 'power-user'
+  );
 
-  const explanations: Record<FeatureId, string> = {
-    'invoicing': 'With Housecall Pro invoicing, you can create professional invoices automatically when you complete a job. Invoices can be sent via email or text, and customers can pay online with one click.',
-    'payments': 'Online payments let your customers pay invoices instantly with a credit card. The money is deposited directly to your bank account, usually within 1-2 business days.',
-    'automated-comms': 'Automated communications send texts and emails to your customers at key moments - appointment confirmations, on-my-way notifications, follow-ups, and review requests.',
-    'scheduling': 'The scheduling system gives you a visual calendar to manage all your jobs. You can drag and drop to reschedule, see your whole team\'s availability, and dispatch jobs to technicians.',
-    'estimates': 'Create professional estimates with your pricing and send them to customers for approval. Customers can approve with one click, and approved estimates convert directly into jobs.',
-    'csr-ai': 'The AI Voice Agent answers your business calls 24/7 when you can\'t. It sounds natural, can answer questions about your services, book appointments, and capture lead information.',
-    'reviews': 'Automated review requests go out after every completed job, making it easy for happy customers to leave you 5-star reviews on Google.',
-  };
+  // Get navigation items for help articles and videos
+  const helpItems = stageContext.navigation?.filter(nav =>
+    nav.navigationType === 'hcp_help' || nav.navigationType === 'hcp_video'
+  ) || [];
 
-  let content = explanations[featureId] + '\n\n';
-  content += '**Learn more:**\n';
-  articles.forEach(article => {
-    const icon = article.type === 'video' ? '🎥' : '📖';
-    content += `${icon} [${article.title}](${article.url})\n`;
-  });
+  let content = '';
+
+  if (valueSnippet) {
+    content += valueSnippet.content + '\n\n';
+  }
+
+  if (helpItems.length > 0) {
+    content += '**Learn more:**\n';
+    helpItems.forEach(item => {
+      const icon = item.navigationType === 'hcp_video' ? '🎥' : '📖';
+      content += `${icon} [${item.name}](${item.url})\n`;
+    });
+  }
 
   return content;
+}
+
+/**
+ * Get value proposition from stageContext.
+ */
+function getValueProp(stageContext: StageContext | undefined): string | undefined {
+  if (!stageContext?.contextSnippets) return undefined;
+
+  // Look for value prop or key statistic
+  const valueProp = stageContext.contextSnippets.find(s =>
+    s.id === 'value-prop' || s.id === 'stat-highlight'
+  );
+
+  return valueProp?.content;
 }
 
 // -----------------------------------------------------------------------------
@@ -319,25 +306,18 @@ function formatLineItemsPreview(lineItems: Array<Record<string, unknown>>): stri
  */
 function generateNotAttachedResponse(detected: DetectedFeature, proName: string): string {
   const { feature, stageContext } = detected;
-  const chatExp = stageContext?.chatExperience;
-  const helpContent = generateHelpContent(feature.id, 'not_attached');
+  const helpContent = generateHelpContent(stageContext, feature.name);
 
   let response = `Great question about ${feature.name.toLowerCase()}! Let me explain how it works.\n\n`;
   response += helpContent;
   response += '\n---\n\n';
 
-  // Value proposition
-  const valueProps: Record<FeatureId, string> = {
-    'invoicing': 'Pros using Housecall Pro invoicing get paid **2x faster** than those using paper invoices.',
-    'payments': 'Accept credit cards instantly and see deposits in your account within **1-2 business days**.',
-    'automated-comms': 'Save **5+ hours per week** on customer communication with automated texts and emails.',
-    'scheduling': 'Never double-book again - see your entire team\'s schedule at a glance.',
-    'estimates': 'Win more jobs with professional estimates customers can approve with **one click**.',
-    'csr-ai': 'Capture leads **24/7** even when you\'re on a job or after hours.',
-    'reviews': 'Build your reputation automatically - more reviews = more new customers.',
-  };
+  // Value proposition from stageContext (or fallback)
+  const valueProp = getValueProp(stageContext);
+  if (valueProp) {
+    response += `**${valueProp}**\n\n`;
+  }
 
-  response += valueProps[feature.id] + '\n\n';
   response += `I notice ${feature.name.toLowerCase()} isn't enabled on your account yet. `;
   response += `I can schedule a call with our team to show you how it works and get you set up.\n\n`;
   response += `**Would you like to book a time?**\n\n`;
@@ -351,7 +331,7 @@ function generateNotAttachedResponse(detected: DetectedFeature, proName: string)
  */
 function generateAttachedResponse(detected: DetectedFeature, proName: string): string {
   const { feature, stageContext } = detected;
-  const helpContent = generateHelpContent(feature.id, 'attached');
+  const helpContent = generateHelpContent(stageContext, feature.name);
 
   let response = `I see you have ${feature.name.toLowerCase()} available, ${proName}! Let me help you get started.\n\n`;
   response += helpContent;
@@ -378,7 +358,7 @@ function generateAttachedResponse(detected: DetectedFeature, proName: string): s
  */
 function generateActivatedResponse(detected: DetectedFeature, proName: string): string {
   const { feature, stageContext } = detected;
-  const helpContent = generateHelpContent(feature.id, 'activated');
+  const helpContent = generateHelpContent(stageContext, feature.name);
 
   let response = `You're all set up with ${feature.name.toLowerCase()}, ${proName}! Here's how to make the most of it.\n\n`;
   response += helpContent;

@@ -683,7 +683,7 @@ export function FrontlineView() {
           <SupportAgentIcon sx={{ fontSize: 32, color: palette.primary }} />
           <Box>
             <Typography variant="h5" fontWeight={600}>
-              Frontline Rep View
+              Org Insights Admin Panel
             </Typography>
             <Typography variant="body2" color="text.secondary">
               See customer progress and get stage-appropriate context

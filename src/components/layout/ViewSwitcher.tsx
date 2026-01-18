@@ -3,6 +3,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import PersonIcon from '@mui/icons-material/Person';
 import ChatIcon from '@mui/icons-material/Chat';
+import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
 import { useOnboarding } from '../../context';
 import type { ViewType } from '../../types';
 
@@ -16,20 +17,20 @@ interface ViewConfig {
 const views: ViewConfig[] = [
   {
     id: 'admin',
-    label: 'Admin',
-    sublabel: 'Manage Content',
+    label: '@HCP',
+    sublabel: 'Context Manager',
     icon: <AdminPanelSettingsIcon />,
   },
   {
     id: 'frontline',
-    label: 'Frontline',
-    sublabel: 'Rep View',
+    label: 'Org Insights',
+    sublabel: 'Admin Panel',
     icon: <SupportAgentIcon />,
   },
   {
     id: 'portal',
-    label: 'Pro Portal',
-    sublabel: 'Customer View',
+    label: 'Housecall Pro',
+    sublabel: 'Web',
     icon: <PersonIcon />,
   },
   {
@@ -37,6 +38,12 @@ const views: ViewConfig[] = [
     label: 'AI Chat',
     sublabel: 'Assistant',
     icon: <ChatIcon />,
+  },
+  {
+    id: 'sample-pros',
+    label: 'Sample Pros',
+    sublabel: 'Configurations',
+    icon: <SettingsApplicationsIcon />,
   },
 ];
 
