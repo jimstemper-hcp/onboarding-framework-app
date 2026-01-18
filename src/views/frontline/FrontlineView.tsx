@@ -32,6 +32,13 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Link,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import LabelIcon from '@mui/icons-material/Label';
@@ -54,6 +61,11 @@ import CategoryIcon from '@mui/icons-material/Category';
 import PhoneIcon from '@mui/icons-material/Phone';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import GroupsIcon from '@mui/icons-material/Groups';
 import * as MuiIcons from '@mui/icons-material';
 import { useOnboarding } from '../../context';
 import { onboardingItems as allOnboardingItems, onboardingCategories } from '../../data';
@@ -1872,6 +1884,15 @@ function FeaturesListPage({
     }
   });
 
+  // Sort each stage group by rank (lower = higher priority, undefined = last)
+  (Object.keys(featuresByStage) as AdoptionStage[]).forEach((stage) => {
+    featuresByStage[stage].sort((a, b) => {
+      const rankA = selectedPro.featureStatus[a.id]?.rank ?? Infinity;
+      const rankB = selectedPro.featureStatus[b.id]?.rank ?? Infinity;
+      return rankA - rankB;
+    });
+  });
+
   // Calculate overall progress
   let totalItems = 0;
   let totalCompleted = 0;
@@ -2217,6 +2238,8 @@ function InformationPage({
 // =============================================================================
 
 function CallsPage({ selectedPro }: { selectedPro: ProAccount | undefined }) {
+  const [expandedCallId, setExpandedCallId] = useState<string | null>('2');
+
   if (!selectedPro) {
     return (
       <Paper variant="outlined" sx={{ p: 4, textAlign: 'center' }}>
@@ -2227,134 +2250,423 @@ function CallsPage({ selectedPro }: { selectedPro: ProAccount | undefined }) {
     );
   }
 
-  // Mock call data - in a real app this would come from Calendly integration
+  // Mock upcoming scheduled calls data
   const scheduledCalls = [
     {
       id: '1',
-      type: 'Onboarding Setup',
-      date: 'Jan 20, 2026 at 2:00 PM',
-      team: 'onboarding',
-      status: 'scheduled',
+      callName: 'Pricing & Contract Review',
+      assignedRep: 'Sarah Johnson',
+      dateTime: '12/12/2025, 03:00 PM',
+      calendlyEventUrl: 'https://calendly.com/event/123',
+      zoomLink: 'https://zoom.us/j/123456789',
     },
     {
       id: '2',
-      type: 'Feature Training',
-      date: 'Jan 22, 2026 at 10:00 AM',
-      team: 'onboarding',
-      status: 'scheduled',
+      callName: 'Technical Onboarding Session',
+      assignedRep: 'Michael Chen',
+      dateTime: '12/15/2025, 10:00 AM',
+      calendlyEventUrl: 'https://calendly.com/event/456',
+      zoomLink: 'https://zoom.us/j/987654321',
     },
   ];
 
-  const completedCalls = [
+  // Mock past calls data with AI-generated details
+  const pastCalls = [
     {
-      id: '3',
-      type: 'Intro Call',
-      date: 'Jan 15, 2026 at 3:00 PM',
-      team: 'onboarding',
-      status: 'completed',
-      notes: 'Discussed invoicing goals and timeline',
+      id: '1',
+      callName: 'Initial Discovery Call',
+      dateTime: 'Dec 3, 2025 at 2:00 PM',
+      rep: 'Sarah Johnson',
+      customer: 'Mike Peterson',
+      aiGenerated: true,
+      summary: 'Introduced Housecall Pro features and discussed current business challenges. Mike expressed interest in streamlining his scheduling and invoicing processes. He mentioned they currently use paper-based systems and are looking to modernize.',
+      proData: {
+        organizationSize: '5-10 employees',
+        industry: 'HVAC',
+        painPoints: 'Manual scheduling, paper invoices, missed appointments',
+        companyGoal: 'Reduce admin time by 50%',
+        techReadiness: 'Low - Coming from pen and paper',
+        decisionMaker: 'Mike Peterson (Owner)',
+        currentTools: 'Paper calendars, Excel spreadsheets',
+        budgetRange: '$2,000 - $5,000 annually',
+      },
+      featuresDiscussed: [
+        {
+          name: 'Online Scheduling',
+          mappingStatus: 'mapped',
+          sentiment: 'positive',
+          snippet: '"This would save us so much time on phone calls."',
+        },
+        {
+          name: 'Digital Invoicing',
+          mappingStatus: 'mapped',
+          sentiment: 'positive',
+          snippet: '"I need to stop chasing paper invoices."',
+        },
+      ],
+    },
+    {
+      id: '2',
+      callName: 'Technical Deep Dive',
+      dateTime: 'Dec 5, 2025 at 10:30 AM',
+      rep: 'James Martinez',
+      customer: 'Mike Peterson & Lisa Chen (Operations Manager)',
+      aiGenerated: true,
+      summary: 'Walked through the technical implementation with Mike and his operations manager Lisa. They were particularly impressed with the integration capabilities with QuickBooks. Lisa had detailed questions about the mobile app functionality and offline capabilities. Both expressed concerns about the learning curve for their existing team members.',
+      proData: {
+        organizationSize: '10-25 employees',
+        industry: 'Plumbing & HVAC',
+        painPoints: 'Team training, system migration, data import',
+        companyGoal: 'Fully operational on new system within 60 days',
+        techReadiness: 'Medium - Team has varying tech comfort levels',
+        decisionMaker: 'Mike Peterson (Owner), Lisa Chen (Ops Manager)',
+        currentTools: 'QuickBooks, Google Sheets, ServiceTitan (trial)',
+        budgetRange: '$5,000 - $10,000 annually',
+      },
+      featuresDiscussed: [
+        {
+          name: 'QuickBooks Integration',
+          mappingStatus: 'mapped',
+          sentiment: 'positive',
+          snippet: '"This is a must-have. We cannot afford to lose our financial data."',
+        },
+        {
+          name: 'Offline Mobile Access',
+          mappingStatus: 'mapped',
+          sentiment: 'positive',
+          snippet: '"Some of our jobs are in areas with poor cell coverage, so this is critical."',
+        },
+        {
+          name: 'Training & Onboarding',
+          mappingStatus: 'mapped',
+          sentiment: 'neutral',
+          snippet: '"We need to make sure the team can actually use this. What kind of support do you offer?"',
+        },
+      ],
     },
   ];
+
+  const toggleExpanded = (callId: string) => {
+    setExpandedCallId(expandedCallId === callId ? null : callId);
+  };
 
   return (
     <Box>
-      {/* Page header */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" fontWeight={600}>
-          Calls Management
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Schedule and manage Calendly calls for {selectedPro.companyName}
-        </Typography>
-      </Box>
-
-      {/* Schedule new call button */}
-      <Button
-        variant="contained"
-        startIcon={<CalendarMonthIcon />}
-        sx={{ mb: 3 }}
-        onClick={() => window.open('https://calendly.com/hcp-onboarding', '_blank')}
-      >
-        Schedule New Call
-      </Button>
-
-      {/* Scheduled Calls */}
-      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-        Scheduled Calls
+      {/* Upcoming Scheduled Calls */}
+      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+        Upcoming Scheduled Calls
       </Typography>
-      {scheduledCalls.length > 0 ? (
-        <Stack spacing={2} sx={{ mb: 4 }}>
-          {scheduledCalls.map((call) => (
-            <Paper key={call.id} variant="outlined" sx={{ p: 2 }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography variant="subtitle2" fontWeight={600}>
-                    {call.type}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {call.date}
-                  </Typography>
-                  <Chip
-                    label={call.team}
-                    size="small"
-                    sx={{ mt: 0.5, height: 20, fontSize: '0.65rem' }}
-                  />
-                </Box>
-                <Stack direction="row" spacing={1}>
-                  <Button size="small" variant="outlined">
-                    Reschedule
-                  </Button>
-                  <Button size="small" color="error" variant="outlined">
-                    Cancel
-                  </Button>
-                </Stack>
-              </Stack>
-            </Paper>
-          ))}
-        </Stack>
-      ) : (
-        <Paper variant="outlined" sx={{ p: 3, mb: 4, textAlign: 'center', bgcolor: palette.grey[50] }}>
-          <Typography color="text.secondary">No scheduled calls</Typography>
-        </Paper>
-      )}
-
-      {/* Completed Calls */}
-      <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-        Completed Calls
-      </Typography>
-      {completedCalls.length > 0 ? (
-        <Stack spacing={2}>
-          {completedCalls.map((call) => (
-            <Paper key={call.id} variant="outlined" sx={{ p: 2, bgcolor: alpha(palette.success, 0.02) }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <CheckCircleIcon sx={{ fontSize: 18, color: palette.success }} />
-                    <Typography variant="subtitle2" fontWeight={600}>
-                      {call.type}
-                    </Typography>
+      <TableContainer component={Paper} variant="outlined" sx={{ mb: 4 }}>
+        <Table>
+          <TableHead>
+            <TableRow sx={{ bgcolor: palette.grey[50] }}>
+              <TableCell sx={{ fontWeight: 500, color: palette.grey[600] }}>Call name</TableCell>
+              <TableCell sx={{ fontWeight: 500, color: palette.grey[600] }}>Assigned rep</TableCell>
+              <TableCell sx={{ fontWeight: 500, color: palette.grey[600] }}>Time & date</TableCell>
+              <TableCell sx={{ fontWeight: 500, color: palette.grey[600] }}>Calendly event</TableCell>
+              <TableCell sx={{ fontWeight: 500, color: palette.grey[600] }}>Phone/Zoom link</TableCell>
+              <TableCell sx={{ fontWeight: 500, color: palette.grey[600] }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {scheduledCalls.map((call) => (
+              <TableRow key={call.id} hover>
+                <TableCell>{call.callName}</TableCell>
+                <TableCell>{call.assignedRep}</TableCell>
+                <TableCell>{call.dateTime}</TableCell>
+                <TableCell>
+                  <Link
+                    href={call.calendlyEventUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ color: palette.primary, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                  >
+                    View event
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <Link
+                    href={call.zoomLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ color: palette.primary, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                  >
+                    Join Zoom
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={0.5}>
+                    <Tooltip title="Send email">
+                      <IconButton size="small">
+                        <EmailOutlinedIcon fontSize="small" sx={{ color: palette.grey[600] }} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="View notes">
+                      <IconButton size="small">
+                        <DescriptionOutlinedIcon fontSize="small" sx={{ color: palette.grey[600] }} />
+                      </IconButton>
+                    </Tooltip>
                   </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    {call.date}
-                  </Typography>
-                  {call.notes && (
-                    <Typography variant="caption" sx={{ display: 'block', mt: 1, fontStyle: 'italic' }}>
-                      Notes: {call.notes}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Past Calls */}
+      <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+        Past Calls
+      </Typography>
+      <Stack spacing={2}>
+        {pastCalls.map((call) => {
+          const isExpanded = expandedCallId === call.id;
+          return (
+            <Paper
+              key={call.id}
+              variant="outlined"
+              sx={{
+                overflow: 'hidden',
+                borderLeft: 4,
+                borderLeftColor: palette.primary,
+              }}
+            >
+              {/* Call Header */}
+              <Box sx={{ p: 2 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                  <Box>
+                    <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 0.5 }}>
+                      <PhoneIcon sx={{ fontSize: 20, color: palette.grey[600] }} />
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {call.callName}
+                      </Typography>
+                      {call.aiGenerated && (
+                        <Chip
+                          label="AI Generated"
+                          size="small"
+                          sx={{
+                            bgcolor: alpha('#FF6B35', 0.1),
+                            color: '#FF6B35',
+                            fontWeight: 600,
+                            fontSize: '0.7rem',
+                            height: 22,
+                          }}
+                        />
+                      )}
+                    </Stack>
+                    <Stack direction="row" spacing={2} sx={{ color: palette.grey[600] }}>
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <CalendarMonthIcon sx={{ fontSize: 16 }} />
+                        <Typography variant="body2">{call.dateTime}</Typography>
+                      </Stack>
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <PersonIcon sx={{ fontSize: 16 }} />
+                        <Typography variant="body2">Rep: {call.rep}</Typography>
+                      </Stack>
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <GroupsIcon sx={{ fontSize: 16 }} />
+                        <Typography variant="body2">Customer: {call.customer}</Typography>
+                      </Stack>
+                    </Stack>
+                  </Box>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<EmailOutlinedIcon />}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Generate Follow-up Email
+                    </Button>
+                    <IconButton size="small" onClick={() => toggleExpanded(call.id)}>
+                      {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                    </IconButton>
+                  </Stack>
+                </Stack>
+              </Box>
+
+              {/* Expanded Content */}
+              <Collapse in={isExpanded}>
+                <Box sx={{ px: 2, pb: 2 }}>
+                  <Divider sx={{ mb: 2 }} />
+
+                  {/* Call Summary */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+                      Call Summary
                     </Typography>
-                  )}
+                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
+                      {call.summary}
+                    </Typography>
+                  </Box>
+
+                  {/* Pro Data */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+                      Pro Data
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, 1fr)',
+                        gap: 2,
+                        pl: 1,
+                      }}
+                    >
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Organization Size
+                        </Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {call.proData.organizationSize}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Industry
+                        </Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {call.proData.industry}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Pain Points
+                        </Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {call.proData.painPoints}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Company Goal
+                        </Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {call.proData.companyGoal}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Tech Readiness
+                        </Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {call.proData.techReadiness}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Decision Maker
+                        </Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {call.proData.decisionMaker}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Current Tools
+                        </Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {call.proData.currentTools}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Budget Range
+                        </Typography>
+                        <Typography variant="body2" fontWeight={500}>
+                          {call.proData.budgetRange}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  {/* Features Discussed */}
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+                      Features Discussed
+                    </Typography>
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell sx={{ fontWeight: 500, color: palette.grey[600], borderBottom: `1px solid ${palette.grey[200]}` }}>
+                              Feature Name
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 500, color: palette.grey[600], borderBottom: `1px solid ${palette.grey[200]}` }}>
+                              Mapping Status
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 500, color: palette.grey[600], borderBottom: `1px solid ${palette.grey[200]}` }}>
+                              Sentiment
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 500, color: palette.grey[600], borderBottom: `1px solid ${palette.grey[200]}` }}>
+                              Snippet
+                            </TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {call.featuresDiscussed.map((feature, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell sx={{ borderBottom: `1px solid ${palette.grey[100]}` }}>
+                                {feature.name}
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: `1px solid ${palette.grey[100]}` }}>
+                                <Chip
+                                  label={feature.mappingStatus === 'mapped' ? 'Mapped' : 'Unmapped'}
+                                  size="small"
+                                  sx={{
+                                    bgcolor: feature.mappingStatus === 'mapped' ? palette.success : palette.grey[400],
+                                    color: 'white',
+                                    fontWeight: 600,
+                                    fontSize: '0.7rem',
+                                    height: 22,
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: `1px solid ${palette.grey[100]}` }}>
+                                <Chip
+                                  label={feature.sentiment.charAt(0).toUpperCase() + feature.sentiment.slice(1)}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{
+                                    borderColor:
+                                      feature.sentiment === 'positive'
+                                        ? palette.success
+                                        : feature.sentiment === 'negative'
+                                        ? palette.error
+                                        : palette.grey[400],
+                                    color:
+                                      feature.sentiment === 'positive'
+                                        ? palette.success
+                                        : feature.sentiment === 'negative'
+                                        ? palette.error
+                                        : palette.grey[600],
+                                    fontWeight: 500,
+                                    fontSize: '0.7rem',
+                                    height: 22,
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell
+                                sx={{
+                                  borderBottom: `1px solid ${palette.grey[100]}`,
+                                  fontStyle: 'italic',
+                                  color: palette.grey[600],
+                                }}
+                              >
+                                {feature.snippet}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
                 </Box>
-                <Button size="small" variant="text">
-                  View Details
-                </Button>
-              </Stack>
+              </Collapse>
             </Paper>
-          ))}
-        </Stack>
-      ) : (
-        <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', bgcolor: palette.grey[50] }}>
-          <Typography color="text.secondary">No completed calls</Typography>
-        </Paper>
-      )}
+          );
+        })}
+      </Stack>
     </Box>
   );
 }

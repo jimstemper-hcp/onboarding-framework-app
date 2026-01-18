@@ -573,6 +573,7 @@ export interface FeatureStatus {
   engagedAt?: string;
   completedTasks: string[]; // Task IDs
   usageCount: number;
+  rank?: number; // Per-pro ranking (lower = higher priority)
 }
 
 /**

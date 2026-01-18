@@ -655,6 +655,13 @@ function FeatureStatusEditor({ featureStatus, onChange }: FeatureStatusEditorPro
     });
   };
 
+  const handleRankChange = (featureId: FeatureId, rank: number | undefined) => {
+    onChange(featureId, {
+      ...featureStatus[featureId],
+      rank,
+    });
+  };
+
   return (
     <Stack spacing={2}>
       {allFeatureIds.map((featureId) => {
@@ -702,6 +709,17 @@ function FeatureStatusEditor({ featureStatus, onChange }: FeatureStatusEditorPro
                 value={status.usageCount}
                 onChange={(e) => handleUsageChange(featureId, parseInt(e.target.value) || 0)}
                 sx={{ width: 120 }}
+              />
+
+              <TextField
+                label="Rank"
+                type="number"
+                size="small"
+                value={status.rank ?? ''}
+                onChange={(e) => handleRankChange(featureId, e.target.value ? parseInt(e.target.value) : undefined)}
+                sx={{ width: 100 }}
+                placeholder="1, 2, 3..."
+                helperText="Lower = higher priority"
               />
 
               <TextField
