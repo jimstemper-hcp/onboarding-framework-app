@@ -28,33 +28,37 @@ export function PlanningModeToggle() {
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
-          bgcolor: isPlanningMode ? 'primary.dark' : 'action.hover',
-          borderRadius: 2,
+          gap: 0.75,
+          bgcolor: isPlanningMode ? '#7C3AED' : 'rgba(255,255,255,0.15)',
+          border: '1px solid',
+          borderColor: isPlanningMode ? '#7C3AED' : 'rgba(255,255,255,0.3)',
+          borderRadius: 1.5,
           px: 1.5,
-          py: 0.5,
+          py: 0.25,
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           '&:hover': {
-            bgcolor: isPlanningMode ? 'primary.main' : 'action.selected',
+            bgcolor: isPlanningMode ? '#6D28D9' : 'rgba(255,255,255,0.25)',
+            borderColor: isPlanningMode ? '#6D28D9' : 'rgba(255,255,255,0.5)',
           },
         }}
         onClick={togglePlanningMode}
       >
         {isPlanningMode ? (
-          <Architecture sx={{ fontSize: 18, color: 'primary.contrastText' }} />
+          <Architecture sx={{ fontSize: 16, color: 'white' }} />
         ) : (
-          <PlayArrow sx={{ fontSize: 18, color: 'text.secondary' }} />
+          <PlayArrow sx={{ fontSize: 16, color: 'white' }} />
         )}
         <Typography
-          variant="body2"
+          variant="caption"
           sx={{
-            fontWeight: 500,
-            color: isPlanningMode ? 'primary.contrastText' : 'text.secondary',
+            fontWeight: 600,
+            color: 'white',
             userSelect: 'none',
+            letterSpacing: 0.5,
           }}
         >
-          {isPlanningMode ? 'Planning' : 'Demo'}
+          {isPlanningMode ? 'PLANNING' : 'DEMO'}
         </Typography>
         <Switch
           size="small"
@@ -62,11 +66,30 @@ export function PlanningModeToggle() {
           onChange={togglePlanningMode}
           onClick={(e) => e.stopPropagation()}
           sx={{
-            '& .MuiSwitch-switchBase.Mui-checked': {
-              color: 'primary.contrastText',
+            width: 32,
+            height: 18,
+            p: 0,
+            '& .MuiSwitch-switchBase': {
+              p: 0,
+              m: '2px',
+              '&.Mui-checked': {
+                transform: 'translateX(14px)',
+                color: 'white',
+                '& + .MuiSwitch-track': {
+                  backgroundColor: 'rgba(255,255,255,0.4)',
+                  opacity: 1,
+                },
+              },
             },
-            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-              backgroundColor: 'primary.light',
+            '& .MuiSwitch-thumb': {
+              width: 14,
+              height: 14,
+              bgcolor: 'white',
+            },
+            '& .MuiSwitch-track': {
+              borderRadius: 9,
+              backgroundColor: 'rgba(255,255,255,0.3)',
+              opacity: 1,
             },
           }}
         />
