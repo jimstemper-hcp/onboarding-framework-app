@@ -2687,8 +2687,7 @@ const menuItems: { id: FrontlinePage; label: string; icon: React.ReactNode }[] =
 // =============================================================================
 
 export function FrontlineView() {
-  const { features, pros, completeTask, uncompleteTask } = useOnboarding();
-  const [selectedProId, setSelectedProId] = useState<string | null>(pros[0]?.id || null);
+  const { features, pros, activeProId, completeTask, uncompleteTask } = useOnboarding();
   const [currentPage, setCurrentPage] = useState<FrontlinePage>('information');
 
   // Track category statuses (in a real app, this would be persisted per pro)
@@ -2707,7 +2706,7 @@ export function FrontlineView() {
   // Track completed onboarding items (in a real app, this would be persisted per pro)
   const [completedOnboardingItems, setCompletedOnboardingItems] = useState<string[]>([]);
 
-  const selectedPro = pros.find((p) => p.id === selectedProId);
+  const selectedPro = pros.find((p) => p.id === activeProId);
 
   const handleToggleTask = (taskId: string, featureId: FeatureId) => {
     if (!selectedPro || !featureId) return;
@@ -2784,17 +2783,12 @@ export function FrontlineView() {
         >
           {/* Sidebar Header */}
           <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center">
               <SupportAgentIcon sx={{ fontSize: 24, color: palette.primary }} />
               <Typography variant="h6" fontWeight={600}>
                 Org Insights
               </Typography>
             </Stack>
-            <ProSelectorSidebar
-              pros={pros}
-              selectedProId={selectedProId}
-              onSelect={setSelectedProId}
-            />
           </Box>
 
           {/* Menu Items */}

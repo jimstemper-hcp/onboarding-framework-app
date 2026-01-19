@@ -1,6 +1,6 @@
-import { Box, AppBar, Toolbar, Typography, Container } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, Container, Stack } from '@mui/material';
 import { ViewSwitcher } from './ViewSwitcher';
-import { ConnectionIndicator } from './ConnectionIndicator';
+import { ProSelectorToolbar } from './ProSelectorToolbar';
 import { PlanningModeToggle } from '../../planning';
 import type { ReactNode } from 'react';
 
@@ -13,40 +13,41 @@ export function MainLayout({ children }: MainLayoutProps) {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Header */}
       <AppBar position="static">
-        <Toolbar>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
+        <Toolbar sx={{ minHeight: '56px !important', pt: 1.5, pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, flexGrow: 1 }}>
             {/* Simple logo placeholder */}
             <Box
               sx={{
-                width: 32,
-                height: 32,
+                width: 28,
+                height: 28,
                 bgcolor: 'primary.main',
                 borderRadius: 1,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 700,
-                fontSize: '1.1rem',
+                fontSize: '1rem',
+                flexShrink: 0,
               }}
             >
               H
             </Box>
-            <Box>
-              <Typography variant="h6" component="h1" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
+              <Typography variant="subtitle1" component="h1" sx={{ fontWeight: 700, lineHeight: 1.1, fontSize: '1rem' }}>
                 Housecall Pro
               </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.8, lineHeight: 1 }}>
+              <Typography variant="caption" sx={{ opacity: 0.7, lineHeight: 1, fontSize: '0.7rem' }}>
                 Onboarding Framework Prototype
               </Typography>
             </Box>
           </Box>
 
-          <PlanningModeToggle />
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <ProSelectorToolbar />
+            <PlanningModeToggle />
+          </Stack>
         </Toolbar>
       </AppBar>
-
-      {/* Connection Indicator */}
-      <ConnectionIndicator />
 
       {/* View Switcher (Tabs) */}
       <ViewSwitcher />

@@ -6,8 +6,6 @@ import {
   LinearProgress,
   Chip,
   IconButton,
-  Menu,
-  MenuItem,
   Button,
   Checkbox,
   Collapse,
@@ -16,7 +14,6 @@ import {
   alpha,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -27,7 +24,6 @@ import FlagRoundedIcon from '@mui/icons-material/FlagRounded';
 import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
 import * as MuiIcons from '@mui/icons-material';
-import { useState } from 'react';
 import { useOnboarding, useActivePro } from '../../context';
 import { onboardingItems as allOnboardingItems } from '../../data';
 import { PlanningWrapper } from '../../planning';
@@ -782,9 +778,8 @@ function TimelineMilestone({
 // =============================================================================
 
 export function PortalView() {
-  const { features, pros, activeProId, setActivePro, completeTask, uncompleteTask } = useOnboarding();
+  const { features, completeTask, uncompleteTask } = useOnboarding();
   const activePro = useActivePro();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   if (!activePro) {
     return <Typography>No pro selected</Typography>;
@@ -842,64 +837,14 @@ export function PortalView() {
     <PlanningWrapper elementId="view-portal">
     <Box sx={{ maxWidth: 720, mx: 'auto' }}>
       {/* Header */}
-      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 4 }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: palette.text.primary, letterSpacing: '-0.5px' }}>
-            {goalTitle}
-          </Typography>
-          <Typography variant="body1" sx={{ color: palette.text.secondary, mt: 0.5 }}>
-            Your personalized onboarding journey
-          </Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          size="small"
-          endIcon={<KeyboardArrowDownIcon />}
-          onClick={(e) => setAnchorEl(e.currentTarget)}
-          sx={{
-            borderColor: 'divider',
-            color: palette.text.secondary,
-            fontWeight: 500,
-            textTransform: 'none',
-            borderRadius: 2,
-          }}
-        >
-          Switch Pro
-        </Button>
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={() => setAnchorEl(null)}
-          PaperProps={{
-            elevation: 0,
-            sx: { border: '1px solid', borderColor: 'divider', borderRadius: 2, mt: 1 },
-          }}
-        >
-          {pros.map((pro) => {
-            const { earned } = calculateTotalPoints(pro, features);
-            return (
-              <MenuItem
-                key={pro.id}
-                selected={pro.id === activeProId}
-                onClick={() => {
-                  setActivePro(pro.id);
-                  setAnchorEl(null);
-                }}
-                sx={{ py: 1.5, px: 2 }}
-              >
-                <Box>
-                  <Typography variant="body2" fontWeight={500}>
-                    {pro.companyName}
-                  </Typography>
-                  <Typography variant="caption" sx={{ color: palette.text.muted }}>
-                    {earned} pts earned
-                  </Typography>
-                </Box>
-              </MenuItem>
-            );
-          })}
-        </Menu>
-      </Stack>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, color: palette.text.primary, letterSpacing: '-0.5px' }}>
+          {goalTitle}
+        </Typography>
+        <Typography variant="body1" sx={{ color: palette.text.secondary, mt: 0.5 }}>
+          Your personalized onboarding journey
+        </Typography>
+      </Box>
 
       {/* Progress Summary */}
       <ProgressSummaryCard pro={activePro} features={features} streak={streak} />
