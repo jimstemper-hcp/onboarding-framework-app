@@ -43,6 +43,7 @@ export interface ChatMessage {
   content: string;
   timestamp: string; // ISO timestamp
   attachments?: FileAttachment[];  // Optional file attachments (images)
+  debugContext?: MessageDebugContext;  // Debug context for assistant messages
 }
 
 /**
@@ -159,4 +160,91 @@ export interface AnthropicError {
     type: string;
     message: string;
   };
+}
+
+// -----------------------------------------------------------------------------
+// DEBUG CONTEXT TYPES
+// -----------------------------------------------------------------------------
+
+/**
+ * Pro information captured for debug context.
+ */
+export interface DebugProInfo {
+  id: string;
+  companyName: string;
+  ownerName: string;
+  plan: string;
+  goal: string;
+}
+
+/**
+ * Feature context captured for debug context.
+ */
+export interface DebugFeatureInfo {
+  id: string;
+  name: string;
+  stage: string;
+  completedTasks: number;
+  usageCount: number;
+}
+
+/**
+ * Conversation state from mock service.
+ */
+export interface DebugConversationState {
+  flowState: string;
+  currentFeature?: string;
+  currentStage?: string;
+  dataChoice?: string;
+}
+
+/**
+ * System prompt information.
+ */
+export interface DebugSystemPrompt {
+  mode: ChatMode;
+  fullPrompt: string;
+  promptLength: number;
+}
+
+/**
+ * Tool call information.
+ */
+export interface DebugToolCall {
+  name: string;
+  parameters?: Record<string, unknown>;
+  result?: string;
+}
+
+/**
+ * Timing information.
+ */
+export interface DebugTiming {
+  requestedAt: string;
+  respondedAt: string;
+  durationMs: number;
+}
+
+/**
+ * API details.
+ */
+export interface DebugApiDetails {
+  model: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  isMockMode: boolean;
+}
+
+/**
+ * Complete debug context attached to assistant messages.
+ * Shows the @HCP Context Manager information used to generate the response.
+ */
+export interface MessageDebugContext {
+  pro?: DebugProInfo;
+  feature?: DebugFeatureInfo;
+  conversationState?: DebugConversationState;
+  systemPrompt?: DebugSystemPrompt;
+  toolCalls?: DebugToolCall[];
+  timing?: DebugTiming;
+  apiDetails?: DebugApiDetails;
 }

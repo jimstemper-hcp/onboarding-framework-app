@@ -24,6 +24,7 @@ import FlagRoundedIcon from '@mui/icons-material/FlagRounded';
 import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
 import * as MuiIcons from '@mui/icons-material';
+import { useState } from 'react';
 import { useOnboarding, useActivePro } from '../../context';
 import { onboardingItems as allOnboardingItems } from '../../data';
 import { PlanningWrapper } from '../../planning';

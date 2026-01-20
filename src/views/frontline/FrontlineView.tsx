@@ -39,6 +39,10 @@ import {
   TableHead,
   TableRow,
   Link,
+  ToggleButton,
+  ToggleButtonGroup,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import LabelIcon from '@mui/icons-material/Label';
@@ -58,6 +62,12 @@ import PersonIcon from '@mui/icons-material/Person';
 import ComputerIcon from '@mui/icons-material/Computer';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CategoryIcon from '@mui/icons-material/Category';
+import ViewWeekIcon from '@mui/icons-material/ViewWeek';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+import SearchIcon from '@mui/icons-material/Search';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import PhoneIcon from '@mui/icons-material/Phone';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -79,6 +89,22 @@ import type { Feature, AdoptionStage, FeatureId, ProAccount, OnboardingItemAssig
 type FrontlinePage = 'information' | 'onboarding-plan' | 'features-list' | 'calls';
 
 type CategoryStatus = 'not-covered' | 'in-progress' | 'completed';
+
+type OnboardingPlanViewMode = 'category' | 'weekly';
+
+type WeekNumber = 1 | 2 | 3 | 4;
+
+interface WeeklyPlanItem {
+  itemId: string;
+  order: number;
+}
+
+interface WeeklyPlanState {
+  week1: WeeklyPlanItem[];
+  week2: WeeklyPlanItem[];
+  week3: WeeklyPlanItem[];
+  week4: WeeklyPlanItem[];
+}
 
 // =============================================================================
 // PALETTE
@@ -1176,6 +1202,444 @@ function OnboardingCategorySection({
 }
 
 // =============================================================================
+// WEEKLY PLANNING VIEW
+// =============================================================================
+// Allows organizing onboarding items into Week 1-4 categories with
+// add, remove, and reorder functionality.
+// =============================================================================
+
+interface WeeklyPlanningViewProps {
+  weeklyPlan: WeeklyPlanState;
+  onUpdateWeeklyPlan: (plan: WeeklyPlanState) => void;
+  completedItemIds: string[];
+}
+
+function WeeklyPlanningView({
+  weeklyPlan,
+  onUpdateWeeklyPlan,
+  completedItemIds,
+}: WeeklyPlanningViewProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedWeek, setExpandedWeek] = useState<WeekNumber | null>(1);
+
+  // Get all items currently assigned to any week
+  const assignedItemIds = new Set([
+    ...weeklyPlan.week1.map(i => i.itemId),
+    ...weeklyPlan.week2.map(i => i.itemId),
+    ...weeklyPlan.week3.map(i => i.itemId),
+    ...weeklyPlan.week4.map(i => i.itemId),
+  ]);
+
+  // Filter available items (not yet assigned to any week)
+  const availableItems = allOnboardingItems.filter(item => {
+    const matchesSearch = searchQuery === '' ||
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.labels?.some(l => l.toLowerCase().includes(searchQuery.toLowerCase()));
+    return !assignedItemIds.has(item.id) && matchesSearch;
+  });
+
+  // Helper to get week key
+  const getWeekKey = (week: WeekNumber): keyof WeeklyPlanState => `week${week}` as keyof WeeklyPlanState;
+
+  // Add item to a week
+  const handleAddToWeek = (itemId: string, week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    const currentItems = weeklyPlan[weekKey];
+    const newOrder = currentItems.length > 0 ? Math.max(...currentItems.map(i => i.order)) + 1 : 0;
+    onUpdateWeeklyPlan({
+      ...weeklyPlan,
+      [weekKey]: [...currentItems, { itemId, order: newOrder }],
+    });
+  };
+
+  // Remove item from a week
+  const handleRemoveFromWeek = (itemId: string, week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    onUpdateWeeklyPlan({
+      ...weeklyPlan,
+      [weekKey]: weeklyPlan[weekKey].filter(i => i.itemId !== itemId),
+    });
+  };
+
+  // Move item up within a week
+  const handleMoveUp = (itemId: string, week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    const items = [...weeklyPlan[weekKey]];
+    const index = items.findIndex(i => i.itemId === itemId);
+    if (index > 0) {
+      [items[index - 1], items[index]] = [items[index], items[index - 1]];
+      // Re-number orders
+      items.forEach((item, idx) => { item.order = idx; });
+      onUpdateWeeklyPlan({ ...weeklyPlan, [weekKey]: items });
+    }
+  };
+
+  // Move item down within a week
+  const handleMoveDown = (itemId: string, week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    const items = [...weeklyPlan[weekKey]];
+    const index = items.findIndex(i => i.itemId === itemId);
+    if (index < items.length - 1) {
+      [items[index], items[index + 1]] = [items[index + 1], items[index]];
+      // Re-number orders
+      items.forEach((item, idx) => { item.order = idx; });
+      onUpdateWeeklyPlan({ ...weeklyPlan, [weekKey]: items });
+    }
+  };
+
+  // Render a single week column
+  const renderWeekColumn = (week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    const items = weeklyPlan[weekKey].sort((a, b) => a.order - b.order);
+    const weekColors = {
+      1: palette.primary,
+      2: palette.secondary,
+      3: palette.warning,
+      4: palette.success,
+    };
+    const color = weekColors[week];
+
+    return (
+      <Paper
+        key={week}
+        variant="outlined"
+        sx={{
+          flex: 1,
+          minWidth: 280,
+          maxWidth: 320,
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'white',
+        }}
+      >
+        {/* Week Header */}
+        <Box
+          sx={{
+            p: 2,
+            borderBottom: 1,
+            borderColor: 'divider',
+            bgcolor: alpha(color, 0.05),
+          }}
+        >
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Avatar
+                sx={{
+                  width: 28,
+                  height: 28,
+                  bgcolor: alpha(color, 0.15),
+                  color: color,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                }}
+              >
+                {week}
+              </Avatar>
+              <Typography variant="subtitle2" fontWeight={600}>
+                Week {week}
+              </Typography>
+            </Stack>
+            <Chip
+              label={`${items.length} items`}
+              size="small"
+              sx={{
+                height: 22,
+                fontSize: '0.7rem',
+                bgcolor: alpha(color, 0.1),
+                color: color,
+              }}
+            />
+          </Stack>
+        </Box>
+
+        {/* Week Items */}
+        <Box sx={{ flex: 1, overflow: 'auto', p: 1, minHeight: 200, maxHeight: 400 }}>
+          {items.length === 0 ? (
+            <Box
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px dashed',
+                borderColor: palette.grey[200],
+                borderRadius: 1,
+                m: 1,
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ p: 2 }}>
+                No items assigned
+                <br />
+                <Typography variant="caption" color="text.secondary">
+                  Add items from the pool below
+                </Typography>
+              </Typography>
+            </Box>
+          ) : (
+            <Stack spacing={1}>
+              {items.map((planItem, index) => {
+                const itemDef = allOnboardingItems.find(i => i.id === planItem.itemId);
+                if (!itemDef) return null;
+                const isCompleted = completedItemIds.includes(planItem.itemId);
+                const isRepFacing = itemDef.type === 'rep_facing';
+
+                return (
+                  <Paper
+                    key={planItem.itemId}
+                    variant="outlined"
+                    sx={{
+                      p: 1.5,
+                      bgcolor: isCompleted ? alpha(palette.success, 0.04) : 'white',
+                      borderColor: isCompleted ? alpha(palette.success, 0.3) : 'divider',
+                      '&:hover': {
+                        borderColor: color,
+                        bgcolor: alpha(color, 0.02),
+                      },
+                    }}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="flex-start">
+                      {/* Drag/Order indicator */}
+                      <Stack spacing={0} sx={{ pt: 0.5 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleMoveUp(planItem.itemId, week)}
+                          disabled={index === 0}
+                          sx={{ p: 0.25 }}
+                        >
+                          <KeyboardArrowUpIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleMoveDown(planItem.itemId, week)}
+                          disabled={index === items.length - 1}
+                          sx={{ p: 0.25 }}
+                        >
+                          <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Stack>
+
+                      {/* Item content */}
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight={500}
+                          sx={{
+                            textDecoration: isCompleted ? 'line-through' : 'none',
+                            color: isCompleted ? 'text.secondary' : 'text.primary',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {itemDef.title}
+                        </Typography>
+                        <Stack direction="row" spacing={0.5} sx={{ mt: 0.5 }}>
+                          <Chip
+                            icon={isRepFacing ? <PersonIcon sx={{ fontSize: '12px !important' }} /> : <ComputerIcon sx={{ fontSize: '12px !important' }} />}
+                            label={isRepFacing ? 'Rep' : 'In-Product'}
+                            size="small"
+                            sx={{
+                              height: 18,
+                              fontSize: '0.6rem',
+                              bgcolor: isRepFacing ? alpha(palette.secondary, 0.1) : alpha(palette.primary, 0.1),
+                              color: isRepFacing ? palette.secondary : palette.primary,
+                              '& .MuiChip-icon': { ml: 0.5 },
+                            }}
+                          />
+                          {itemDef.category && (
+                            <Chip
+                              label={itemDef.category.replace(/-/g, ' ')}
+                              size="small"
+                              sx={{
+                                height: 18,
+                                fontSize: '0.6rem',
+                                bgcolor: alpha(palette.grey[400], 0.1),
+                                textTransform: 'capitalize',
+                              }}
+                            />
+                          )}
+                        </Stack>
+                      </Box>
+
+                      {/* Remove button */}
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveFromWeek(planItem.itemId, week)}
+                        sx={{
+                          p: 0.5,
+                          color: palette.grey[400],
+                          '&:hover': { color: palette.error, bgcolor: alpha(palette.error, 0.1) },
+                        }}
+                      >
+                        <RemoveIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Stack>
+                  </Paper>
+                );
+              })}
+            </Stack>
+          )}
+        </Box>
+      </Paper>
+    );
+  };
+
+  return (
+    <Box>
+      {/* Week Columns */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
+          Weekly Schedule
+        </Typography>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{
+            overflowX: 'auto',
+            pb: 1,
+          }}
+        >
+          {([1, 2, 3, 4] as WeekNumber[]).map(week => renderWeekColumn(week))}
+        </Stack>
+      </Box>
+
+      {/* Available Items Pool */}
+      <Paper variant="outlined" sx={{ p: 2 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" fontWeight={600}>
+            Available Onboarding Items ({availableItems.length})
+          </Typography>
+          <TextField
+            size="small"
+            placeholder="Search items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: 18, color: palette.grey[400] }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ width: 250 }}
+          />
+        </Stack>
+
+        {/* Items grouped by category */}
+        <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+          {onboardingCategories.map(category => {
+            const categoryItems = availableItems.filter(item => item.category === category.id);
+            if (categoryItems.length === 0) return null;
+
+            return (
+              <Box key={category.id} sx={{ mb: 2 }}>
+                <Typography
+                  variant="caption"
+                  fontWeight={600}
+                  color="text.secondary"
+                  sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1, display: 'block' }}
+                >
+                  {category.label} ({categoryItems.length})
+                </Typography>
+                <Stack spacing={0.5}>
+                  {categoryItems.map(item => {
+                    const isRepFacing = item.type === 'rep_facing';
+                    return (
+                      <Paper
+                        key={item.id}
+                        variant="outlined"
+                        sx={{
+                          p: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          '&:hover': {
+                            borderColor: palette.primary,
+                            bgcolor: alpha(palette.primary, 0.02),
+                          },
+                        }}
+                      >
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {item.title}
+                          </Typography>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <Chip
+                              icon={isRepFacing ? <PersonIcon sx={{ fontSize: '12px !important' }} /> : <ComputerIcon sx={{ fontSize: '12px !important' }} />}
+                              label={isRepFacing ? 'Rep' : 'In-Product'}
+                              size="small"
+                              sx={{
+                                height: 16,
+                                fontSize: '0.55rem',
+                                bgcolor: isRepFacing ? alpha(palette.secondary, 0.1) : alpha(palette.primary, 0.1),
+                                color: isRepFacing ? palette.secondary : palette.primary,
+                                '& .MuiChip-icon': { ml: 0.25 },
+                              }}
+                            />
+                            {item.estimatedMinutes && (
+                              <Typography variant="caption" color="text.secondary">
+                                ~{item.estimatedMinutes}min
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Box>
+
+                        {/* Add to week buttons */}
+                        <Stack direction="row" spacing={0.5}>
+                          {([1, 2, 3, 4] as WeekNumber[]).map(week => (
+                            <Tooltip key={week} title={`Add to Week ${week}`}>
+                              <IconButton
+                                size="small"
+                                onClick={() => handleAddToWeek(item.id, week)}
+                                sx={{
+                                  p: 0.5,
+                                  fontSize: '0.7rem',
+                                  fontWeight: 600,
+                                  width: 24,
+                                  height: 24,
+                                  border: 1,
+                                  borderColor: 'divider',
+                                  '&:hover': {
+                                    bgcolor: alpha(palette.primary, 0.1),
+                                    borderColor: palette.primary,
+                                  },
+                                }}
+                              >
+                                {week}
+                              </IconButton>
+                            </Tooltip>
+                          ))}
+                        </Stack>
+                      </Paper>
+                    );
+                  })}
+                </Stack>
+              </Box>
+            );
+          })}
+
+          {availableItems.length === 0 && (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                {searchQuery ? 'No items match your search' : 'All items have been assigned to weeks'}
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </Paper>
+    </Box>
+  );
+}
+
+// =============================================================================
 // ONBOARDING PLAN PAGE
 // =============================================================================
 
@@ -1195,6 +1659,13 @@ function OnboardingPlanPage({
   const [expandedCategory, setExpandedCategory] = useState<OnboardingCategoryId | null>('account-setup');
   const [selectedItem, setSelectedItem] = useState<OnboardingItemDefinition | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<OnboardingPlanViewMode>('category');
+  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlanState>({
+    week1: [],
+    week2: [],
+    week3: [],
+    week4: [],
+  });
 
   if (!selectedPro) {
     return (
@@ -1230,62 +1701,108 @@ function OnboardingPlanPage({
     <Box>
       {/* Page header */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" fontWeight={600}>
-          Onboarding Plan
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Track {selectedPro.companyName}'s onboarding progress across 9 categories
-        </Typography>
-        {/* Overall progress */}
-        <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2 }}>
-          <Typography variant="body2" fontWeight={500}>
-            Overall Progress: {totalCompleted}/{totalItems}
-          </Typography>
-          <LinearProgress
-            variant="determinate"
-            value={totalItems > 0 ? (totalCompleted / totalItems) * 100 : 0}
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography variant="h6" fontWeight={600}>
+              Onboarding Plan
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {viewMode === 'category'
+                ? `Track ${selectedPro.companyName}'s onboarding progress across 9 categories`
+                : `Organize ${selectedPro.companyName}'s onboarding items into weekly milestones`
+              }
+            </Typography>
+          </Box>
+
+          {/* View Mode Toggle */}
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(_, newMode) => newMode && setViewMode(newMode)}
+            size="small"
             sx={{
-              flex: 1,
-              maxWidth: 300,
-              height: 8,
-              borderRadius: 4,
-              bgcolor: palette.grey[200],
-              '& .MuiLinearProgress-bar': {
-                bgcolor: palette.success,
-                borderRadius: 4,
+              '& .MuiToggleButton-root': {
+                textTransform: 'none',
+                px: 2,
+                py: 0.75,
               },
             }}
-          />
-          <Typography variant="body2" color="text.secondary">
-            {totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0}%
-          </Typography>
+          >
+            <ToggleButton value="category">
+              <ViewListIcon sx={{ fontSize: 18, mr: 0.75 }} />
+              Category View
+            </ToggleButton>
+            <ToggleButton value="weekly">
+              <ViewWeekIcon sx={{ fontSize: 18, mr: 0.75 }} />
+              Weekly Planning
+            </ToggleButton>
+          </ToggleButtonGroup>
         </Stack>
+
+        {/* Overall progress - only show in category view */}
+        {viewMode === 'category' && (
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ mt: 2 }}>
+            <Typography variant="body2" fontWeight={500}>
+              Overall Progress: {totalCompleted}/{totalItems}
+            </Typography>
+            <LinearProgress
+              variant="determinate"
+              value={totalItems > 0 ? (totalCompleted / totalItems) * 100 : 0}
+              sx={{
+                flex: 1,
+                maxWidth: 300,
+                height: 8,
+                borderRadius: 4,
+                bgcolor: palette.grey[200],
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: palette.success,
+                  borderRadius: 4,
+                },
+              }}
+            />
+            <Typography variant="body2" color="text.secondary">
+              {totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0}%
+            </Typography>
+          </Stack>
+        )}
       </Box>
 
-      {/* Category sections */}
-      <Box>
-        {onboardingCategories.map((category) => (
-          <OnboardingCategorySection
-            key={category.id}
-            category={category}
-            completedItemIds={completedItemIds}
-            onOpenItem={handleOpenItem}
-            categoryStatus={categoryStatuses[category.id]}
-            onStatusChange={(status) => onCategoryStatusChange(category.id, status)}
-            expanded={expandedCategory === category.id}
-            onToggleExpanded={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
+      {/* Content based on view mode */}
+      {viewMode === 'category' ? (
+        <>
+          {/* Category sections */}
+          <Box>
+            {onboardingCategories.map((category) => (
+              <OnboardingCategorySection
+                key={category.id}
+                category={category}
+                completedItemIds={completedItemIds}
+                onOpenItem={handleOpenItem}
+                categoryStatus={categoryStatuses[category.id]}
+                onStatusChange={(status) => onCategoryStatusChange(category.id, status)}
+                expanded={expandedCategory === category.id}
+                onToggleExpanded={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
+              />
+            ))}
+          </Box>
+
+          {/* Item Detail Modal */}
+          <OnboardingItemModal
+            item={selectedItem}
+            open={modalOpen}
+            onClose={handleCloseModal}
+            isCompleted={selectedItem ? completedItemIds.includes(selectedItem.id) : false}
+            onToggleComplete={handleToggleItemComplete}
           />
-        ))}
-      </Box>
-
-      {/* Item Detail Modal */}
-      <OnboardingItemModal
-        item={selectedItem}
-        open={modalOpen}
-        onClose={handleCloseModal}
-        isCompleted={selectedItem ? completedItemIds.includes(selectedItem.id) : false}
-        onToggleComplete={handleToggleItemComplete}
-      />
+        </>
+      ) : (
+        /* Weekly Planning View */
+        <WeeklyPlanningView
+          weeklyPlan={weeklyPlan}
+          onUpdateWeeklyPlan={setWeeklyPlan}
+          completedItemIds={completedItemIds}
+        />
+      )}
     </Box>
   );
 }

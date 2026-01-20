@@ -21,6 +21,7 @@ import type {
   AnthropicMessage,
   FileAttachment,
   AnthropicMessageContent,
+  MessageDebugContext,
 } from '../types';
 import {
   sendToAnthropic,
@@ -33,7 +34,7 @@ import {
   type PlanningModeContext,
   type DemoModeContext,
 } from '../services/contextBuilder';
-import { generateMockResponse, type MockContext } from '../services/mockService';
+import { generateMockResponse, type MockContext, type MockResponseResult } from '../services/mockService';
 import { usePlanningMode } from '../../planning/context/PlanningContext';
 import { useOnboarding, useActivePro } from '../../context/OnboardingContext';
 
@@ -177,6 +178,10 @@ export function ChatProvider({ children }: ChatProviderProps) {
 
     try {
       let response: string;
+      let debugContext: MessageDebugContext | undefined;
+
+      // Capture timing
+      const requestedAt = new Date().toISOString();
 
       // Use mock mode if no API key and in demo mode with an active pro
       if (!apiKeyConfig.hasKey && mode === 'demo' && activePro) {
@@ -185,7 +190,41 @@ export function ChatProvider({ children }: ChatProviderProps) {
           features,
           getStageContext,
         };
-        response = await generateMockResponse(content.trim(), mockContext, attachments);
+
+        // Build system prompt for debug context (even in mock mode)
+        const systemPrompt = buildContext();
+
+        const mockResult: MockResponseResult = await generateMockResponse(content.trim(), mockContext, attachments);
+        response = mockResult.content;
+
+        // Build debug context from mock response
+        const respondedAt = new Date().toISOString();
+        debugContext = {
+          pro: {
+            id: activePro.id,
+            companyName: activePro.companyName,
+            ownerName: activePro.ownerName,
+            plan: activePro.plan,
+            goal: activePro.goal,
+          },
+          feature: mockResult.debugContext.detectedFeature,
+          conversationState: mockResult.debugContext.conversationState,
+          systemPrompt: {
+            mode,
+            fullPrompt: systemPrompt,
+            promptLength: systemPrompt.length,
+          },
+          toolCalls: mockResult.debugContext.toolCalls,
+          timing: {
+            requestedAt,
+            respondedAt,
+            durationMs: new Date(respondedAt).getTime() - new Date(requestedAt).getTime(),
+          },
+          apiDetails: {
+            model: 'mock',
+            isMockMode: true,
+          },
+        };
       } else if (!apiKeyConfig.hasKey) {
         // No API key and not in demo mode (or no active pro)
         throw new Error('No API key configured. Please add your Anthropic API key to use the chat.');
@@ -204,14 +243,41 @@ export function ChatProvider({ children }: ChatProviderProps) {
 
         // Send to Anthropic
         response = await sendToAnthropic(conversationHistory, systemPrompt);
+
+        // Build debug context for real API call
+        const respondedAt = new Date().toISOString();
+        debugContext = {
+          pro: activePro ? {
+            id: activePro.id,
+            companyName: activePro.companyName,
+            ownerName: activePro.ownerName,
+            plan: activePro.plan,
+            goal: activePro.goal,
+          } : undefined,
+          systemPrompt: {
+            mode,
+            fullPrompt: systemPrompt,
+            promptLength: systemPrompt.length,
+          },
+          timing: {
+            requestedAt,
+            respondedAt,
+            durationMs: new Date(respondedAt).getTime() - new Date(requestedAt).getTime(),
+          },
+          apiDetails: {
+            model: 'claude-3-5-sonnet-20241022',
+            isMockMode: false,
+          },
+        };
       }
 
-      // Add assistant message
+      // Add assistant message with debug context
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
         content: response,
         timestamp: new Date().toISOString(),
+        debugContext,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);

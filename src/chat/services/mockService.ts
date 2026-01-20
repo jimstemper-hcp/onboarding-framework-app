@@ -7,7 +7,7 @@
 // =============================================================================
 
 import type { Feature, ProAccount, FeatureId, AdoptionStage, StageContext } from '../../types';
-import type { FileAttachment } from '../types';
+import type { FileAttachment, DebugConversationState, DebugFeatureInfo, DebugToolCall } from '../types';
 
 // -----------------------------------------------------------------------------
 // TYPES
@@ -74,6 +74,18 @@ let conversationState: ConversationState = {
   flowState: 'initial',
   createdItems: [],
 };
+
+/**
+ * Result from mock response generation including debug context.
+ */
+export interface MockResponseResult {
+  content: string;
+  debugContext: {
+    conversationState: DebugConversationState;
+    detectedFeature?: DebugFeatureInfo;
+    toolCalls?: DebugToolCall[];
+  };
+}
 
 /**
  * Reset conversation state (useful for testing or starting fresh).
@@ -1521,14 +1533,34 @@ function isInvoiceUploadIntent(message: string): boolean {
  * This simulates the AI behavior without requiring an API key.
  * Supports multi-turn conversational flows with sample/real data options.
  * Supports image attachments for invoice extraction flow.
+ * Returns both the response content and debug context for inspection.
  */
 export async function generateMockResponse(
   message: string,
   context: MockContext,
   attachments?: FileAttachment[]
-): Promise<string> {
+): Promise<MockResponseResult> {
   const { activePro, features, getStageContext } = context;
   const proName = activePro.ownerName.split(' ')[0];
+
+  // Track detected feature for debug context
+  let detectedFeatureInfo: DebugFeatureInfo | undefined;
+  let toolCalls: DebugToolCall[] = [];
+
+  // Helper to build result with debug context
+  const buildResult = (content: string): MockResponseResult => ({
+    content,
+    debugContext: {
+      conversationState: {
+        flowState: conversationState.flowState,
+        currentFeature: conversationState.currentFeature,
+        currentStage: conversationState.currentStage,
+        dataChoice: conversationState.dataChoice,
+      },
+      detectedFeature: detectedFeatureInfo,
+      toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+    },
+  });
 
   // Simulate a brief delay to feel more natural
   await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
@@ -1541,6 +1573,8 @@ export async function generateMockResponse(
     );
 
     if (hasImageAttachment) {
+      toolCalls.push({ name: 'image_analysis', parameters: { attachmentCount: attachments.length } });
+
       // If user mentions invoice/convert/etc OR we're in invoicing context, extract invoice
       const lowerMessage = message.toLowerCase();
       const isInvoiceRelated = isInvoiceUploadIntent(message) ||
@@ -1551,51 +1585,64 @@ export async function generateMockResponse(
         message.trim() === ''; // Just uploaded an image with no text
 
       if (isInvoiceRelated || message.trim() === '') {
-        return handleInvoiceImageUpload(proName);
+        return buildResult(handleInvoiceImageUpload(proName));
       }
 
       // For other image uploads, acknowledge and ask about intent
-      return `I see you've uploaded an image. Would you like me to:\n\n` +
+      return buildResult(`I see you've uploaded an image. Would you like me to:\n\n` +
         `1. **Extract invoice details** - If this is an invoice or receipt\n` +
         `2. **Something else** - Let me know what you need help with\n\n` +
-        `Just let me know!`;
+        `Just let me know!`);
     }
   }
 
   // Check conversation state for pending flows
   if (conversationState.flowState === 'awaiting_invoice_confirmation') {
-    return handleInvoiceConfirmation(message, context);
+    if (conversationState.extractedInvoice) {
+      toolCalls.push({ name: 'invoice_confirmation_flow', parameters: { action: 'confirm' } });
+    }
+    return buildResult(handleInvoiceConfirmation(message, context));
   }
 
   if (conversationState.flowState === 'awaiting_confirmation') {
-    return handleConfirmationResponse(message, context);
+    toolCalls.push({ name: 'confirmation_flow', parameters: { pending: conversationState.pendingAction?.toolName } });
+    return buildResult(handleConfirmationResponse(message, context));
   }
 
   if (conversationState.flowState === 'awaiting_choice') {
-    return handleChoiceResponse(message, context);
+    return buildResult(handleChoiceResponse(message, context));
   }
 
   if (conversationState.flowState === 'awaiting_input') {
-    return handleInputResponse(message, context);
+    return buildResult(handleInputResponse(message, context));
   }
 
   // Check if user is asking about uploading an invoice (without attachment)
   if (isInvoiceUploadIntent(message)) {
-    return `I'd be happy to help convert your invoice! Upload your invoice image using the 📎 button and I'll extract all the details for you.\n\n` +
+    return buildResult(`I'd be happy to help convert your invoice! Upload your invoice image using the 📎 button and I'll extract all the details for you.\n\n` +
       `I can read:\n` +
       `- Photos of paper invoices\n` +
       `- Screenshots of digital invoices\n` +
       `- Scanned documents\n\n` +
-      `Once you upload the image, I'll extract the customer info, line items, and totals automatically.`;
+      `Once you upload the image, I'll extract the customer info, line items, and totals automatically.`);
   }
 
   // Try to detect a feature mention
   const detectedFeature = detectFeature(message, features, activePro, getStageContext);
 
   if (detectedFeature) {
-    return generateFeatureResponse(detectedFeature, message, context);
+    // Capture detected feature info for debug context
+    const status = activePro.featureStatus[detectedFeature.feature.id];
+    detectedFeatureInfo = {
+      id: detectedFeature.feature.id,
+      name: detectedFeature.feature.name,
+      stage: detectedFeature.stage,
+      completedTasks: status?.completedTasks.length || 0,
+      usageCount: status?.usageCount || 0,
+    };
+    return buildResult(generateFeatureResponse(detectedFeature, message, context));
   }
 
   // Fall back to general response
-  return generateGeneralResponse(message, activePro);
+  return buildResult(generateGeneralResponse(message, activePro));
 }

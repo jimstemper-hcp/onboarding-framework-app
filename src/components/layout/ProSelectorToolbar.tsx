@@ -41,7 +41,7 @@ export function ProSelectorToolbar() {
     handleClose();
   };
 
-  const handleEditPro = (event: React.MouseEvent, proId: string) => {
+  const handleEditPro = (event: React.MouseEvent) => {
     event.stopPropagation();
     handleClose();
     // Navigate to sample-pros view
@@ -186,7 +186,7 @@ export function ProSelectorToolbar() {
                 <Tooltip title="Edit pro configuration" arrow>
                   <IconButton
                     size="small"
-                    onClick={(e) => handleEditPro(e, pro.id)}
+                    onClick={(e) => handleEditPro(e)}
                     sx={{
                       opacity: 0.5,
                       '&:hover': {

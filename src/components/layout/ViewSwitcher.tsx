@@ -1,4 +1,4 @@
-import { Tabs, Tab, Box, Divider } from '@mui/material';
+import { Tab, Box, Divider } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import PersonIcon from '@mui/icons-material/Person';
@@ -67,10 +67,6 @@ const categoryColors: Record<ViewCategory, { bg: string; border: string; text: s
 
 export function ViewSwitcher() {
   const { currentView, setCurrentView } = useOnboarding();
-
-  const handleChange = (_event: React.SyntheticEvent, newValue: ViewType) => {
-    setCurrentView(newValue);
-  };
 
   // Group views by category for visual separation
   const proFacingViews = views.filter(v => v.category === 'pro-facing');
