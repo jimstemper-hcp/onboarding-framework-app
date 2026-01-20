@@ -589,6 +589,7 @@ export interface ProAccount {
   plan: PlanTier;
   goal: ProGoal;  // Maps to company_goal in Pro Data
   createdAt: string;
+  currentWeek: 1 | 2 | 3 | 4;  // Weeks since enrolling in paid plan (1-4)
   featureStatus: Record<FeatureId, FeatureStatus>;
 
   // Pro Data (Pro Facets) fields

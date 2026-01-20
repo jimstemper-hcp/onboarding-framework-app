@@ -54,6 +54,7 @@ export const mockPros: ProAccount[] = [
     plan: 'essentials',
     goal: 'growth',
     createdAt: '2024-01-10',
+    currentWeek: 3,  // 3 weeks into onboarding
 
     // Pro Data (Pro Facets) fields
     billingStatus: 'enrolled',
@@ -132,6 +133,7 @@ export const mockPros: ProAccount[] = [
     plan: 'max',
     goal: 'efficiency',
     createdAt: '2024-02-01',
+    currentWeek: 1,  // Just started onboarding
 
     // Pro Data (Pro Facets) fields
     billingStatus: 'trial',
@@ -211,6 +213,7 @@ export const mockPros: ProAccount[] = [
     plan: 'max',
     goal: 'growth',
     createdAt: '2023-06-15',
+    currentWeek: 4,  // Completed onboarding journey
 
     // Pro Data (Pro Facets) fields
     billingStatus: 'enrolled',
@@ -334,6 +337,7 @@ export const mockPros: ProAccount[] = [
     plan: 'basic',
     goal: 'efficiency',
     createdAt: '2024-01-20',
+    currentWeek: 2,  // Second week of onboarding
 
     // Pro Data (Pro Facets) fields
     billingStatus: 'enrolled',

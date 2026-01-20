@@ -12,6 +12,9 @@ import {
   Stack,
   Avatar,
   alpha,
+  ToggleButton,
+  ToggleButtonGroup,
+  Paper,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -23,6 +26,9 @@ import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import FlagRoundedIcon from '@mui/icons-material/FlagRounded';
 import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
 import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewWeekIcon from '@mui/icons-material/ViewWeek';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import * as MuiIcons from '@mui/icons-material';
 import { useState } from 'react';
 import { useOnboarding, useActivePro } from '../../context';
@@ -61,6 +67,50 @@ const POINTS = {
   FEATURE_ATTACHED: 50,
   FEATURE_ACTIVATED: 100,
   FEATURE_ENGAGED: 150,
+};
+
+// =============================================================================
+// PORTAL VIEW TYPES
+// =============================================================================
+
+type PortalViewMode = 'journey' | 'weekly';
+
+type WeekNumber = 1 | 2 | 3 | 4;
+
+interface WeeklyPlanItem {
+  itemId: string;
+  order: number;
+}
+
+// =============================================================================
+// SAMPLE WEEKLY PLAN (In production, this would come from the backend/context)
+// =============================================================================
+
+const sampleWeeklyPlan: Record<WeekNumber, WeeklyPlanItem[]> = {
+  1: [
+    { itemId: 'create-first-customer', order: 0 },
+    { itemId: 'company-profile', order: 1 },
+    { itemId: 'add-company-logo', order: 2 },
+    { itemId: 'add-new-customers', order: 3 },
+  ],
+  2: [
+    { itemId: 'create-first-estimate', order: 0 },
+    { itemId: 'create-first-job', order: 1 },
+    { itemId: 'send-first-invoice', order: 2 },
+    { itemId: 'online-booking', order: 3 },
+  ],
+  3: [
+    { itemId: 'connect-payment-processor', order: 0 },
+    { itemId: 'enable-appointment-reminders', order: 1 },
+    { itemId: 'enable-review-requests', order: 2 },
+    { itemId: 'add-employees', order: 3 },
+  ],
+  4: [
+    { itemId: 'pricebook', order: 0 },
+    { itemId: 'service-plans-settings', order: 1 },
+    { itemId: 'time-tracking', order: 2 },
+    { itemId: 'custom-reports', order: 3 },
+  ],
 };
 
 // Get all onboarding items for a feature across stages
@@ -775,18 +825,418 @@ function TimelineMilestone({
 }
 
 // =============================================================================
+// WEEKLY JOURNEY VIEW
+// =============================================================================
+// Focuses on current week's tasks with catch-up section for incomplete prior items.
+// =============================================================================
+
+interface WeeklyJourneyViewProps {
+  currentWeek: WeekNumber;
+  completedItemIds: string[];
+  onToggleTask: (itemId: string) => void;
+}
+
+function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask }: WeeklyJourneyViewProps) {
+  const totalWeeks = 4;
+  const weekColor = palette.primary;
+
+  const weekDescriptions: Record<WeekNumber, string> = {
+    1: 'Set up your account basics',
+    2: 'Create your first jobs & invoices',
+    3: 'Enable time-saving automations',
+    4: 'Optimize your business operations',
+  };
+
+  // Get current week's items
+  const currentWeekItems = sampleWeeklyPlan[currentWeek].sort((a, b) => a.order - b.order);
+  const currentWeekCompletedCount = currentWeekItems.filter(item => completedItemIds.includes(item.itemId)).length;
+  const currentWeekProgress = currentWeekItems.length > 0 ? (currentWeekCompletedCount / currentWeekItems.length) * 100 : 0;
+
+  // Get incomplete items from prior weeks
+  const incompleteFromPriorWeeks: Array<{ itemId: string; fromWeek: WeekNumber }> = [];
+  for (let week = 1 as WeekNumber; week < currentWeek; week++) {
+    const weekItems = sampleWeeklyPlan[week];
+    for (const item of weekItems) {
+      if (!completedItemIds.includes(item.itemId)) {
+        incompleteFromPriorWeeks.push({ itemId: item.itemId, fromWeek: week });
+      }
+    }
+  }
+
+  // Render a task item
+  const renderTaskItem = (
+    itemId: string,
+    index: number,
+    totalItems: number,
+    showWeekBadge?: WeekNumber
+  ) => {
+    const itemDef = allOnboardingItems.find(i => i.id === itemId);
+    const isCompleted = completedItemIds.includes(itemId);
+
+    if (!itemDef) {
+      return (
+        <Box
+          key={itemId}
+          sx={{
+            px: 3,
+            py: 2,
+            borderBottom: index < totalItems - 1 ? '1px solid' : 'none',
+            borderColor: alpha(palette.slate, 0.08),
+          }}
+        >
+          <Typography variant="body2" color={palette.text.muted}>
+            Task: {itemId}
+          </Typography>
+        </Box>
+      );
+    }
+
+    return (
+      <Box
+        key={itemId}
+        sx={{
+          px: 3,
+          py: 2,
+          borderBottom: index < totalItems - 1 ? '1px solid' : 'none',
+          borderColor: alpha(palette.slate, 0.08),
+          cursor: 'pointer',
+          transition: 'background-color 0.15s ease',
+          '&:hover': {
+            bgcolor: alpha(palette.primary, 0.03),
+          },
+        }}
+        onClick={() => onToggleTask(itemId)}
+      >
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Checkbox
+            checked={isCompleted}
+            onChange={() => onToggleTask(itemId)}
+            icon={<CheckCircleOutlinedIcon />}
+            checkedIcon={<CheckCircleIcon />}
+            sx={{
+              p: 0,
+              color: palette.slate,
+              '&.Mui-checked': { color: palette.success },
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <Box sx={{ flex: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography
+                variant="body2"
+                fontWeight={500}
+                sx={{
+                  textDecoration: isCompleted ? 'line-through' : 'none',
+                  color: isCompleted ? palette.text.muted : palette.text.primary,
+                }}
+              >
+                {itemDef.title}
+              </Typography>
+              {showWeekBadge && (
+                <Chip
+                  label={`Week ${showWeekBadge}`}
+                  size="small"
+                  sx={{
+                    height: 18,
+                    fontSize: '0.6rem',
+                    fontWeight: 600,
+                    bgcolor: alpha(palette.warning, 0.15),
+                    color: palette.warning,
+                  }}
+                />
+              )}
+            </Stack>
+            {itemDef.estimatedMinutes && (
+              <Typography variant="caption" color={palette.text.muted}>
+                ~{itemDef.estimatedMinutes} min
+              </Typography>
+            )}
+          </Box>
+          {isCompleted && (
+            <Chip
+              label={`+${POINTS.TASK_COMPLETE}`}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: '0.65rem',
+                fontWeight: 600,
+                bgcolor: alpha(palette.success, 0.1),
+                color: palette.success,
+              }}
+            />
+          )}
+        </Stack>
+      </Box>
+    );
+  };
+
+  return (
+    <Box>
+      {/* Week Progress Header */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 3,
+          mb: 3,
+          borderRadius: 3,
+          bgcolor: alpha(weekColor, 0.03),
+          border: '1px solid',
+          borderColor: alpha(weekColor, 0.15),
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar
+              sx={{
+                width: 48,
+                height: 48,
+                bgcolor: weekColor,
+                color: 'white',
+                fontWeight: 700,
+                fontSize: '1.25rem',
+              }}
+            >
+              {currentWeek}
+            </Avatar>
+            <Box>
+              <Typography variant="h6" fontWeight={600} color={palette.text.primary}>
+                Week {currentWeek} of {totalWeeks}
+              </Typography>
+              <Typography variant="body2" color={palette.text.secondary}>
+                {weekDescriptions[currentWeek]}
+              </Typography>
+            </Box>
+          </Stack>
+
+          {/* Week indicator dots */}
+          <Stack direction="row" spacing={1} alignItems="center">
+            {([1, 2, 3, 4] as WeekNumber[]).map(week => (
+              <Box
+                key={week}
+                sx={{
+                  width: week === currentWeek ? 28 : 10,
+                  height: 10,
+                  borderRadius: 5,
+                  bgcolor: week < currentWeek
+                    ? palette.success
+                    : week === currentWeek
+                      ? weekColor
+                      : alpha(palette.slate, 0.2),
+                  transition: 'all 0.2s ease',
+                }}
+              />
+            ))}
+          </Stack>
+        </Stack>
+
+        {/* Overall week progress */}
+        <Box sx={{ mt: 2 }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+            <Typography variant="caption" fontWeight={500} color={palette.text.secondary}>
+              This week's progress
+            </Typography>
+            <Typography variant="caption" fontWeight={600} color={palette.text.primary}>
+              {currentWeekCompletedCount}/{currentWeekItems.length} tasks
+            </Typography>
+          </Stack>
+          <LinearProgress
+            variant="determinate"
+            value={currentWeekProgress}
+            sx={{
+              height: 8,
+              borderRadius: 4,
+              bgcolor: alpha(palette.slate, 0.1),
+              '& .MuiLinearProgress-bar': {
+                bgcolor: weekColor,
+                borderRadius: 4,
+              },
+            }}
+          />
+        </Box>
+      </Paper>
+
+      {/* Catch-up Section - Incomplete items from prior weeks */}
+      {incompleteFromPriorWeeks.length > 0 && (
+        <Card
+          elevation={0}
+          sx={{
+            mb: 3,
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: alpha(palette.warning, 0.3),
+            bgcolor: alpha(palette.warning, 0.02),
+            overflow: 'hidden',
+          }}
+        >
+          <Box
+            sx={{
+              px: 3,
+              py: 2,
+              borderBottom: '1px solid',
+              borderColor: alpha(palette.warning, 0.15),
+              bgcolor: alpha(palette.warning, 0.05),
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: alpha(palette.warning, 0.15),
+                  color: palette.warning,
+                }}
+              >
+                <FlagRoundedIcon sx={{ fontSize: 18 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} color={palette.text.primary}>
+                  Catch Up ({incompleteFromPriorWeeks.length})
+                </Typography>
+                <Typography variant="caption" color={palette.text.secondary}>
+                  Complete these items from previous weeks
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
+          <CardContent sx={{ p: 0 }}>
+            {incompleteFromPriorWeeks.map((item, index) =>
+              renderTaskItem(item.itemId, index, incompleteFromPriorWeeks.length, item.fromWeek)
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Current Week's Tasks */}
+      <Card
+        elevation={0}
+        sx={{
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: alpha(weekColor, 0.2),
+          overflow: 'hidden',
+        }}
+      >
+        <Box
+          sx={{
+            px: 3,
+            py: 2,
+            borderBottom: '1px solid',
+            borderColor: alpha(palette.slate, 0.1),
+            bgcolor: alpha(weekColor, 0.03),
+          }}
+        >
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
+                  bgcolor: alpha(weekColor, 0.15),
+                  color: weekColor,
+                }}
+              >
+                <CalendarTodayIcon sx={{ fontSize: 16 }} />
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} color={palette.text.primary}>
+                  This Week's Tasks
+                </Typography>
+                <Typography variant="caption" color={palette.text.secondary}>
+                  Focus on completing these {currentWeekItems.length} items
+                </Typography>
+              </Box>
+            </Stack>
+            {currentWeekCompletedCount === currentWeekItems.length && currentWeekItems.length > 0 && (
+              <Chip
+                icon={<CheckCircleIcon sx={{ fontSize: '14px !important' }} />}
+                label="All done!"
+                size="small"
+                sx={{
+                  height: 24,
+                  fontWeight: 600,
+                  fontSize: '0.7rem',
+                  bgcolor: alpha(palette.success, 0.15),
+                  color: palette.success,
+                  '& .MuiChip-icon': { color: palette.success },
+                }}
+              />
+            )}
+          </Stack>
+        </Box>
+        <CardContent sx={{ p: 0 }}>
+          {currentWeekItems.length === 0 ? (
+            <Box sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="body2" color={palette.text.muted}>
+                No tasks assigned for this week
+              </Typography>
+            </Box>
+          ) : (
+            currentWeekItems.map((item, index) =>
+              renderTaskItem(item.itemId, index, currentWeekItems.length)
+            )
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Next Week Preview (if not on final week) */}
+      {currentWeek < 4 && (
+        <Paper
+          elevation={0}
+          sx={{
+            mt: 3,
+            p: 2.5,
+            borderRadius: 2,
+            bgcolor: palette.bg.subtle,
+            border: '1px dashed',
+            borderColor: alpha(palette.slate, 0.2),
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Avatar
+              sx={{
+                width: 36,
+                height: 36,
+                bgcolor: alpha(palette.slate, 0.1),
+                color: palette.slate,
+                fontSize: '0.875rem',
+                fontWeight: 600,
+              }}
+            >
+              {currentWeek + 1}
+            </Avatar>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body2" fontWeight={500} color={palette.text.secondary}>
+                Coming up: Week {currentWeek + 1}
+              </Typography>
+              <Typography variant="caption" color={palette.text.muted}>
+                {weekDescriptions[(currentWeek + 1) as WeekNumber]} • {sampleWeeklyPlan[(currentWeek + 1) as WeekNumber].length} tasks
+              </Typography>
+            </Box>
+          </Stack>
+        </Paper>
+      )}
+    </Box>
+  );
+}
+
+// =============================================================================
 // MAIN VIEW
 // =============================================================================
 
 export function PortalView() {
   const { features, completeTask, uncompleteTask } = useOnboarding();
   const activePro = useActivePro();
+  const [viewMode, setViewMode] = useState<PortalViewMode>('journey');
 
   if (!activePro) {
     return <Typography>No pro selected</Typography>;
   }
 
   const streak = calculateStreak(activePro);
+
+  // Collect all completed task IDs across all features for weekly view
+  const allCompletedItemIds = Object.values(activePro.featureStatus)
+    .flatMap(status => status.completedTasks);
 
   const handleToggleTask = (featureId: string, taskId: string) => {
     const status = activePro.featureStatus[featureId as keyof typeof activePro.featureStatus];
@@ -795,6 +1245,27 @@ export function PortalView() {
       uncompleteTask(activePro.id, featureId as keyof typeof activePro.featureStatus, taskId);
     } else {
       completeTask(activePro.id, featureId as keyof typeof activePro.featureStatus, taskId);
+    }
+  };
+
+  // Handler for weekly view task toggle (finds the feature containing the task)
+  const handleWeeklyTaskToggle = (itemId: string) => {
+    // Find which feature this item belongs to by checking all feature's onboarding items
+    for (const feature of features) {
+      const allItems = getFeatureOnboardingItems(feature);
+      if (allItems.some(item => item.itemId === itemId)) {
+        handleToggleTask(feature.id, itemId);
+        return;
+      }
+    }
+    // If not found in features, it might be a general onboarding item
+    // For now, just toggle it in the first feature that has it in completedTasks
+    for (const featureId of Object.keys(activePro.featureStatus)) {
+      const status = activePro.featureStatus[featureId as keyof typeof activePro.featureStatus];
+      if (status && (status.completedTasks.includes(itemId) || status.stage !== 'not_attached')) {
+        handleToggleTask(featureId, itemId);
+        return;
+      }
     }
   };
 
@@ -839,72 +1310,129 @@ export function PortalView() {
     <Box sx={{ maxWidth: 720, mx: 'auto' }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, color: palette.text.primary, letterSpacing: '-0.5px' }}>
-          {goalTitle}
-        </Typography>
-        <Typography variant="body1" sx={{ color: palette.text.secondary, mt: 0.5 }}>
-          Your personalized onboarding journey
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: palette.text.primary, letterSpacing: '-0.5px' }}>
+              {goalTitle}
+            </Typography>
+            <Typography variant="body1" sx={{ color: palette.text.secondary, mt: 0.5 }}>
+              {viewMode === 'journey'
+                ? 'Your personalized onboarding journey'
+                : `Week ${activePro.currentWeek} of your onboarding plan`
+              }
+            </Typography>
+          </Box>
+
+          {/* View Mode Toggle */}
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(_, newMode) => newMode && setViewMode(newMode)}
+            size="small"
+            sx={{
+              '& .MuiToggleButton-root': {
+                textTransform: 'none',
+                px: 2,
+                py: 0.75,
+                borderColor: alpha(palette.slate, 0.2),
+                '&.Mui-selected': {
+                  bgcolor: alpha(palette.primary, 0.08),
+                  color: palette.primary,
+                  borderColor: alpha(palette.primary, 0.3),
+                },
+              },
+            }}
+          >
+            <ToggleButton value="journey">
+              <ViewListIcon sx={{ fontSize: 18, mr: 0.75 }} />
+              Journey
+            </ToggleButton>
+            <ToggleButton value="weekly">
+              <ViewWeekIcon sx={{ fontSize: 18, mr: 0.75 }} />
+              Weekly
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
       </Box>
 
       {/* Progress Summary */}
       <ProgressSummaryCard pro={activePro} features={features} streak={streak} />
 
-      {/* Timeline Section Header */}
-      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-        <FlagRoundedIcon sx={{ color: palette.primary, fontSize: 22 }} />
-        <Typography variant="h6" fontWeight={600}>
-          Your Onboarding Plan
-        </Typography>
-      </Stack>
+      {/* Content based on view mode */}
+      {viewMode === 'journey' ? (
+        <>
+          {/* Timeline Section Header */}
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+            <FlagRoundedIcon sx={{ color: palette.primary, fontSize: 22 }} />
+            <Typography variant="h6" fontWeight={600}>
+              Your Onboarding Plan
+            </Typography>
+          </Stack>
 
-      {/* Jump to current */}
-      {activeIndex > 0 && (
-        <Button
-          size="small"
-          startIcon={<ArrowDownwardRoundedIcon />}
-          onClick={() => {
-            document.getElementById(`milestone-${activeIndex}`)?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-            });
-          }}
-          sx={{
-            mb: 2,
-            color: palette.primary,
-            textTransform: 'none',
-            fontWeight: 500,
-          }}
-        >
-          Jump to current milestone
-        </Button>
+          {/* Jump to current */}
+          {activeIndex > 0 && (
+            <Button
+              size="small"
+              startIcon={<ArrowDownwardRoundedIcon />}
+              onClick={() => {
+                document.getElementById(`milestone-${activeIndex}`)?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                });
+              }}
+              sx={{
+                mb: 2,
+                color: palette.primary,
+                textTransform: 'none',
+                fontWeight: 500,
+              }}
+            >
+              Jump to current milestone
+            </Button>
+          )}
+
+          {/* Timeline */}
+          <Box sx={{ pl: 1 }}>
+            {timelineFeatures.map((feature, index) => {
+              const status = activePro.featureStatus[feature.id];
+              const milestoneStatus = getMilestoneStatus(status, getRequiredItems(feature));
+              const isCurrent = index === activeIndex;
+
+              return (
+                <Box key={feature.id} id={`milestone-${index}`}>
+                  <TimelineMilestone
+                    feature={feature}
+                    status={status}
+                    milestoneStatus={milestoneStatus}
+                    isFirst={index === 0}
+                    isLast={index === timelineFeatures.length - 1}
+                    isCurrent={isCurrent}
+                    onToggleTask={(taskId) => handleToggleTask(feature.id, taskId)}
+                  />
+                </Box>
+              );
+            })}
+          </Box>
+        </>
+      ) : (
+        /* Weekly Planning View */
+        <>
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
+            <CalendarTodayIcon sx={{ color: palette.primary, fontSize: 22 }} />
+            <Typography variant="h6" fontWeight={600}>
+              Weekly Onboarding Plan
+            </Typography>
+          </Stack>
+          <WeeklyJourneyView
+            currentWeek={activePro.currentWeek}
+            completedItemIds={allCompletedItemIds}
+            onToggleTask={handleWeeklyTaskToggle}
+          />
+        </>
       )}
 
-      {/* Timeline */}
-      <Box sx={{ pl: 1 }}>
-        {timelineFeatures.map((feature, index) => {
-          const status = activePro.featureStatus[feature.id];
-          const milestoneStatus = getMilestoneStatus(status, getRequiredItems(feature));
-          const isCurrent = index === activeIndex;
-
-          return (
-            <Box key={feature.id} id={`milestone-${index}`}>
-              <TimelineMilestone
-                feature={feature}
-                status={status}
-                milestoneStatus={milestoneStatus}
-                isFirst={index === 0}
-                isLast={index === timelineFeatures.length - 1}
-                isCurrent={isCurrent}
-                onToggleTask={(taskId) => handleToggleTask(feature.id, taskId)}
-              />
-            </Box>
-          );
-        })}
-      </Box>
-
-      {/* Completion message */}
-      {activeIndex === -1 && (
+      {/* Completion message - only show in journey mode */}
+      {viewMode === 'journey' && activeIndex === -1 && (
         <Card
           elevation={0}
           sx={{
