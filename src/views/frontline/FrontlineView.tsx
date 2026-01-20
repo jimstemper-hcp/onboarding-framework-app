@@ -1220,7 +1220,25 @@ function WeeklyPlanningView({
   completedItemIds,
 }: WeeklyPlanningViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedWeek, setExpandedWeek] = useState<WeekNumber | null>(1);
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<WeekNumber>>(new Set([1]));
+  const [filters, setFilters] = useState({
+    type: 'all' as 'all' | 'rep_facing' | 'in_product',
+    category: 'all' as 'all' | OnboardingCategoryId,
+    completion: 'all' as 'all' | 'completed' | 'incomplete',
+  });
+
+  // Toggle week expansion
+  const toggleWeekExpanded = (week: WeekNumber) => {
+    setExpandedWeeks(prev => {
+      const next = new Set(prev);
+      if (next.has(week)) {
+        next.delete(week);
+      } else {
+        next.add(week);
+      }
+      return next;
+    });
+  };
 
   // Get all items currently assigned to any week
   const assignedItemIds = new Set([
@@ -1236,7 +1254,20 @@ function WeeklyPlanningView({
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.labels?.some(l => l.toLowerCase().includes(searchQuery.toLowerCase()));
-    return !assignedItemIds.has(item.id) && matchesSearch;
+
+    // Type filter
+    const matchesType = filters.type === 'all' || item.type === filters.type;
+
+    // Category filter
+    const matchesCategory = filters.category === 'all' || item.category === filters.category;
+
+    // Completion filter
+    const isCompleted = completedItemIds.includes(item.id);
+    const matchesCompletion = filters.completion === 'all' ||
+      (filters.completion === 'completed' && isCompleted) ||
+      (filters.completion === 'incomplete' && !isCompleted);
+
+    return !assignedItemIds.has(item.id) && matchesSearch && matchesType && matchesCategory && matchesCompletion;
   });
 
   // Helper to get week key
@@ -1288,58 +1319,64 @@ function WeeklyPlanningView({
     }
   };
 
-  // Render a single week column
-  const renderWeekColumn = (week: WeekNumber) => {
+  // Week colors
+  const weekColors: Record<WeekNumber, string> = {
+    1: palette.primary,
+    2: palette.secondary,
+    3: palette.warning,
+    4: palette.success,
+  };
+
+  // Render a single week accordion
+  const renderWeekAccordion = (week: WeekNumber) => {
     const weekKey = getWeekKey(week);
     const items = weeklyPlan[weekKey].sort((a, b) => a.order - b.order);
-    const weekColors = {
-      1: palette.primary,
-      2: palette.secondary,
-      3: palette.warning,
-      4: palette.success,
-    };
+    const completedCount = items.filter(i => completedItemIds.includes(i.itemId)).length;
+    const isExpanded = expandedWeeks.has(week);
     const color = weekColors[week];
 
     return (
-      <Paper
+      <Accordion
         key={week}
-        variant="outlined"
+        expanded={isExpanded}
+        onChange={() => toggleWeekExpanded(week)}
         sx={{
-          flex: 1,
-          minWidth: 280,
-          maxWidth: 320,
-          display: 'flex',
-          flexDirection: 'column',
           bgcolor: 'white',
+          '&:before': { display: 'none' },
+          boxShadow: 'none',
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: '8px !important',
+          '&.Mui-expanded': {
+            margin: 0,
+          },
         }}
       >
-        {/* Week Header */}
-        <Box
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
           sx={{
-            p: 2,
-            borderBottom: 1,
-            borderColor: 'divider',
             bgcolor: alpha(color, 0.05),
+            borderRadius: isExpanded ? '8px 8px 0 0' : '8px',
+            minHeight: 56,
+            '&.Mui-expanded': {
+              minHeight: 56,
+            },
           }}
         >
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Avatar
-                sx={{
-                  width: 28,
-                  height: 28,
-                  bgcolor: alpha(color, 0.15),
-                  color: color,
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                }}
-              >
-                {week}
-              </Avatar>
-              <Typography variant="subtitle2" fontWeight={600}>
-                Week {week}
-              </Typography>
-            </Stack>
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', pr: 1 }}>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: alpha(color, 0.15),
+                color: color,
+                fontSize: '0.95rem',
+                fontWeight: 600,
+              }}
+            >
+              {week}
+            </Avatar>
+            <Typography fontWeight={600}>Week {week}</Typography>
             <Chip
               label={`${items.length} items`}
               size="small"
@@ -1350,25 +1387,36 @@ function WeeklyPlanningView({
                 color: color,
               }}
             />
+            {items.length > 0 && (
+              <Chip
+                icon={completedCount === items.length ? <CheckCircleIcon sx={{ fontSize: '14px !important' }} /> : undefined}
+                label={`${completedCount}/${items.length} done`}
+                size="small"
+                sx={{
+                  height: 22,
+                  fontSize: '0.7rem',
+                  bgcolor: completedCount === items.length ? alpha(palette.success, 0.1) : alpha(palette.grey[400], 0.1),
+                  color: completedCount === items.length ? palette.success : palette.grey[600],
+                  '& .MuiChip-icon': { ml: 0.5 },
+                }}
+              />
+            )}
           </Stack>
-        </Box>
-
-        {/* Week Items */}
-        <Box sx={{ flex: 1, overflow: 'auto', p: 1, minHeight: 200, maxHeight: 400 }}>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 2 }}>
           {items.length === 0 ? (
             <Box
               sx={{
-                height: '100%',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 border: '2px dashed',
                 borderColor: palette.grey[200],
                 borderRadius: 1,
-                m: 1,
+                py: 3,
               }}
             >
-              <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ p: 2 }}>
+              <Typography variant="body2" color="text.secondary" textAlign="center">
                 No items assigned
                 <br />
                 <Typography variant="caption" color="text.secondary">
@@ -1403,7 +1451,7 @@ function WeeklyPlanningView({
                       <Stack spacing={0} sx={{ pt: 0.5 }}>
                         <IconButton
                           size="small"
-                          onClick={() => handleMoveUp(planItem.itemId, week)}
+                          onClick={(e) => { e.stopPropagation(); handleMoveUp(planItem.itemId, week); }}
                           disabled={index === 0}
                           sx={{ p: 0.25 }}
                         >
@@ -1411,7 +1459,7 @@ function WeeklyPlanningView({
                         </IconButton>
                         <IconButton
                           size="small"
-                          onClick={() => handleMoveDown(planItem.itemId, week)}
+                          onClick={(e) => { e.stopPropagation(); handleMoveDown(planItem.itemId, week); }}
                           disabled={index === items.length - 1}
                           sx={{ p: 0.25 }}
                         >
@@ -1465,7 +1513,7 @@ function WeeklyPlanningView({
                       {/* Remove button */}
                       <IconButton
                         size="small"
-                        onClick={() => handleRemoveFromWeek(planItem.itemId, week)}
+                        onClick={(e) => { e.stopPropagation(); handleRemoveFromWeek(planItem.itemId, week); }}
                         sx={{
                           p: 0.5,
                           color: palette.grey[400],
@@ -1480,27 +1528,20 @@ function WeeklyPlanningView({
               })}
             </Stack>
           )}
-        </Box>
-      </Paper>
+        </AccordionDetails>
+      </Accordion>
     );
   };
 
   return (
     <Box>
-      {/* Week Columns */}
+      {/* Week Accordions */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5 }}>
           Weekly Schedule
         </Typography>
-        <Stack
-          direction="row"
-          spacing={2}
-          sx={{
-            overflowX: 'auto',
-            pb: 1,
-          }}
-        >
-          {([1, 2, 3, 4] as WeekNumber[]).map(week => renderWeekColumn(week))}
+        <Stack direction="column" spacing={2}>
+          {([1, 2, 3, 4] as WeekNumber[]).map(week => renderWeekAccordion(week))}
         </Stack>
       </Box>
 
@@ -1526,110 +1567,166 @@ function WeeklyPlanningView({
           />
         </Stack>
 
-        {/* Items grouped by category */}
+        {/* Filters */}
+        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
+          <Typography variant="body2" fontWeight={500} color="text.secondary">
+            Filters:
+          </Typography>
+
+          {/* Type Filter */}
+          <ToggleButtonGroup
+            value={filters.type}
+            exclusive
+            onChange={(_, v) => v && setFilters(f => ({...f, type: v}))}
+            size="small"
+            sx={{ '& .MuiToggleButton-root': { py: 0.5, px: 1.5, fontSize: '0.75rem' } }}
+          >
+            <ToggleButton value="all">All</ToggleButton>
+            <ToggleButton value="rep_facing">Rep</ToggleButton>
+            <ToggleButton value="in_product">In-Product</ToggleButton>
+          </ToggleButtonGroup>
+
+          {/* Category Filter */}
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <Select
+              value={filters.category}
+              onChange={(e) => setFilters(f => ({...f, category: e.target.value as 'all' | OnboardingCategoryId}))}
+              sx={{ fontSize: '0.8rem' }}
+            >
+              <MenuItem value="all">All Categories</MenuItem>
+              {onboardingCategories.map(cat => (
+                <MenuItem key={cat.id} value={cat.id}>{cat.label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Completion Filter */}
+          <ToggleButtonGroup
+            value={filters.completion}
+            exclusive
+            onChange={(_, v) => v && setFilters(f => ({...f, completion: v}))}
+            size="small"
+            sx={{ '& .MuiToggleButton-root': { py: 0.5, px: 1.5, fontSize: '0.75rem' } }}
+          >
+            <ToggleButton value="all">All</ToggleButton>
+            <ToggleButton value="incomplete">Incomplete</ToggleButton>
+            <ToggleButton value="completed">Completed</ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
+
+        {/* Flat list of items */}
         <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
-          {onboardingCategories.map(category => {
-            const categoryItems = availableItems.filter(item => item.category === category.id);
-            if (categoryItems.length === 0) return null;
+          <Stack spacing={0.5}>
+            {availableItems.map(item => {
+              const isRepFacing = item.type === 'rep_facing';
+              const isCompleted = completedItemIds.includes(item.id);
+              const categoryLabel = onboardingCategories.find(c => c.id === item.category)?.label || item.category?.replace(/-/g, ' ');
 
-            return (
-              <Box key={category.id} sx={{ mb: 2 }}>
-                <Typography
-                  variant="caption"
-                  fontWeight={600}
-                  color="text.secondary"
-                  sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1, display: 'block' }}
+              return (
+                <Paper
+                  key={item.id}
+                  variant="outlined"
+                  sx={{
+                    p: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    bgcolor: isCompleted ? alpha(palette.success, 0.04) : 'white',
+                    borderColor: isCompleted ? alpha(palette.success, 0.3) : 'divider',
+                    '&:hover': {
+                      borderColor: palette.primary,
+                      bgcolor: isCompleted ? alpha(palette.success, 0.06) : alpha(palette.primary, 0.02),
+                    },
+                  }}
                 >
-                  {category.label} ({categoryItems.length})
-                </Typography>
-                <Stack spacing={0.5}>
-                  {categoryItems.map(item => {
-                    const isRepFacing = item.type === 'rep_facing';
-                    return (
-                      <Paper
-                        key={item.id}
-                        variant="outlined"
-                        sx={{
-                          p: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          '&:hover': {
-                            borderColor: palette.primary,
-                            bgcolor: alpha(palette.primary, 0.02),
-                          },
-                        }}
-                      >
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {item.title}
-                          </Typography>
-                          <Stack direction="row" spacing={0.5} alignItems="center">
-                            <Chip
-                              icon={isRepFacing ? <PersonIcon sx={{ fontSize: '12px !important' }} /> : <ComputerIcon sx={{ fontSize: '12px !important' }} />}
-                              label={isRepFacing ? 'Rep' : 'In-Product'}
-                              size="small"
-                              sx={{
-                                height: 16,
-                                fontSize: '0.55rem',
-                                bgcolor: isRepFacing ? alpha(palette.secondary, 0.1) : alpha(palette.primary, 0.1),
-                                color: isRepFacing ? palette.secondary : palette.primary,
-                                '& .MuiChip-icon': { ml: 0.25 },
-                              }}
-                            />
-                            {item.estimatedMinutes && (
-                              <Typography variant="caption" color="text.secondary">
-                                ~{item.estimatedMinutes}min
-                              </Typography>
-                            )}
-                          </Stack>
-                        </Box>
+                  {/* Completion indicator */}
+                  {isCompleted && (
+                    <CheckCircleIcon sx={{ fontSize: 16, color: palette.success, flexShrink: 0 }} />
+                  )}
 
-                        {/* Add to week buttons */}
-                        <Stack direction="row" spacing={0.5}>
-                          {([1, 2, 3, 4] as WeekNumber[]).map(week => (
-                            <Tooltip key={week} title={`Add to Week ${week}`}>
-                              <IconButton
-                                size="small"
-                                onClick={() => handleAddToWeek(item.id, week)}
-                                sx={{
-                                  p: 0.5,
-                                  fontSize: '0.7rem',
-                                  fontWeight: 600,
-                                  width: 24,
-                                  height: 24,
-                                  border: 1,
-                                  borderColor: 'divider',
-                                  '&:hover': {
-                                    bgcolor: alpha(palette.primary, 0.1),
-                                    borderColor: palette.primary,
-                                  },
-                                }}
-                              >
-                                {week}
-                              </IconButton>
-                            </Tooltip>
-                          ))}
-                        </Stack>
-                      </Paper>
-                    );
-                  })}
-                </Stack>
-              </Box>
-            );
-          })}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        color: isCompleted ? 'text.secondary' : 'text.primary',
+                      }}
+                    >
+                      {item.title}
+                    </Typography>
+                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexWrap: 'wrap' }}>
+                      <Chip
+                        icon={isRepFacing ? <PersonIcon sx={{ fontSize: '12px !important' }} /> : <ComputerIcon sx={{ fontSize: '12px !important' }} />}
+                        label={isRepFacing ? 'Rep' : 'In-Product'}
+                        size="small"
+                        sx={{
+                          height: 16,
+                          fontSize: '0.55rem',
+                          bgcolor: isRepFacing ? alpha(palette.secondary, 0.1) : alpha(palette.primary, 0.1),
+                          color: isRepFacing ? palette.secondary : palette.primary,
+                          '& .MuiChip-icon': { ml: 0.25 },
+                        }}
+                      />
+                      {categoryLabel && (
+                        <Chip
+                          label={categoryLabel}
+                          size="small"
+                          sx={{
+                            height: 16,
+                            fontSize: '0.55rem',
+                            bgcolor: alpha(palette.grey[400], 0.1),
+                            textTransform: 'capitalize',
+                          }}
+                        />
+                      )}
+                      {item.estimatedMinutes && (
+                        <Typography variant="caption" color="text.secondary">
+                          ~{item.estimatedMinutes}min
+                        </Typography>
+                      )}
+                    </Stack>
+                  </Box>
+
+                  {/* Add to week buttons */}
+                  <Stack direction="row" spacing={0.5}>
+                    {([1, 2, 3, 4] as WeekNumber[]).map(week => (
+                      <Tooltip key={week} title={`Add to Week ${week}`}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleAddToWeek(item.id, week)}
+                          sx={{
+                            p: 0.5,
+                            fontSize: '0.7rem',
+                            fontWeight: 600,
+                            width: 24,
+                            height: 24,
+                            border: 1,
+                            borderColor: 'divider',
+                            bgcolor: alpha(weekColors[week], 0.05),
+                            '&:hover': {
+                              bgcolor: alpha(weekColors[week], 0.15),
+                              borderColor: weekColors[week],
+                            },
+                          }}
+                        >
+                          {week}
+                        </IconButton>
+                      </Tooltip>
+                    ))}
+                  </Stack>
+                </Paper>
+              );
+            })}
+          </Stack>
 
           {availableItems.length === 0 && (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <Typography variant="body2" color="text.secondary">
-                {searchQuery ? 'No items match your search' : 'All items have been assigned to weeks'}
+                {searchQuery || filters.type !== 'all' || filters.category !== 'all' || filters.completion !== 'all'
+                  ? 'No items match your filters'
+                  : 'All items have been assigned to weeks'}
               </Typography>
             </Box>
           )}
