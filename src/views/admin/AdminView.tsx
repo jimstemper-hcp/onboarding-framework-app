@@ -50,7 +50,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { useOnboarding } from '../../context';
 import { onboardingItems } from '../../data';
-import { PlanningWrapper } from '../../planning';
+import { PlanningWrapper, usePlanningMode } from '../../planning';
 import type {
   Feature,
   CalendlyLink,
@@ -3482,8 +3482,25 @@ function ToolsManagementPage() {
 // MAIN ADMIN VIEW WITH SIDEBAR
 // =============================================================================
 
+// Map admin pages to planning page IDs
+const adminPageToPlanningId: Record<AdminPage, string> = {
+  features: 'page-hcp-context-features-index',
+  navigation: 'page-hcp-context-navigation',
+  calls: 'page-hcp-context-calls',
+  'onboarding-items': 'page-hcp-context-onboarding-items',
+  tools: 'page-hcp-context-tools',
+};
+
 export function AdminView() {
   const [currentPage, setCurrentPage] = useState<AdminPage>('features');
+  const { setCurrentPage: setPlanningPage, isPlanningMode } = usePlanningMode();
+
+  // Report current page to planning context
+  useEffect(() => {
+    if (isPlanningMode) {
+      setPlanningPage(adminPageToPlanningId[currentPage]);
+    }
+  }, [isPlanningMode, currentPage, setPlanningPage]);
 
   const menuItems: { id: AdminPage; label: string; icon: React.ReactNode }[] = [
     { id: 'features', label: 'Features', icon: <CategoryIcon /> },

@@ -1,7 +1,7 @@
-import { Box, AppBar, Toolbar, Typography, Container, Stack } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, Container, Stack, useMediaQuery, useTheme } from '@mui/material';
 import { ViewSwitcher } from './ViewSwitcher';
 import { ProSelectorToolbar } from './ProSelectorToolbar';
-import { PlanningModeToggle } from '../../planning';
+import { PlanningModeToggle, usePlanningMode, DRAWER_WIDTH } from '../../planning';
 import type { ReactNode } from 'react';
 
 interface MainLayoutProps {
@@ -9,8 +9,26 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const theme = useTheme();
+  const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
+  const { isPlanningMode } = usePlanningMode();
+
+  // Calculate margin for persistent drawer (only on large screens)
+  const drawerMargin = isPlanningMode && isLargeScreen ? DRAWER_WIDTH : 0;
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        marginRight: `${drawerMargin}px`,
+        transition: theme.transitions.create('margin', {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.leavingScreen,
+        }),
+      }}
+    >
       {/* Header */}
       <AppBar position="static">
         <Toolbar sx={{ minHeight: '56px !important', pt: 1.5, pb: 1 }}>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -27,6 +27,12 @@ import {
   Card,
   alpha,
   Tooltip,
+  InputAdornment,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Divider,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -34,8 +40,13 @@ import AddIcon from '@mui/icons-material/Add';
 import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SearchIcon from '@mui/icons-material/Search';
+import RemoveIcon from '@mui/icons-material/Remove';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import * as MuiIcons from '@mui/icons-material';
 import { useOnboarding } from '../../context';
+import { onboardingItems as allOnboardingItems } from '../../data';
 import { PlanningWrapper } from '../../planning';
 import type {
   ProAccount,
@@ -56,6 +67,8 @@ import type {
   Segment,
   PainPoint,
   IndustryStandardized,
+  WeeklyPlan,
+  WeeklyPlanItem,
 } from '../../types';
 
 // =============================================================================
@@ -107,6 +120,12 @@ const businessTypes: BusinessType[] = ['plumber', 'electrician', 'hvac', 'landsc
 const planTiers: PlanTier[] = ['basic', 'essentials', 'max'];
 const proGoals: ProGoal[] = ['growth', 'efficiency'];
 const stages: AdoptionStage[] = ['not_attached', 'attached', 'activated', 'engaged'];
+
+type WeekNumber = 1 | 2 | 3 | 4;
+
+function createDefaultWeeklyPlan(): WeeklyPlan {
+  return { week1: [], week2: [], week3: [], week4: [] };
+}
 
 // Pro Data field options
 const billingStatuses: BillingStatus[] = ['trial_expired', 'enrolled', 'unknown', 'unenrolled', 'trial'];
@@ -218,12 +237,20 @@ function ProEditorDialog({ open, pro, onSave, onClose, isNew }: ProEditorDialogP
   const [activeTab, setActiveTab] = useState(0);
 
   // Reset state when dialog opens with new pro
-  useState(() => {
-    setEditedPro(pro);
-    setActiveTab(0);
-  });
+  useEffect(() => {
+    if (open && pro) {
+      setEditedPro(pro);
+      setActiveTab(0);
+    }
+  }, [open, pro]);
 
   if (!editedPro) return null;
+
+  const weeklyPlan = editedPro.weeklyPlan || createDefaultWeeklyPlan();
+
+  const handleWeeklyPlanChange = (plan: WeeklyPlan) => {
+    setEditedPro({ ...editedPro, weeklyPlan: plan });
+  };
 
   const handleSave = () => {
     onSave(editedPro);
@@ -265,6 +292,7 @@ function ProEditorDialog({ open, pro, onSave, onClose, isNew }: ProEditorDialogP
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
           <Tab label="Pro Details" />
           <Tab label="Feature Status" />
+          <Tab label="Weekly Plan" />
         </Tabs>
 
         {activeTab === 0 && (
@@ -603,6 +631,15 @@ function ProEditorDialog({ open, pro, onSave, onClose, isNew }: ProEditorDialogP
             />
           </Box>
         )}
+
+        {activeTab === 2 && (
+          <Box sx={{ mt: 2 }}>
+            <WeeklyPlanEditor
+              weeklyPlan={weeklyPlan}
+              onChange={handleWeeklyPlanChange}
+            />
+          </Box>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
@@ -755,6 +792,259 @@ function FeatureStatusEditor({ featureStatus, onChange }: FeatureStatusEditorPro
         );
       })}
     </Stack>
+  );
+}
+
+// =============================================================================
+// WEEKLY PLAN EDITOR
+// =============================================================================
+
+interface WeeklyPlanEditorProps {
+  weeklyPlan: WeeklyPlan;
+  onChange: (plan: WeeklyPlan) => void;
+}
+
+function WeeklyPlanEditor({ weeklyPlan, onChange }: WeeklyPlanEditorProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Get all assigned item IDs across all weeks
+  const assignedItemIds = [
+    ...weeklyPlan.week1.map(i => i.itemId),
+    ...weeklyPlan.week2.map(i => i.itemId),
+    ...weeklyPlan.week3.map(i => i.itemId),
+    ...weeklyPlan.week4.map(i => i.itemId),
+  ];
+
+  // Filter available items (not already assigned)
+  const availableItems = allOnboardingItems.filter(item => {
+    const matchesSearch = searchTerm === '' ||
+      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const notAssigned = !assignedItemIds.includes(item.id);
+    return matchesSearch && notAssigned;
+  });
+
+  const getWeekKey = (week: WeekNumber): keyof WeeklyPlan => `week${week}` as keyof WeeklyPlan;
+
+  const handleAddToWeek = (itemId: string, week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    const currentItems = weeklyPlan[weekKey];
+    const maxOrder = currentItems.length > 0
+      ? Math.max(...currentItems.map(i => i.order)) + 1
+      : 0;
+    onChange({
+      ...weeklyPlan,
+      [weekKey]: [...currentItems, { itemId, order: maxOrder }],
+    });
+  };
+
+  const handleRemoveFromWeek = (itemId: string, week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    onChange({
+      ...weeklyPlan,
+      [weekKey]: weeklyPlan[weekKey].filter(i => i.itemId !== itemId),
+    });
+  };
+
+  const handleMoveUp = (itemId: string, week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    const items = [...weeklyPlan[weekKey]].sort((a, b) => a.order - b.order);
+    const index = items.findIndex(i => i.itemId === itemId);
+    if (index > 0) {
+      const temp = items[index].order;
+      items[index].order = items[index - 1].order;
+      items[index - 1].order = temp;
+      onChange({ ...weeklyPlan, [weekKey]: items });
+    }
+  };
+
+  const handleMoveDown = (itemId: string, week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    const items = [...weeklyPlan[weekKey]].sort((a, b) => a.order - b.order);
+    const index = items.findIndex(i => i.itemId === itemId);
+    if (index < items.length - 1) {
+      const temp = items[index].order;
+      items[index].order = items[index + 1].order;
+      items[index + 1].order = temp;
+      onChange({ ...weeklyPlan, [weekKey]: items });
+    }
+  };
+
+  const renderWeekColumn = (week: WeekNumber) => {
+    const weekKey = getWeekKey(week);
+    const items = weeklyPlan[weekKey].sort((a, b) => a.order - b.order);
+
+    return (
+      <Box
+        key={week}
+        sx={{
+          flex: 1,
+          minWidth: 180,
+          borderRight: week < 4 ? '1px solid' : 'none',
+          borderColor: 'divider',
+          p: 1.5,
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          fontWeight={600}
+          sx={{ mb: 1.5, color: palette.primary }}
+        >
+          Week {week}
+        </Typography>
+        <Stack spacing={0.5}>
+          {items.map((item, index) => {
+            const itemDef = allOnboardingItems.find(i => i.id === item.itemId);
+            if (!itemDef) return null;
+            return (
+              <Paper
+                key={item.itemId}
+                variant="outlined"
+                sx={{
+                  p: 1,
+                  bgcolor: palette.grey[50],
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="caption" noWrap title={itemDef.title}>
+                    {itemDef.title}
+                  </Typography>
+                </Box>
+                <Stack direction="row" spacing={0}>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleMoveUp(item.itemId, week)}
+                    disabled={index === 0}
+                    sx={{ p: 0.25 }}
+                  >
+                    <KeyboardArrowUpIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleMoveDown(item.itemId, week)}
+                    disabled={index === items.length - 1}
+                    sx={{ p: 0.25 }}
+                  >
+                    <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleRemoveFromWeek(item.itemId, week)}
+                    sx={{ p: 0.25, color: palette.error }}
+                  >
+                    <RemoveIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Stack>
+              </Paper>
+            );
+          })}
+          {items.length === 0 && (
+            <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+              No items
+            </Typography>
+          )}
+        </Stack>
+      </Box>
+    );
+  };
+
+  return (
+    <Box sx={{ display: 'flex', gap: 2, height: '50vh' }}>
+      {/* Left panel: Available items */}
+      <Paper
+        variant="outlined"
+        sx={{
+          width: 280,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
+        <Box sx={{ p: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
+            Available Items
+          </Typography>
+          <TextField
+            size="small"
+            placeholder="Search items..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+        <List dense sx={{ flex: 1, overflow: 'auto', py: 0 }}>
+          {availableItems.map((item) => (
+            <ListItem
+              key={item.id}
+              disablePadding
+              secondaryAction={
+                <Stack direction="row" spacing={0.5}>
+                  {([1, 2, 3, 4] as WeekNumber[]).map((week) => (
+                    <Tooltip key={week} title={`Add to Week ${week}`}>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleAddToWeek(item.id, week)}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          fontSize: '0.65rem',
+                          bgcolor: alpha(palette.primary, 0.1),
+                          color: palette.primary,
+                          '&:hover': { bgcolor: alpha(palette.primary, 0.2) },
+                        }}
+                      >
+                        {week}
+                      </IconButton>
+                    </Tooltip>
+                  ))}
+                </Stack>
+              }
+            >
+              <ListItemButton sx={{ py: 0.5 }}>
+                <ListItemText
+                  primary={item.title}
+                  primaryTypographyProps={{
+                    variant: 'caption',
+                    noWrap: true,
+                    sx: { maxWidth: 140 },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+          {availableItems.length === 0 && (
+            <ListItem>
+              <ListItemText
+                primary={searchTerm ? 'No matching items' : 'All items assigned'}
+                primaryTypographyProps={{ variant: 'caption', color: 'text.secondary' }}
+              />
+            </ListItem>
+          )}
+        </List>
+      </Paper>
+
+      {/* Right panel: Week columns */}
+      <Paper
+        variant="outlined"
+        sx={{
+          flex: 1,
+          display: 'flex',
+          overflow: 'auto',
+        }}
+      >
+        {([1, 2, 3, 4] as WeekNumber[]).map(renderWeekColumn)}
+      </Paper>
+    </Box>
   );
 }
 

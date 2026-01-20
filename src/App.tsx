@@ -2,7 +2,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { theme } from './theme/theme';
 import { OnboardingProvider, useOnboarding } from './context';
-import { PlanningModeProvider, PlanningModal } from './planning';
+import { PlanningModeProvider, PlanningDrawer } from './planning';
 import { ChatProvider } from './chat';
 import { MainLayout } from './components/layout';
 import { AdminView } from './views/admin';
@@ -41,7 +41,7 @@ function App() {
             <MainLayout>
               <ViewRouter />
             </MainLayout>
-            <PlanningModal />
+            <PlanningDrawer />
           </ChatProvider>
         </OnboardingProvider>
       </PlanningModeProvider>

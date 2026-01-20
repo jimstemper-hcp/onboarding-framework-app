@@ -19,6 +19,8 @@ import type {
   PlannableId,
   PlannableElement,
   PlannableCategory,
+  PageId,
+  SpecViewMode,
 } from '../types';
 import { plannableRegistry } from '../registry/plannableRegistry';
 
@@ -55,6 +57,8 @@ export function PlanningModeProvider({ children }: PlanningModeProviderProps) {
   const [activeElementId, setActiveElementId] = useState<PlannableId | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<PlanningTab>('spec');
+  const [currentPageId, setCurrentPageId] = useState<PageId | null>(null);
+  const [specViewMode, setSpecViewModeState] = useState<SpecViewMode>('formatted');
 
   const [feedbackItems, setFeedbackItems] = useState<PlanningFeedback[]>(() => {
     const stored = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
@@ -107,6 +111,22 @@ export function PlanningModeProvider({ children }: PlanningModeProviderProps) {
 
   const setActiveTabAction = useCallback((tab: PlanningTab) => {
     setActiveTab(tab);
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // PAGE-AWARE DRAWER ACTIONS
+  // ---------------------------------------------------------------------------
+
+  const setCurrentPage = useCallback((pageId: PageId) => {
+    setCurrentPageId(pageId);
+  }, []);
+
+  const toggleSpecViewMode = useCallback(() => {
+    setSpecViewModeState((prev) => (prev === 'formatted' ? 'markdown' : 'formatted'));
+  }, []);
+
+  const setSpecViewMode = useCallback((mode: SpecViewMode) => {
+    setSpecViewModeState(mode);
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -165,6 +185,8 @@ export function PlanningModeProvider({ children }: PlanningModeProviderProps) {
     activeElementId,
     isModalOpen,
     activeTab,
+    currentPageId,
+    specViewMode,
     feedbackItems,
 
     // Mode actions
@@ -175,6 +197,11 @@ export function PlanningModeProvider({ children }: PlanningModeProviderProps) {
     openElement,
     closeModal,
     setActiveTab: setActiveTabAction,
+
+    // Page-aware drawer actions
+    setCurrentPage,
+    toggleSpecViewMode,
+    setSpecViewMode,
 
     // Feedback actions
     submitFeedback,

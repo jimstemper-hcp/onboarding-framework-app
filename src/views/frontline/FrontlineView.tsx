@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -79,8 +79,8 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import * as MuiIcons from '@mui/icons-material';
 import { useOnboarding } from '../../context';
 import { onboardingItems as allOnboardingItems, onboardingCategories } from '../../data';
-import { PlanningWrapper } from '../../planning';
-import type { Feature, AdoptionStage, FeatureId, ProAccount, OnboardingItemAssignment, OnboardingCategoryId, OnboardingCategory, OnboardingItemDefinition } from '../../types';
+import { PlanningWrapper, usePlanningMode } from '../../planning';
+import type { Feature, AdoptionStage, FeatureId, ProAccount, OnboardingItemAssignment, OnboardingCategoryId, OnboardingCategory, OnboardingItemDefinition, WeeklyPlan } from '../../types';
 
 // =============================================================================
 // TYPES
@@ -94,16 +94,9 @@ type OnboardingPlanViewMode = 'category' | 'weekly';
 
 type WeekNumber = 1 | 2 | 3 | 4;
 
-interface WeeklyPlanItem {
-  itemId: string;
-  order: number;
-}
-
-interface WeeklyPlanState {
-  week1: WeeklyPlanItem[];
-  week2: WeeklyPlanItem[];
-  week3: WeeklyPlanItem[];
-  week4: WeeklyPlanItem[];
+// Helper to create an empty weekly plan
+function createDefaultWeeklyPlan(): WeeklyPlan {
+  return { week1: [], week2: [], week3: [], week4: [] };
 }
 
 // =============================================================================
@@ -1209,8 +1202,8 @@ function OnboardingCategorySection({
 // =============================================================================
 
 interface WeeklyPlanningViewProps {
-  weeklyPlan: WeeklyPlanState;
-  onUpdateWeeklyPlan: (plan: WeeklyPlanState) => void;
+  weeklyPlan: WeeklyPlan;
+  onUpdateWeeklyPlan: (plan: WeeklyPlan) => void;
   completedItemIds: string[];
 }
 
@@ -1271,7 +1264,7 @@ function WeeklyPlanningView({
   });
 
   // Helper to get week key
-  const getWeekKey = (week: WeekNumber): keyof WeeklyPlanState => `week${week}` as keyof WeeklyPlanState;
+  const getWeekKey = (week: WeekNumber): keyof WeeklyPlan => `week${week}` as keyof WeeklyPlan;
 
   // Add item to a week
   const handleAddToWeek = (itemId: string, week: WeekNumber) => {
@@ -1746,23 +1739,35 @@ function OnboardingPlanPage({
   onToggleItem,
   categoryStatuses,
   onCategoryStatusChange,
+  onUpdateWeeklyPlan,
 }: {
   selectedPro: ProAccount | undefined;
   completedItemIds: string[];
   onToggleItem: (itemId: string) => void;
   categoryStatuses: Record<OnboardingCategoryId, CategoryStatus>;
   onCategoryStatusChange: (categoryId: OnboardingCategoryId, status: CategoryStatus) => void;
+  onUpdateWeeklyPlan: (plan: WeeklyPlan) => void;
 }) {
   const [expandedCategory, setExpandedCategory] = useState<OnboardingCategoryId | null>('account-setup');
   const [selectedItem, setSelectedItem] = useState<OnboardingItemDefinition | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<OnboardingPlanViewMode>('category');
-  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlanState>({
-    week1: [],
-    week2: [],
-    week3: [],
-    week4: [],
-  });
+  const [weeklyPlan, setWeeklyPlan] = useState<WeeklyPlan>(
+    selectedPro?.weeklyPlan || createDefaultWeeklyPlan()
+  );
+
+  // Sync weeklyPlan state when selectedPro changes
+  useEffect(() => {
+    if (selectedPro) {
+      setWeeklyPlan(selectedPro.weeklyPlan || createDefaultWeeklyPlan());
+    }
+  }, [selectedPro?.id, selectedPro?.weeklyPlan]);
+
+  // Persist weekly plan changes to the pro account
+  const handleWeeklyPlanChange = (plan: WeeklyPlan) => {
+    setWeeklyPlan(plan);
+    onUpdateWeeklyPlan(plan);
+  };
 
   if (!selectedPro) {
     return (
@@ -1896,7 +1901,7 @@ function OnboardingPlanPage({
         /* Weekly Planning View */
         <WeeklyPlanningView
           weeklyPlan={weeklyPlan}
-          onUpdateWeeklyPlan={setWeeklyPlan}
+          onUpdateWeeklyPlan={handleWeeklyPlanChange}
           completedItemIds={completedItemIds}
         />
       )}
@@ -3300,9 +3305,25 @@ const menuItems: { id: FrontlinePage; label: string; icon: React.ReactNode }[] =
 // MAIN VIEW
 // =============================================================================
 
+// Map frontline pages to planning page IDs
+const frontlinePageToPlanningId: Record<FrontlinePage, string> = {
+  information: 'page-org-insights-information',
+  'onboarding-plan': 'page-org-insights-onboarding-plan',
+  'features-list': 'page-org-insights-features-list',
+  calls: 'page-org-insights-calls',
+};
+
 export function FrontlineView() {
-  const { features, pros, activeProId, completeTask, uncompleteTask } = useOnboarding();
+  const { features, pros, activeProId, completeTask, uncompleteTask, updateProWeeklyPlan } = useOnboarding();
   const [currentPage, setCurrentPage] = useState<FrontlinePage>('information');
+  const { setCurrentPage: setPlanningPage, isPlanningMode } = usePlanningMode();
+
+  // Report current page to planning context
+  useEffect(() => {
+    if (isPlanningMode) {
+      setPlanningPage(frontlinePageToPlanningId[currentPage]);
+    }
+  }, [isPlanningMode, currentPage, setPlanningPage]);
 
   // Track category statuses (in a real app, this would be persisted per pro)
   const [categoryStatuses, setCategoryStatuses] = useState<Record<OnboardingCategoryId, CategoryStatus>>({
@@ -3348,6 +3369,12 @@ export function FrontlineView() {
     }));
   };
 
+  const handleUpdateWeeklyPlan = (plan: WeeklyPlan) => {
+    if (selectedPro) {
+      updateProWeeklyPlan(selectedPro.id, plan);
+    }
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'information':
@@ -3364,6 +3391,7 @@ export function FrontlineView() {
             onToggleItem={handleToggleOnboardingItem}
             categoryStatuses={categoryStatuses}
             onCategoryStatusChange={handleCategoryStatusChange}
+            onUpdateWeeklyPlan={handleUpdateWeeklyPlan}
           />
         );
       case 'features-list':

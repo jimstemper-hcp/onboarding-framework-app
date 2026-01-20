@@ -76,9 +76,21 @@ export interface PlanningFeedback {
 }
 
 /**
- * Active tab in the planning modal.
+ * Active tab in the planning drawer.
  */
 export type PlanningTab = 'spec' | 'feedback' | 'status';
+
+/**
+ * View mode for the spec tab (formatted markdown vs raw markdown).
+ */
+export type SpecViewMode = 'formatted' | 'markdown';
+
+/**
+ * Page identifier for page-aware drawer content.
+ * Convention: kebab-case, prefixed by app section
+ * Examples: "hcp-web-journey", "hcp-context-features-invoicing"
+ */
+export type PageId = string;
 
 /**
  * Planning mode context state.
@@ -91,6 +103,10 @@ export interface PlanningModeState {
   activeElementId: PlannableId | null;
   isModalOpen: boolean;
   activeTab: PlanningTab;
+
+  // Page-aware drawer state
+  currentPageId: PageId | null;
+  specViewMode: SpecViewMode;
 
   // Feedback (persisted to localStorage)
   feedbackItems: PlanningFeedback[];
@@ -108,6 +124,11 @@ export interface PlanningModeActions {
   openElement: (elementId: PlannableId) => void;
   closeModal: () => void;
   setActiveTab: (tab: PlanningTab) => void;
+
+  // Page-aware drawer actions
+  setCurrentPage: (pageId: PageId) => void;
+  toggleSpecViewMode: () => void;
+  setSpecViewMode: (mode: SpecViewMode) => void;
 
   // Feedback
   submitFeedback: (elementId: PlannableId, elementName: string, feedback: string, submittedBy?: string) => void;

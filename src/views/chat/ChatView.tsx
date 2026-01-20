@@ -1,9 +1,19 @@
+import { useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
-import { PlanningWrapper, PlanningInfoButton } from '../../planning';
+import { PlanningWrapper, PlanningInfoButton, usePlanningMode } from '../../planning';
 import { ChatContainer } from '../../chat';
 
 export function ChatView() {
+  const { setCurrentPage, isPlanningMode } = usePlanningMode();
+
+  // Report current page to planning context
+  useEffect(() => {
+    if (isPlanningMode) {
+      setCurrentPage('page-ai-chat-index');
+    }
+  }, [isPlanningMode, setCurrentPage]);
+
   return (
     <PlanningWrapper elementId="view-chat">
       <Box>

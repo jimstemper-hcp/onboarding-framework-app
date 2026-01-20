@@ -14,6 +14,7 @@ import type {
   AdoptionStage,
   ViewType,
   OnboardingContextValue,
+  WeeklyPlan,
 } from '../types';
 import { features as initialFeatures } from '../data/features';
 import { mockPros as initialPros } from '../data/mockPros';
@@ -227,6 +228,17 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     []
   );
 
+  const updateProWeeklyPlan = useCallback(
+    (proId: string, weeklyPlan: WeeklyPlan) => {
+      setPros((currentPros) =>
+        currentPros.map((pro) =>
+          pro.id === proId ? { ...pro, weeklyPlan } : pro
+        )
+      );
+    },
+    []
+  );
+
   // ---------------------------------------------------------------------------
   // DERIVED DATA HELPERS
   // ---------------------------------------------------------------------------
@@ -301,6 +313,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       updatePro,
       deletePro,
       updateProFeatureStatus,
+      updateProWeeklyPlan,
 
       // Feature mutations
       updateFeature,
@@ -328,6 +341,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       updatePro,
       deletePro,
       updateProFeatureStatus,
+      updateProWeeklyPlan,
       updateFeature,
       getFeatureById,
       getProById,

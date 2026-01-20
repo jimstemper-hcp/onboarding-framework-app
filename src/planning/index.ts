@@ -16,6 +16,7 @@ export { PlanningModeProvider, usePlanningMode } from './context/PlanningContext
 export { PlanningModeToggle } from './components/PlanningModeToggle';
 export { PlanningWrapper, PlanningInfoButton } from './components/PlanningWrapper';
 export { PlanningModal } from './components/PlanningModal';
+export { PlanningDrawer, DRAWER_WIDTH } from './components/PlanningDrawer';
 
 // Registry
 export { plannableRegistry, getElementsByCategory, getElementsByStatus, getElementsByTag } from './registry/plannableRegistry';
@@ -28,6 +29,8 @@ export type {
   PlannableElement,
   PlanningFeedback,
   PlanningTab,
+  SpecViewMode,
+  PageId,
   PlanningModeState,
   PlanningModeActions,
   PlanningModeContextValue,

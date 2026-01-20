@@ -285,6 +285,29 @@ export interface OnboardingItemAssignment {
 }
 
 // -----------------------------------------------------------------------------
+// WEEKLY PLAN TYPES
+// -----------------------------------------------------------------------------
+
+/**
+ * A single item in a weekly plan, referencing an onboarding item.
+ */
+export interface WeeklyPlanItem {
+  itemId: string;  // References OnboardingItemDefinition.id
+  order: number;   // Display order within the week
+}
+
+/**
+ * A 4-week onboarding plan structure.
+ * Each week contains a list of onboarding items to complete.
+ */
+export interface WeeklyPlan {
+  week1: WeeklyPlanItem[];
+  week2: WeeklyPlanItem[];
+  week3: WeeklyPlanItem[];
+  week4: WeeklyPlanItem[];
+}
+
+// -----------------------------------------------------------------------------
 // STAGE-SPECIFIC CONTEXT TYPES
 // -----------------------------------------------------------------------------
 
@@ -591,6 +614,7 @@ export interface ProAccount {
   createdAt: string;
   currentWeek: 1 | 2 | 3 | 4;  // Weeks since enrolling in paid plan (1-4)
   featureStatus: Record<FeatureId, FeatureStatus>;
+  weeklyPlan?: WeeklyPlan;  // Custom weekly onboarding plan
 
   // Pro Data (Pro Facets) fields
   billingStatus?: BillingStatus;
@@ -657,6 +681,7 @@ export interface OnboardingContextActions {
   updatePro: (pro: ProAccount) => void;
   deletePro: (proId: string) => void;
   updateProFeatureStatus: (proId: string, featureId: FeatureId, status: FeatureStatus) => void;
+  updateProWeeklyPlan: (proId: string, weeklyPlan: WeeklyPlan) => void;
 
   // Feature mutations (for Admin view)
   updateFeature: (feature: Feature) => void;

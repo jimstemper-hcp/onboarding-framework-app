@@ -30,11 +30,11 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import * as MuiIcons from '@mui/icons-material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useOnboarding, useActivePro } from '../../context';
 import { onboardingItems as allOnboardingItems } from '../../data';
-import { PlanningWrapper } from '../../planning';
-import type { Feature, FeatureStatus, ProAccount, OnboardingItemAssignment } from '../../types';
+import { PlanningWrapper, usePlanningMode } from '../../planning';
+import type { Feature, FeatureStatus, ProAccount, OnboardingItemAssignment, WeeklyPlan } from '../../types';
 
 // =============================================================================
 // MODERN COLOR PALETTE
@@ -77,41 +77,10 @@ type PortalViewMode = 'journey' | 'weekly';
 
 type WeekNumber = 1 | 2 | 3 | 4;
 
-interface WeeklyPlanItem {
-  itemId: string;
-  order: number;
+// Helper to create an empty weekly plan
+function createDefaultWeeklyPlan(): WeeklyPlan {
+  return { week1: [], week2: [], week3: [], week4: [] };
 }
-
-// =============================================================================
-// SAMPLE WEEKLY PLAN (In production, this would come from the backend/context)
-// =============================================================================
-
-const sampleWeeklyPlan: Record<WeekNumber, WeeklyPlanItem[]> = {
-  1: [
-    { itemId: 'create-first-customer', order: 0 },
-    { itemId: 'company-profile', order: 1 },
-    { itemId: 'add-company-logo', order: 2 },
-    { itemId: 'add-new-customers', order: 3 },
-  ],
-  2: [
-    { itemId: 'create-first-estimate', order: 0 },
-    { itemId: 'create-first-job', order: 1 },
-    { itemId: 'send-first-invoice', order: 2 },
-    { itemId: 'online-booking', order: 3 },
-  ],
-  3: [
-    { itemId: 'connect-payment-processor', order: 0 },
-    { itemId: 'enable-appointment-reminders', order: 1 },
-    { itemId: 'enable-review-requests', order: 2 },
-    { itemId: 'add-employees', order: 3 },
-  ],
-  4: [
-    { itemId: 'pricebook', order: 0 },
-    { itemId: 'service-plans-settings', order: 1 },
-    { itemId: 'time-tracking', order: 2 },
-    { itemId: 'custom-reports', order: 3 },
-  ],
-};
 
 // Get all onboarding items for a feature across stages
 function getFeatureOnboardingItems(feature: Feature): OnboardingItemAssignment[] {
@@ -834,9 +803,10 @@ interface WeeklyJourneyViewProps {
   currentWeek: WeekNumber;
   completedItemIds: string[];
   onToggleTask: (itemId: string) => void;
+  weeklyPlan: WeeklyPlan;
 }
 
-function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask }: WeeklyJourneyViewProps) {
+function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask, weeklyPlan }: WeeklyJourneyViewProps) {
   const totalWeeks = 4;
   const weekColor = palette.primary;
 
@@ -847,15 +817,21 @@ function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask }: Week
     4: 'Optimize your business operations',
   };
 
+  // Get week items from the weeklyPlan prop
+  const getWeekItems = (week: WeekNumber) => {
+    const weekKey = `week${week}` as keyof WeeklyPlan;
+    return weeklyPlan[weekKey] || [];
+  };
+
   // Get current week's items
-  const currentWeekItems = sampleWeeklyPlan[currentWeek].sort((a, b) => a.order - b.order);
+  const currentWeekItems = getWeekItems(currentWeek).sort((a, b) => a.order - b.order);
   const currentWeekCompletedCount = currentWeekItems.filter(item => completedItemIds.includes(item.itemId)).length;
   const currentWeekProgress = currentWeekItems.length > 0 ? (currentWeekCompletedCount / currentWeekItems.length) * 100 : 0;
 
   // Get incomplete items from prior weeks
   const incompleteFromPriorWeeks: Array<{ itemId: string; fromWeek: WeekNumber }> = [];
   for (let week = 1 as WeekNumber; week < currentWeek; week++) {
-    const weekItems = sampleWeeklyPlan[week];
+    const weekItems = getWeekItems(week);
     for (const item of weekItems) {
       if (!completedItemIds.includes(item.itemId)) {
         incompleteFromPriorWeeks.push({ itemId: item.itemId, fromWeek: week });
@@ -1161,7 +1137,7 @@ function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask }: Week
                 Coming up: Week {currentWeek + 1}
               </Typography>
               <Typography variant="caption" color={palette.text.muted}>
-                {weekDescriptions[(currentWeek + 1) as WeekNumber]} • {sampleWeeklyPlan[(currentWeek + 1) as WeekNumber].length} tasks
+                {weekDescriptions[(currentWeek + 1) as WeekNumber]} • {getWeekItems((currentWeek + 1) as WeekNumber).length} tasks
               </Typography>
             </Box>
           </Stack>
@@ -1179,6 +1155,15 @@ export function PortalView() {
   const { features, completeTask, uncompleteTask } = useOnboarding();
   const activePro = useActivePro();
   const [viewMode, setViewMode] = useState<PortalViewMode>('journey');
+  const { setCurrentPage, isPlanningMode } = usePlanningMode();
+
+  // Report current page to planning context
+  useEffect(() => {
+    if (isPlanningMode) {
+      const pageId = viewMode === 'journey' ? 'page-hcp-web-journey' : 'page-hcp-web-weekly';
+      setCurrentPage(pageId);
+    }
+  }, [isPlanningMode, viewMode, setCurrentPage]);
 
   if (!activePro) {
     return <Typography>No pro selected</Typography>;
@@ -1379,6 +1364,7 @@ export function PortalView() {
             currentWeek={activePro.currentWeek}
             completedItemIds={allCompletedItemIds}
             onToggleTask={handleWeeklyTaskToggle}
+            weeklyPlan={activePro.weeklyPlan || createDefaultWeeklyPlan()}
           />
         </>
       )}

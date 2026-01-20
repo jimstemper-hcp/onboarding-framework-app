@@ -1,4 +1,32 @@
-import type { ProAccount, FeatureId, FeatureStatus } from '../types';
+import type { ProAccount, FeatureId, FeatureStatus, WeeklyPlan } from '../types';
+
+// Default weekly plan used for most pros
+const defaultWeeklyPlan: WeeklyPlan = {
+  week1: [
+    { itemId: 'create-first-customer', order: 0 },
+    { itemId: 'company-profile', order: 1 },
+    { itemId: 'add-company-logo', order: 2 },
+    { itemId: 'add-new-customers', order: 3 },
+  ],
+  week2: [
+    { itemId: 'create-first-estimate', order: 0 },
+    { itemId: 'create-first-job', order: 1 },
+    { itemId: 'send-first-invoice', order: 2 },
+    { itemId: 'online-booking', order: 3 },
+  ],
+  week3: [
+    { itemId: 'connect-payment-processor', order: 0 },
+    { itemId: 'enable-appointment-reminders', order: 1 },
+    { itemId: 'enable-review-requests', order: 2 },
+    { itemId: 'add-employees', order: 3 },
+  ],
+  week4: [
+    { itemId: 'pricebook', order: 0 },
+    { itemId: 'service-plans-settings', order: 1 },
+    { itemId: 'time-tracking', order: 2 },
+    { itemId: 'custom-reports', order: 3 },
+  ],
+};
 
 // Helper to create a feature status at a specific stage
 const createStatus = (
@@ -75,6 +103,8 @@ export const mockPros: ProAccount[] = [
     salesforceAccountId: '0015000000ABC123',
     salesforceLeadId: '00Q5000000DEF456',
     techReadiness: false,
+
+    weeklyPlan: defaultWeeklyPlan,
 
     featureStatus: createAllFeatureStatuses({
       // Invoicing: Attached but only created a customer (2 tasks remaining)
@@ -155,6 +185,8 @@ export const mockPros: ProAccount[] = [
     salesforceLeadId: '00Q5000000JKL012',
     techReadiness: true,
 
+    weeklyPlan: defaultWeeklyPlan,
+
     featureStatus: createAllFeatureStatuses({
       // Has access to everything (Max plan) but just started
       invoicing: {
@@ -234,6 +266,8 @@ export const mockPros: ProAccount[] = [
     salesforceAccountId: '0015000000MNO345',
     salesforceLeadId: '00Q5000000PQR678',
     techReadiness: true,
+
+    weeklyPlan: defaultWeeklyPlan,
 
     featureStatus: createAllFeatureStatuses({
       invoicing: {
@@ -357,6 +391,8 @@ export const mockPros: ProAccount[] = [
     segment: '1A',
     salesforceAccountId: '0015000000STU901',
     techReadiness: false,
+
+    weeklyPlan: defaultWeeklyPlan,
 
     featureStatus: createAllFeatureStatuses({
       // Basic plan only includes scheduling
