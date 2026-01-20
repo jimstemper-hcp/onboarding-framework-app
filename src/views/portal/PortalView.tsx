@@ -920,38 +920,37 @@ function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask }: Week
             }}
             onClick={(e) => e.stopPropagation()}
           />
-          <Box sx={{ flex: 1 }}>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography
-                variant="body2"
-                fontWeight={500}
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1 }}>
+            <Typography
+              variant="body2"
+              fontWeight={500}
+              sx={{
+                textDecoration: isCompleted ? 'line-through' : 'none',
+                color: isCompleted ? palette.text.muted : palette.text.primary,
+              }}
+            >
+              {itemDef.title}
+            </Typography>
+            {showWeekBadge && (
+              <Chip
+                label={`Week ${showWeekBadge}`}
+                size="small"
                 sx={{
-                  textDecoration: isCompleted ? 'line-through' : 'none',
-                  color: isCompleted ? palette.text.muted : palette.text.primary,
+                  height: 18,
+                  fontSize: '0.6rem',
+                  fontWeight: 600,
+                  bgcolor: alpha(palette.warning, 0.15),
+                  color: palette.warning,
                 }}
-              >
-                {itemDef.title}
-              </Typography>
-              {showWeekBadge && (
-                <Chip
-                  label={`Week ${showWeekBadge}`}
-                  size="small"
-                  sx={{
-                    height: 18,
-                    fontSize: '0.6rem',
-                    fontWeight: 600,
-                    bgcolor: alpha(palette.warning, 0.15),
-                    color: palette.warning,
-                  }}
-                />
-              )}
-            </Stack>
+              />
+            )}
+            <Box sx={{ flex: 1 }} />
             {itemDef.estimatedMinutes && (
               <Typography variant="caption" color={palette.text.muted}>
                 ~{itemDef.estimatedMinutes} min
               </Typography>
             )}
-          </Box>
+          </Stack>
           {isCompleted && (
             <Chip
               label={`+${POINTS.TASK_COMPLETE}`}
@@ -972,89 +971,6 @@ function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask }: Week
 
   return (
     <Box>
-      {/* Week Progress Header */}
-      <Paper
-        elevation={0}
-        sx={{
-          p: 3,
-          mb: 3,
-          borderRadius: 3,
-          bgcolor: alpha(weekColor, 0.03),
-          border: '1px solid',
-          borderColor: alpha(weekColor, 0.15),
-        }}
-      >
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar
-              sx={{
-                width: 48,
-                height: 48,
-                bgcolor: weekColor,
-                color: 'white',
-                fontWeight: 700,
-                fontSize: '1.25rem',
-              }}
-            >
-              {currentWeek}
-            </Avatar>
-            <Box>
-              <Typography variant="h6" fontWeight={600} color={palette.text.primary}>
-                Week {currentWeek} of {totalWeeks}
-              </Typography>
-              <Typography variant="body2" color={palette.text.secondary}>
-                {weekDescriptions[currentWeek]}
-              </Typography>
-            </Box>
-          </Stack>
-
-          {/* Week indicator dots */}
-          <Stack direction="row" spacing={1} alignItems="center">
-            {([1, 2, 3, 4] as WeekNumber[]).map(week => (
-              <Box
-                key={week}
-                sx={{
-                  width: week === currentWeek ? 28 : 10,
-                  height: 10,
-                  borderRadius: 5,
-                  bgcolor: week < currentWeek
-                    ? palette.success
-                    : week === currentWeek
-                      ? weekColor
-                      : alpha(palette.slate, 0.2),
-                  transition: 'all 0.2s ease',
-                }}
-              />
-            ))}
-          </Stack>
-        </Stack>
-
-        {/* Overall week progress */}
-        <Box sx={{ mt: 2 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
-            <Typography variant="caption" fontWeight={500} color={palette.text.secondary}>
-              This week's progress
-            </Typography>
-            <Typography variant="caption" fontWeight={600} color={palette.text.primary}>
-              {currentWeekCompletedCount}/{currentWeekItems.length} tasks
-            </Typography>
-          </Stack>
-          <LinearProgress
-            variant="determinate"
-            value={currentWeekProgress}
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              bgcolor: alpha(palette.slate, 0.1),
-              '& .MuiLinearProgress-bar': {
-                bgcolor: weekColor,
-                borderRadius: 4,
-              },
-            }}
-          />
-        </Box>
-      </Paper>
-
       {/* Catch-up Section - Incomplete items from prior weeks */}
       {incompleteFromPriorWeeks.length > 0 && (
         <Card
@@ -1106,7 +1022,7 @@ function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask }: Week
         </Card>
       )}
 
-      {/* Current Week's Tasks */}
+      {/* Current Week's Tasks (with integrated week status header) */}
       <Card
         elevation={0}
         sx={{
@@ -1116,53 +1032,89 @@ function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask }: Week
           overflow: 'hidden',
         }}
       >
+        {/* Week Status Header */}
         <Box
           sx={{
             px: 3,
-            py: 2,
+            py: 2.5,
             borderBottom: '1px solid',
             borderColor: alpha(palette.slate, 0.1),
             bgcolor: alpha(weekColor, 0.03),
           }}
         >
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Stack direction="row" spacing={1.5} alignItems="center">
+            <Stack direction="row" spacing={2} alignItems="center">
               <Avatar
                 sx={{
-                  width: 32,
-                  height: 32,
-                  bgcolor: alpha(weekColor, 0.15),
-                  color: weekColor,
+                  width: 44,
+                  height: 44,
+                  bgcolor: weekColor,
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
                 }}
               >
-                <CalendarTodayIcon sx={{ fontSize: 16 }} />
+                {currentWeek}
               </Avatar>
               <Box>
-                <Typography variant="subtitle2" fontWeight={600} color={palette.text.primary}>
-                  This Week's Tasks
+                <Typography variant="subtitle1" fontWeight={600} color={palette.text.primary}>
+                  Week {currentWeek} of {totalWeeks}
                 </Typography>
-                <Typography variant="caption" color={palette.text.secondary}>
-                  Focus on completing these {currentWeekItems.length} items
+                <Typography variant="body2" color={palette.text.secondary}>
+                  {weekDescriptions[currentWeek]}
                 </Typography>
               </Box>
             </Stack>
-            {currentWeekCompletedCount === currentWeekItems.length && currentWeekItems.length > 0 && (
-              <Chip
-                icon={<CheckCircleIcon sx={{ fontSize: '14px !important' }} />}
-                label="All done!"
-                size="small"
-                sx={{
-                  height: 24,
-                  fontWeight: 600,
-                  fontSize: '0.7rem',
-                  bgcolor: alpha(palette.success, 0.15),
-                  color: palette.success,
-                  '& .MuiChip-icon': { color: palette.success },
-                }}
-              />
-            )}
+
+            {/* Week indicator dots */}
+            <Stack direction="row" spacing={1} alignItems="center">
+              {([1, 2, 3, 4] as WeekNumber[]).map(week => (
+                <Box
+                  key={week}
+                  sx={{
+                    width: week === currentWeek ? 24 : 10,
+                    height: 10,
+                    borderRadius: 5,
+                    bgcolor: week < currentWeek
+                      ? palette.success
+                      : week === currentWeek
+                        ? weekColor
+                        : alpha(palette.slate, 0.2),
+                    transition: 'all 0.2s ease',
+                  }}
+                />
+              ))}
+            </Stack>
           </Stack>
+
+          {/* Progress bar */}
+          <Box sx={{ mt: 2 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
+              <Typography variant="caption" fontWeight={500} color={palette.text.secondary}>
+                Progress
+              </Typography>
+              <Typography variant="caption" fontWeight={600} color={palette.text.primary}>
+                {currentWeekCompletedCount}/{currentWeekItems.length} tasks
+                {currentWeekCompletedCount === currentWeekItems.length && currentWeekItems.length > 0 && ' ✓'}
+              </Typography>
+            </Stack>
+            <LinearProgress
+              variant="determinate"
+              value={currentWeekProgress}
+              sx={{
+                height: 6,
+                borderRadius: 3,
+                bgcolor: alpha(palette.slate, 0.1),
+                '& .MuiLinearProgress-bar': {
+                  bgcolor: currentWeekCompletedCount === currentWeekItems.length ? palette.success : weekColor,
+                  borderRadius: 3,
+                },
+              }}
+            />
+          </Box>
         </Box>
+
+        {/* Task List */}
         <CardContent sx={{ p: 0 }}>
           {currentWeekItems.length === 0 ? (
             <Box sx={{ p: 3, textAlign: 'center' }}>
