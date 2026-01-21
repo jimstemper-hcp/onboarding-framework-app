@@ -239,6 +239,17 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     []
   );
 
+  const updateProCompletedItems = useCallback(
+    (proId: string, completedItems: string[]) => {
+      setPros((currentPros) =>
+        currentPros.map((pro) =>
+          pro.id === proId ? { ...pro, completedItems } : pro
+        )
+      );
+    },
+    []
+  );
+
   // ---------------------------------------------------------------------------
   // DERIVED DATA HELPERS
   // ---------------------------------------------------------------------------
@@ -314,6 +325,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       deletePro,
       updateProFeatureStatus,
       updateProWeeklyPlan,
+      updateProCompletedItems,
 
       // Feature mutations
       updateFeature,
@@ -342,6 +354,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       deletePro,
       updateProFeatureStatus,
       updateProWeeklyPlan,
+      updateProCompletedItems,
       updateFeature,
       getFeatureById,
       getProById,

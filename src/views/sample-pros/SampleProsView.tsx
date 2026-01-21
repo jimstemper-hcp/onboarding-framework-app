@@ -29,9 +29,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
 import SearchIcon from '@mui/icons-material/Search';
-import RemoveIcon from '@mui/icons-material/Remove';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
@@ -58,7 +55,6 @@ import type {
   Segment,
   PainPoint,
   IndustryStandardized,
-  WeeklyPlan,
   Feature,
 } from '../../types';
 
@@ -111,12 +107,6 @@ const businessTypes: BusinessType[] = ['plumber', 'electrician', 'hvac', 'landsc
 const planTiers: PlanTier[] = ['basic', 'essentials', 'max'];
 const proGoals: ProGoal[] = ['growth', 'efficiency'];
 const stages: AdoptionStage[] = ['not_attached', 'attached', 'activated', 'engaged'];
-
-type WeekNumber = 1 | 2 | 3 | 4;
-
-function createDefaultWeeklyPlan(): WeeklyPlan {
-  return { week1: [], week2: [], week3: [], week4: [] };
-}
 
 // Pro Data field options
 const billingStatuses: BillingStatus[] = ['trial_expired', 'enrolled', 'unknown', 'unenrolled', 'trial'];
@@ -902,188 +892,80 @@ function FeaturesTab({ pro, features, onUpdate }: FeaturesTabProps) {
 }
 
 // =============================================================================
-// WEEKLY PLAN TAB
+// ONBOARDING ITEMS TAB
 // =============================================================================
 
-interface WeeklyPlanTabProps {
+const categoryLabels: Record<string, string> = {
+  'account-setup': 'Account Setup',
+  'the-basics': 'The Basics',
+  'add-ons': 'Add-ons',
+  'estimates': 'Estimates',
+  'jobs': 'Jobs',
+  'invoicing': 'Invoicing',
+  'service-plans': 'Service Plans',
+  'additional-tools': 'Additional Tools',
+  'reporting': 'Reporting',
+};
+
+interface OnboardingItemsTabProps {
   pro: ProAccount;
-  onUpdate: (pro: ProAccount) => void;
+  onUpdateCompletedItems: (completedItems: string[]) => void;
 }
 
-function WeeklyPlanTab({ pro, onUpdate }: WeeklyPlanTabProps) {
+function OnboardingItemsTab({ pro, onUpdateCompletedItems }: OnboardingItemsTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const weeklyPlan = pro.weeklyPlan || createDefaultWeeklyPlan();
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
-  const handleWeeklyPlanChange = (plan: WeeklyPlan) => {
-    onUpdate({ ...pro, weeklyPlan: plan });
-  };
+  const completedItems = pro.completedItems || [];
 
-  // Get all assigned item IDs across all weeks
-  const assignedItemIds = [
-    ...weeklyPlan.week1.map(i => i.itemId),
-    ...weeklyPlan.week2.map(i => i.itemId),
-    ...weeklyPlan.week3.map(i => i.itemId),
-    ...weeklyPlan.week4.map(i => i.itemId),
-  ];
+  // Get unique categories from all onboarding items
+  const categories = Array.from(
+    new Set(allOnboardingItems.map((item) => item.category).filter(Boolean))
+  ) as string[];
 
-  // Filter available items (not already assigned)
-  const availableItems = allOnboardingItems.filter(item => {
-    const matchesSearch = searchTerm === '' ||
+  // Filter items based on search and category
+  const filteredItems = allOnboardingItems.filter((item) => {
+    const matchesSearch =
+      searchTerm === '' ||
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const notAssigned = !assignedItemIds.includes(item.id);
-    return matchesSearch && notAssigned;
+    const matchesCategory =
+      categoryFilter === 'all' || item.category === categoryFilter;
+    return matchesSearch && matchesCategory;
   });
 
-  const getWeekKey = (week: WeekNumber): keyof WeeklyPlan => `week${week}` as keyof WeeklyPlan;
+  // Calculate stats
+  const totalItems = allOnboardingItems.length;
+  const completedCount = completedItems.length;
+  const totalPoints = allOnboardingItems.reduce(
+    (sum, item) => sum + (item.points || 0),
+    0
+  );
+  const earnedPoints = completedItems.reduce((sum, itemId) => {
+    const item = allOnboardingItems.find((i) => i.id === itemId);
+    return sum + (item?.points || 0);
+  }, 0);
 
-  const handleAddToWeek = (itemId: string, week: WeekNumber) => {
-    const weekKey = getWeekKey(week);
-    const currentItems = weeklyPlan[weekKey];
-    const maxOrder = currentItems.length > 0
-      ? Math.max(...currentItems.map(i => i.order)) + 1
-      : 0;
-    handleWeeklyPlanChange({
-      ...weeklyPlan,
-      [weekKey]: [...currentItems, { itemId, order: maxOrder }],
-    });
-  };
-
-  const handleRemoveFromWeek = (itemId: string, week: WeekNumber) => {
-    const weekKey = getWeekKey(week);
-    handleWeeklyPlanChange({
-      ...weeklyPlan,
-      [weekKey]: weeklyPlan[weekKey].filter(i => i.itemId !== itemId),
-    });
-  };
-
-  const handleMoveUp = (itemId: string, week: WeekNumber) => {
-    const weekKey = getWeekKey(week);
-    const items = [...weeklyPlan[weekKey]].sort((a, b) => a.order - b.order);
-    const index = items.findIndex(i => i.itemId === itemId);
-    if (index > 0) {
-      const temp = items[index].order;
-      items[index].order = items[index - 1].order;
-      items[index - 1].order = temp;
-      handleWeeklyPlanChange({ ...weeklyPlan, [weekKey]: items });
+  const handleToggleItem = (itemId: string) => {
+    const isCompleted = completedItems.includes(itemId);
+    if (isCompleted) {
+      onUpdateCompletedItems(completedItems.filter((id) => id !== itemId));
+    } else {
+      onUpdateCompletedItems([...completedItems, itemId]);
     }
-  };
-
-  const handleMoveDown = (itemId: string, week: WeekNumber) => {
-    const weekKey = getWeekKey(week);
-    const items = [...weeklyPlan[weekKey]].sort((a, b) => a.order - b.order);
-    const index = items.findIndex(i => i.itemId === itemId);
-    if (index < items.length - 1) {
-      const temp = items[index].order;
-      items[index].order = items[index + 1].order;
-      items[index + 1].order = temp;
-      handleWeeklyPlanChange({ ...weeklyPlan, [weekKey]: items });
-    }
-  };
-
-  const renderWeekColumn = (week: WeekNumber) => {
-    const weekKey = getWeekKey(week);
-    const items = weeklyPlan[weekKey].sort((a, b) => a.order - b.order);
-
-    return (
-      <Box
-        key={week}
-        sx={{
-          flex: 1,
-          minWidth: 180,
-          borderRight: week < 4 ? '1px solid' : 'none',
-          borderColor: 'divider',
-          p: 1.5,
-        }}
-      >
-        <Typography
-          variant="subtitle2"
-          fontWeight={600}
-          sx={{ mb: 1.5, color: palette.primary }}
-        >
-          Week {week}
-        </Typography>
-        <Stack spacing={0.5}>
-          {items.map((item, index) => {
-            const itemDef = allOnboardingItems.find(i => i.id === item.itemId);
-            if (!itemDef) return null;
-            return (
-              <Paper
-                key={item.itemId}
-                variant="outlined"
-                sx={{
-                  p: 1,
-                  bgcolor: palette.grey[50],
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                }}
-              >
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="caption" noWrap title={itemDef.title}>
-                    {itemDef.title}
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={0}>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleMoveUp(item.itemId, week)}
-                    disabled={index === 0}
-                    sx={{ p: 0.25 }}
-                  >
-                    <KeyboardArrowUpIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleMoveDown(item.itemId, week)}
-                    disabled={index === items.length - 1}
-                    sx={{ p: 0.25 }}
-                  >
-                    <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleRemoveFromWeek(item.itemId, week)}
-                    sx={{ p: 0.25, color: palette.error }}
-                  >
-                    <RemoveIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </Stack>
-              </Paper>
-            );
-          })}
-          {items.length === 0 && (
-            <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-              No items
-            </Typography>
-          )}
-        </Stack>
-      </Box>
-    );
   };
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 220px)' }}>
-      {/* Left panel: Available items */}
-      <Paper
-        variant="outlined"
-        sx={{
-          width: 280,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
-        <Box sx={{ p: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-            Available Items
-          </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 220px)' }}>
+      {/* Header with filters */}
+      <Box sx={{ mb: 2 }}>
+        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <TextField
             size="small"
             placeholder="Search items..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            fullWidth
+            sx={{ width: 300 }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -1092,68 +974,132 @@ function WeeklyPlanTab({ pro, onUpdate }: WeeklyPlanTabProps) {
               ),
             }}
           />
-        </Box>
-        <List dense sx={{ flex: 1, overflow: 'auto', py: 0 }}>
-          {availableItems.map((item) => (
-            <ListItem
-              key={item.id}
-              disablePadding
-              secondaryAction={
-                <Stack direction="row" spacing={0.5}>
-                  {([1, 2, 3, 4] as WeekNumber[]).map((week) => (
-                    <Tooltip key={week} title={`Add to Week ${week}`}>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleAddToWeek(item.id, week)}
-                        sx={{
-                          width: 20,
-                          height: 20,
-                          fontSize: '0.65rem',
-                          bgcolor: alpha(palette.primary, 0.1),
-                          color: palette.primary,
-                          '&:hover': { bgcolor: alpha(palette.primary, 0.2) },
-                        }}
-                      >
-                        {week}
-                      </IconButton>
-                    </Tooltip>
-                  ))}
-                </Stack>
-              }
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Category</InputLabel>
+            <Select
+              value={categoryFilter}
+              label="Category"
+              onChange={(e) => setCategoryFilter(e.target.value)}
             >
-              <ListItemButton sx={{ py: 0.5 }}>
-                <ListItemText
-                  primary={item.title}
-                  primaryTypographyProps={{
-                    variant: 'caption',
-                    noWrap: true,
-                    sx: { maxWidth: 140 },
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-          {availableItems.length === 0 && (
+              <MenuItem value="all">All Categories</MenuItem>
+              {categories.map((cat) => (
+                <MenuItem key={cat} value={cat}>
+                  {categoryLabels[cat] || cat}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+
+        {/* Stats summary */}
+        <Typography variant="body2" color="text.secondary">
+          <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            {completedCount} of {totalItems}
+          </Box>{' '}
+          items completed •{' '}
+          <Box component="span" sx={{ fontWeight: 600, color: palette.success }}>
+            {earnedPoints.toLocaleString()}
+          </Box>{' '}
+          of {totalPoints.toLocaleString()} points earned
+        </Typography>
+      </Box>
+
+      {/* Items list */}
+      <Paper variant="outlined" sx={{ flex: 1, overflow: 'auto' }}>
+        <List dense disablePadding>
+          {filteredItems.map((item) => {
+            const isCompleted = completedItems.includes(item.id);
+            return (
+              <ListItem
+                key={item.id}
+                disablePadding
+                sx={{
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  bgcolor: isCompleted ? alpha(palette.success, 0.04) : 'transparent',
+                }}
+              >
+                <ListItemButton onClick={() => handleToggleItem(item.id)} sx={{ py: 1.5, px: 2 }}>
+                  <Box sx={{ mr: 1.5 }}>
+                    {isCompleted ? (
+                      <CheckBoxIcon sx={{ color: palette.success }} />
+                    ) : (
+                      <CheckBoxOutlineBlankIcon sx={{ color: palette.grey[400] }} />
+                    )}
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        textDecoration: isCompleted ? 'line-through' : 'none',
+                        color: isCompleted ? 'text.secondary' : 'text.primary',
+                      }}
+                    >
+                      {item.title}
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 2 }}>
+                    {item.points && (
+                      <Chip
+                        label={`${item.points}pts`}
+                        size="small"
+                        sx={{
+                          height: 22,
+                          fontSize: '0.7rem',
+                          fontWeight: 600,
+                          bgcolor: isCompleted
+                            ? alpha(palette.success, 0.1)
+                            : alpha(palette.primary, 0.1),
+                          color: isCompleted ? palette.success : palette.primary,
+                        }}
+                      />
+                    )}
+                    {item.category && (
+                      <Chip
+                        label={categoryLabels[item.category] || item.category}
+                        size="small"
+                        sx={{
+                          height: 22,
+                          fontSize: '0.65rem',
+                          bgcolor: palette.grey[100],
+                          color: palette.grey[600],
+                        }}
+                      />
+                    )}
+                    {item.type && (
+                      <Chip
+                        label={item.type === 'in_product' ? 'In-Product' : 'Rep-Facing'}
+                        size="small"
+                        sx={{
+                          height: 22,
+                          fontSize: '0.65rem',
+                          bgcolor:
+                            item.type === 'in_product'
+                              ? alpha(palette.secondary, 0.1)
+                              : alpha(palette.warning, 0.1),
+                          color:
+                            item.type === 'in_product' ? palette.secondary : palette.warning,
+                        }}
+                      />
+                    )}
+                  </Stack>
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+          {filteredItems.length === 0 && (
             <ListItem>
               <ListItemText
-                primary={searchTerm ? 'No matching items' : 'All items assigned'}
-                primaryTypographyProps={{ variant: 'caption', color: 'text.secondary' }}
+                primary="No matching items"
+                primaryTypographyProps={{
+                  variant: 'body2',
+                  color: 'text.secondary',
+                  sx: { fontStyle: 'italic', textAlign: 'center', py: 4 },
+                }}
               />
             </ListItem>
           )}
         </List>
-      </Paper>
-
-      {/* Right panel: Week columns */}
-      <Paper
-        variant="outlined"
-        sx={{
-          flex: 1,
-          display: 'flex',
-          overflow: 'auto',
-        }}
-      >
-        {([1, 2, 3, 4] as WeekNumber[]).map(renderWeekColumn)}
       </Paper>
     </Box>
   );
@@ -1164,7 +1110,7 @@ function WeeklyPlanTab({ pro, onUpdate }: WeeklyPlanTabProps) {
 // =============================================================================
 
 export function SampleProsView() {
-  const { pros, features, addPro, updatePro, deletePro } = useOnboarding();
+  const { pros, features, addPro, updatePro, deletePro, updateProCompletedItems } = useOnboarding();
   const [selectedProId, setSelectedProId] = useState<string | null>(pros[0]?.id || null);
   const [activeTab, setActiveTab] = useState(0);
 
@@ -1235,7 +1181,7 @@ export function SampleProsView() {
                 <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
                   <Tab label="Details" />
                   <Tab label="Features" />
-                  <Tab label="Weekly Plan" />
+                  <Tab label="Onboarding Items" />
                 </Tabs>
               </Box>
 
@@ -1248,7 +1194,12 @@ export function SampleProsView() {
                   <FeaturesTab pro={selectedPro} features={features} onUpdate={updatePro} />
                 )}
                 {activeTab === 2 && (
-                  <WeeklyPlanTab pro={selectedPro} onUpdate={updatePro} />
+                  <OnboardingItemsTab
+                    pro={selectedPro}
+                    onUpdateCompletedItems={(completedItems) =>
+                      updateProCompletedItems(selectedPro.id, completedItems)
+                    }
+                  />
                 )}
               </Box>
             </>
