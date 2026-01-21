@@ -1,20 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Typography,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   Stack,
   Chip,
@@ -24,7 +14,6 @@ import {
   InputLabel,
   Tabs,
   Tab,
-  Card,
   alpha,
   Tooltip,
   InputAdornment,
@@ -32,18 +21,20 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  Divider,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SearchIcon from '@mui/icons-material/Search';
 import RemoveIcon from '@mui/icons-material/Remove';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import * as MuiIcons from '@mui/icons-material';
 import { useOnboarding } from '../../context';
 import { onboardingItems as allOnboardingItems } from '../../data';
@@ -68,7 +59,7 @@ import type {
   PainPoint,
   IndustryStandardized,
   WeeklyPlan,
-  WeeklyPlanItem,
+  Feature,
 } from '../../types';
 
 // =============================================================================
@@ -221,46 +212,102 @@ function generateProId(): string {
 }
 
 // =============================================================================
-// PRO EDITOR DIALOG
+// PRO SIDEBAR
 // =============================================================================
 
-interface ProEditorDialogProps {
-  open: boolean;
-  pro: ProAccount | null;
-  onSave: (pro: ProAccount) => void;
-  onClose: () => void;
-  isNew: boolean;
+interface ProSidebarProps {
+  pros: ProAccount[];
+  selectedProId: string | null;
+  onSelectPro: (proId: string) => void;
+  onAddPro: () => void;
 }
 
-function ProEditorDialog({ open, pro, onSave, onClose, isNew }: ProEditorDialogProps) {
-  const [editedPro, setEditedPro] = useState<ProAccount | null>(pro);
-  const [activeTab, setActiveTab] = useState(0);
+function ProSidebar({ pros, selectedProId, onSelectPro, onAddPro }: ProSidebarProps) {
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        width: 280,
+        flexShrink: 0,
+        borderRight: 1,
+        borderColor: 'divider',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
+    >
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Typography variant="subtitle1" fontWeight={600}>
+            Sample Pros
+          </Typography>
+          <Tooltip title="Add new pro">
+            <IconButton size="small" onClick={onAddPro} color="primary">
+              <AddIcon />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      </Box>
+      <List sx={{ flex: 1, overflow: 'auto', py: 0 }}>
+        {pros.map((pro) => (
+          <ListItem key={pro.id} disablePadding>
+            <ListItemButton
+              selected={selectedProId === pro.id}
+              onClick={() => onSelectPro(pro.id)}
+              sx={{
+                py: 1.5,
+                '&.Mui-selected': {
+                  bgcolor: alpha(palette.primary, 0.08),
+                  borderLeft: `3px solid ${palette.primary}`,
+                  '&:hover': {
+                    bgcolor: alpha(palette.primary, 0.12),
+                  },
+                },
+              }}
+            >
+              <ListItemText
+                primary={pro.companyName}
+                secondary={
+                  <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
+                    <Chip
+                      label={pro.plan}
+                      size="small"
+                      sx={{
+                        height: 18,
+                        fontSize: '0.65rem',
+                        textTransform: 'capitalize',
+                        bgcolor: pro.plan === 'max' ? alpha(palette.primary, 0.1) : palette.grey[100],
+                        color: pro.plan === 'max' ? palette.primary : palette.grey[600],
+                      }}
+                    />
+                    <Typography variant="caption" color="text.secondary">
+                      {pro.ownerName}
+                    </Typography>
+                  </Stack>
+                }
+                primaryTypographyProps={{ fontWeight: 500, fontSize: '0.875rem' }}
+              />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Paper>
+  );
+}
 
-  // Reset state when dialog opens with new pro
-  useEffect(() => {
-    if (open && pro) {
-      setEditedPro(pro);
-      setActiveTab(0);
-    }
-  }, [open, pro]);
+// =============================================================================
+// DETAILS TAB
+// =============================================================================
 
-  if (!editedPro) return null;
+interface DetailsTabProps {
+  pro: ProAccount;
+  onUpdate: (pro: ProAccount) => void;
+}
 
-  const weeklyPlan = editedPro.weeklyPlan || createDefaultWeeklyPlan();
-
-  const handleWeeklyPlanChange = (plan: WeeklyPlan) => {
-    setEditedPro({ ...editedPro, weeklyPlan: plan });
-  };
-
-  const handleSave = () => {
-    onSave(editedPro);
-    onClose();
-  };
-
+function DetailsTab({ pro, onUpdate }: DetailsTabProps) {
   const handleFieldChange = (field: keyof ProAccount, value: string) => {
     let processedValue: string | boolean | number | undefined = value;
 
-    // Handle special field types
     if (field === 'techReadiness') {
       processedValue = value === 'true' ? true : value === 'false' ? false : undefined;
     } else if (field === 'organizationSize') {
@@ -269,402 +316,351 @@ function ProEditorDialog({ open, pro, onSave, onClose, isNew }: ProEditorDialogP
       processedValue = undefined;
     }
 
-    setEditedPro({ ...editedPro, [field]: processedValue });
-  };
-
-  const handleFeatureStatusChange = (featureId: FeatureId, status: FeatureStatus) => {
-    setEditedPro({
-      ...editedPro,
-      featureStatus: {
-        ...editedPro.featureStatus,
-        [featureId]: status,
-      },
-    });
+    onUpdate({ ...pro, [field]: processedValue });
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        {isNew ? <PersonAddIcon color="primary" /> : <EditIcon color="primary" />}
-        {isNew ? 'Add New Sample Pro' : `Edit: ${editedPro.companyName}`}
-      </DialogTitle>
-      <DialogContent>
-        <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}>
-          <Tab label="Pro Details" />
-          <Tab label="Feature Status" />
-          <Tab label="Weekly Plan" />
-        </Tabs>
+    <Box sx={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', pr: 1 }}>
+      {/* Basic Info Section */}
+      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+        Basic Information
+      </Typography>
+      <Stack spacing={2} sx={{ mb: 3 }}>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            label="Company Name"
+            value={pro.companyName}
+            onChange={(e) => handleFieldChange('companyName', e.target.value)}
+            fullWidth
+            size="small"
+          />
+          <TextField
+            label="Owner Name"
+            value={pro.ownerName}
+            onChange={(e) => handleFieldChange('ownerName', e.target.value)}
+            fullWidth
+            size="small"
+          />
+        </Stack>
+        <Stack direction="row" spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Plan</InputLabel>
+            <Select
+              value={pro.plan}
+              label="Plan"
+              onChange={(e) => handleFieldChange('plan', e.target.value)}
+            >
+              {planTiers.map((tier) => (
+                <MenuItem key={tier} value={tier}>
+                  {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth size="small">
+            <InputLabel>Company Goal</InputLabel>
+            <Select
+              value={pro.goal}
+              label="Company Goal"
+              onChange={(e) => handleFieldChange('goal', e.target.value)}
+            >
+              {proGoals.map((goal) => (
+                <MenuItem key={goal} value={goal}>
+                  {goal.charAt(0).toUpperCase() + goal.slice(1)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            label="Created At"
+            type="date"
+            value={pro.createdAt}
+            onChange={(e) => handleFieldChange('createdAt', e.target.value)}
+            fullWidth
+            size="small"
+            InputLabelProps={{ shrink: true }}
+          />
+        </Stack>
+      </Stack>
 
-        {activeTab === 0 && (
-          <Box sx={{ mt: 2, maxHeight: '60vh', overflowY: 'auto', pr: 1 }}>
-            {/* Basic Info Section */}
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
-              Basic Information
-            </Typography>
-            <Stack spacing={2} sx={{ mb: 3 }}>
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  label="Company Name"
-                  value={editedPro.companyName}
-                  onChange={(e) => handleFieldChange('companyName', e.target.value)}
-                  fullWidth
-                  size="small"
-                />
-                <TextField
-                  label="Owner Name"
-                  value={editedPro.ownerName}
-                  onChange={(e) => handleFieldChange('ownerName', e.target.value)}
-                  fullWidth
-                  size="small"
-                />
-              </Stack>
-              <Stack direction="row" spacing={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Plan</InputLabel>
-                  <Select
-                    value={editedPro.plan}
-                    label="Plan"
-                    onChange={(e) => handleFieldChange('plan', e.target.value)}
-                  >
-                    {planTiers.map((tier) => (
-                      <MenuItem key={tier} value={tier}>
-                        {tier.charAt(0).toUpperCase() + tier.slice(1)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Company Goal</InputLabel>
-                  <Select
-                    value={editedPro.goal}
-                    label="Company Goal"
-                    onChange={(e) => handleFieldChange('goal', e.target.value)}
-                  >
-                    {proGoals.map((goal) => (
-                      <MenuItem key={goal} value={goal}>
-                        {goal.charAt(0).toUpperCase() + goal.slice(1)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <TextField
-                  label="Created At"
-                  type="date"
-                  value={editedPro.createdAt}
-                  onChange={(e) => handleFieldChange('createdAt', e.target.value)}
-                  fullWidth
-                  size="small"
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Stack>
-            </Stack>
+      {/* Organization IDs Section */}
+      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+        Organization IDs
+      </Typography>
+      <Stack spacing={2} sx={{ mb: 3 }}>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            label="Business ID"
+            value={pro.businessId || ''}
+            onChange={(e) => handleFieldChange('businessId', e.target.value)}
+            fullWidth
+            size="small"
+            placeholder="UUID"
+          />
+          <TextField
+            label="Organization UUID"
+            value={pro.organizationUuid || ''}
+            onChange={(e) => handleFieldChange('organizationUuid', e.target.value)}
+            fullWidth
+            size="small"
+            placeholder="UUID"
+          />
+        </Stack>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            label="Salesforce Account ID"
+            value={pro.salesforceAccountId || ''}
+            onChange={(e) => handleFieldChange('salesforceAccountId', e.target.value)}
+            fullWidth
+            size="small"
+          />
+          <TextField
+            label="Salesforce Lead ID"
+            value={pro.salesforceLeadId || ''}
+            onChange={(e) => handleFieldChange('salesforceLeadId', e.target.value)}
+            fullWidth
+            size="small"
+          />
+        </Stack>
+      </Stack>
 
-            {/* Organization IDs Section */}
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
-              Organization IDs
-            </Typography>
-            <Stack spacing={2} sx={{ mb: 3 }}>
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  label="Business ID"
-                  value={editedPro.businessId || ''}
-                  onChange={(e) => handleFieldChange('businessId', e.target.value)}
-                  fullWidth
-                  size="small"
-                  placeholder="UUID"
-                />
-                <TextField
-                  label="Organization UUID"
-                  value={editedPro.organizationUuid || ''}
-                  onChange={(e) => handleFieldChange('organizationUuid', e.target.value)}
-                  fullWidth
-                  size="small"
-                  placeholder="UUID"
-                />
-              </Stack>
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  label="Salesforce Account ID"
-                  value={editedPro.salesforceAccountId || ''}
-                  onChange={(e) => handleFieldChange('salesforceAccountId', e.target.value)}
-                  fullWidth
-                  size="small"
-                />
-                <TextField
-                  label="Salesforce Lead ID"
-                  value={editedPro.salesforceLeadId || ''}
-                  onChange={(e) => handleFieldChange('salesforceLeadId', e.target.value)}
-                  fullWidth
-                  size="small"
-                />
-              </Stack>
-            </Stack>
+      {/* Industry & Segment Section */}
+      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+        Industry & Segment
+      </Typography>
+      <Stack spacing={2} sx={{ mb: 3 }}>
+        <Stack direction="row" spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Industry (Standardized)</InputLabel>
+            <Select
+              value={pro.industryStandardized || ''}
+              label="Industry (Standardized)"
+              onChange={(e) => handleFieldChange('industryStandardized', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {industryStandardizedOptions.map((ind) => (
+                <MenuItem key={ind} value={ind}>{ind}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth size="small">
+            <InputLabel>Industry Type</InputLabel>
+            <Select
+              value={pro.industryType || ''}
+              label="Industry Type"
+              onChange={(e) => handleFieldChange('industryType', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {industryTypes.map((type) => (
+                <MenuItem key={type} value={type}>{type}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+        <Stack direction="row" spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Segment</InputLabel>
+            <Select
+              value={pro.segment || ''}
+              label="Segment"
+              onChange={(e) => handleFieldChange('segment', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {segments.map((seg) => (
+                <MenuItem key={seg} value={seg}>{seg}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth size="small">
+            <InputLabel>Organization Bin Size</InputLabel>
+            <Select
+              value={pro.organizationBinSize || ''}
+              label="Organization Bin Size"
+              onChange={(e) => handleFieldChange('organizationBinSize', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {organizationBinSizes.map((size) => (
+                <MenuItem key={size} value={size}>{size}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            label="Organization Size"
+            type="number"
+            value={pro.organizationSize || ''}
+            onChange={(e) => handleFieldChange('organizationSize', e.target.value)}
+            fullWidth
+            size="small"
+          />
+        </Stack>
+        <FormControl fullWidth size="small">
+          <InputLabel>Tech Readiness</InputLabel>
+          <Select
+            value={pro.techReadiness === true ? 'true' : pro.techReadiness === false ? 'false' : ''}
+            label="Tech Readiness"
+            onChange={(e) => handleFieldChange('techReadiness', e.target.value)}
+          >
+            <MenuItem value="">—</MenuItem>
+            <MenuItem value="true">Yes (Switcher - comparing with current system)</MenuItem>
+            <MenuItem value="false">No (Coming from pen and paper)</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
 
-            {/* Industry & Segment Section */}
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
-              Industry & Segment
-            </Typography>
-            <Stack spacing={2} sx={{ mb: 3 }}>
-              <Stack direction="row" spacing={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Industry (Standardized)</InputLabel>
-                  <Select
-                    value={editedPro.industryStandardized || ''}
-                    label="Industry (Standardized)"
-                    onChange={(e) => handleFieldChange('industryStandardized', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {industryStandardizedOptions.map((ind) => (
-                      <MenuItem key={ind} value={ind}>{ind}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Industry Type</InputLabel>
-                  <Select
-                    value={editedPro.industryType || ''}
-                    label="Industry Type"
-                    onChange={(e) => handleFieldChange('industryType', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {industryTypes.map((type) => (
-                      <MenuItem key={type} value={type}>{type}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Stack>
-              <Stack direction="row" spacing={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Segment</InputLabel>
-                  <Select
-                    value={editedPro.segment || ''}
-                    label="Segment"
-                    onChange={(e) => handleFieldChange('segment', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {segments.map((seg) => (
-                      <MenuItem key={seg} value={seg}>{seg}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Organization Bin Size</InputLabel>
-                  <Select
-                    value={editedPro.organizationBinSize || ''}
-                    label="Organization Bin Size"
-                    onChange={(e) => handleFieldChange('organizationBinSize', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {organizationBinSizes.map((size) => (
-                      <MenuItem key={size} value={size}>{size}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <TextField
-                  label="Organization Size"
-                  type="number"
-                  value={editedPro.organizationSize || ''}
-                  onChange={(e) => handleFieldChange('organizationSize', e.target.value)}
-                  fullWidth
-                  size="small"
-                />
-              </Stack>
-              <FormControl fullWidth size="small">
-                <InputLabel>Tech Readiness</InputLabel>
-                <Select
-                  value={editedPro.techReadiness === true ? 'true' : editedPro.techReadiness === false ? 'false' : ''}
-                  label="Tech Readiness"
-                  onChange={(e) => handleFieldChange('techReadiness', e.target.value)}
-                >
-                  <MenuItem value="">—</MenuItem>
-                  <MenuItem value="true">Yes (Switcher - comparing with current system)</MenuItem>
-                  <MenuItem value="false">No (Coming from pen and paper)</MenuItem>
-                </Select>
-              </FormControl>
-            </Stack>
+      {/* Status Section */}
+      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+        Status Information
+      </Typography>
+      <Stack spacing={2} sx={{ mb: 3 }}>
+        <Stack direction="row" spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Billing Status</InputLabel>
+            <Select
+              value={pro.billingStatus || ''}
+              label="Billing Status"
+              onChange={(e) => handleFieldChange('billingStatus', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {billingStatuses.map((status) => (
+                <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth size="small">
+            <InputLabel>Organization Status</InputLabel>
+            <Select
+              value={pro.organizationStatus || ''}
+              label="Organization Status"
+              onChange={(e) => handleFieldChange('organizationStatus', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {organizationStatuses.map((status) => (
+                <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+        <Stack direction="row" spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Customer Status Display</InputLabel>
+            <Select
+              value={pro.customerStatusDisplayName || ''}
+              label="Customer Status Display"
+              onChange={(e) => handleFieldChange('customerStatusDisplayName', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {customerStatusDisplayNames.map((status) => (
+                <MenuItem key={status} value={status}>{status}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth size="small">
+            <InputLabel>Lead Status</InputLabel>
+            <Select
+              value={pro.leadStatus || ''}
+              label="Lead Status"
+              onChange={(e) => handleFieldChange('leadStatus', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {leadStatuses.map((status) => (
+                <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+        <Stack direction="row" spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Fraud Status</InputLabel>
+            <Select
+              value={pro.fraudStatus || ''}
+              label="Fraud Status"
+              onChange={(e) => handleFieldChange('fraudStatus', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {fraudStatuses.map((status) => (
+                <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth size="small">
+            <InputLabel>Retention Status</InputLabel>
+            <Select
+              value={pro.retentionStatus || ''}
+              label="Retention Status"
+              onChange={(e) => handleFieldChange('retentionStatus', e.target.value)}
+            >
+              <MenuItem value="">—</MenuItem>
+              {retentionStatuses.map((status) => (
+                <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
+      </Stack>
 
-            {/* Status Section */}
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
-              Status Information
-            </Typography>
-            <Stack spacing={2} sx={{ mb: 3 }}>
-              <Stack direction="row" spacing={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Billing Status</InputLabel>
-                  <Select
-                    value={editedPro.billingStatus || ''}
-                    label="Billing Status"
-                    onChange={(e) => handleFieldChange('billingStatus', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {billingStatuses.map((status) => (
-                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Organization Status</InputLabel>
-                  <Select
-                    value={editedPro.organizationStatus || ''}
-                    label="Organization Status"
-                    onChange={(e) => handleFieldChange('organizationStatus', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {organizationStatuses.map((status) => (
-                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Stack>
-              <Stack direction="row" spacing={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Customer Status Display</InputLabel>
-                  <Select
-                    value={editedPro.customerStatusDisplayName || ''}
-                    label="Customer Status Display"
-                    onChange={(e) => handleFieldChange('customerStatusDisplayName', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {customerStatusDisplayNames.map((status) => (
-                      <MenuItem key={status} value={status}>{status}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Lead Status</InputLabel>
-                  <Select
-                    value={editedPro.leadStatus || ''}
-                    label="Lead Status"
-                    onChange={(e) => handleFieldChange('leadStatus', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {leadStatuses.map((status) => (
-                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Stack>
-              <Stack direction="row" spacing={2}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Fraud Status</InputLabel>
-                  <Select
-                    value={editedPro.fraudStatus || ''}
-                    label="Fraud Status"
-                    onChange={(e) => handleFieldChange('fraudStatus', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {fraudStatuses.map((status) => (
-                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Retention Status</InputLabel>
-                  <Select
-                    value={editedPro.retentionStatus || ''}
-                    label="Retention Status"
-                    onChange={(e) => handleFieldChange('retentionStatus', e.target.value)}
-                  >
-                    <MenuItem value="">—</MenuItem>
-                    {retentionStatuses.map((status) => (
-                      <MenuItem key={status} value={status}>{status.replace(/_/g, ' ')}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Stack>
-            </Stack>
+      {/* Pain Points Section */}
+      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+        Pain Points
+      </Typography>
+      <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+        <InputLabel>Pain Points</InputLabel>
+        <Select
+          multiple
+          value={pro.painPoints || []}
+          label="Pain Points"
+          onChange={(e) => {
+            const value = e.target.value;
+            onUpdate({ ...pro, painPoints: typeof value === 'string' ? value.split(',') as PainPoint[] : value as PainPoint[] });
+          }}
+          renderValue={(selected) => (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+              {(selected as string[]).map((value) => (
+                <Chip key={value} label={value} size="small" />
+              ))}
+            </Box>
+          )}
+        >
+          {painPointOptions.map((point) => (
+            <MenuItem key={point} value={point}>{point}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
 
-            {/* Pain Points Section */}
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
-              Pain Points
-            </Typography>
-            <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-              <InputLabel>Pain Points</InputLabel>
-              <Select
-                multiple
-                value={editedPro.painPoints || []}
-                label="Pain Points"
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setEditedPro({ ...editedPro, painPoints: typeof value === 'string' ? value.split(',') as PainPoint[] : value as PainPoint[] });
-                }}
-                renderValue={(selected) => (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {(selected as string[]).map((value) => (
-                      <Chip key={value} label={value} size="small" />
-                    ))}
-                  </Box>
-                )}
-              >
-                {painPointOptions.map((point) => (
-                  <MenuItem key={point} value={point}>{point}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Legacy Business Type (for backward compatibility) */}
-            <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
-              Legacy Fields
-            </Typography>
-            <FormControl fullWidth size="small">
-              <InputLabel>Business Type (Legacy)</InputLabel>
-              <Select
-                value={editedPro.businessType}
-                label="Business Type (Legacy)"
-                onChange={(e) => handleFieldChange('businessType', e.target.value)}
-              >
-                {businessTypes.map((type) => (
-                  <MenuItem key={type} value={type}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        )}
-
-        {activeTab === 1 && (
-          <Box sx={{ mt: 2 }}>
-            <FeatureStatusEditor
-              featureStatus={editedPro.featureStatus}
-              onChange={handleFeatureStatusChange}
-            />
-          </Box>
-        )}
-
-        {activeTab === 2 && (
-          <Box sx={{ mt: 2 }}>
-            <WeeklyPlanEditor
-              weeklyPlan={weeklyPlan}
-              onChange={handleWeeklyPlanChange}
-            />
-          </Box>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={handleSave} variant="contained">
-          {isNew ? 'Add Pro' : 'Save Changes'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      {/* Legacy Business Type (for backward compatibility) */}
+      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1.5, fontWeight: 600 }}>
+        Legacy Fields
+      </Typography>
+      <FormControl fullWidth size="small">
+        <InputLabel>Business Type (Legacy)</InputLabel>
+        <Select
+          value={pro.businessType}
+          label="Business Type (Legacy)"
+          onChange={(e) => handleFieldChange('businessType', e.target.value)}
+        >
+          {businessTypes.map((type) => (
+            <MenuItem key={type} value={type}>
+              {type.charAt(0).toUpperCase() + type.slice(1)}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </Box>
   );
 }
 
 // =============================================================================
-// FEATURE STATUS EDITOR
+// FEATURES TAB
 // =============================================================================
 
-interface FeatureStatusEditorProps {
-  featureStatus: Record<FeatureId, FeatureStatus>;
-  onChange: (featureId: FeatureId, status: FeatureStatus) => void;
+interface FeaturesTabProps {
+  pro: ProAccount;
+  features: Feature[];
+  onUpdate: (pro: ProAccount) => void;
 }
 
-function FeatureStatusEditor({ featureStatus, onChange }: FeatureStatusEditorProps) {
-  const { features } = useOnboarding();
-
+function FeaturesTab({ pro, features, onUpdate }: FeaturesTabProps) {
   const handleStageChange = (featureId: FeatureId, stage: AdoptionStage) => {
-    const current = featureStatus[featureId];
+    const current = pro.featureStatus[featureId] || createDefaultFeatureStatus();
     const now = new Date().toISOString().split('T')[0];
 
     const updated: FeatureStatus = {
@@ -675,137 +671,252 @@ function FeatureStatusEditor({ featureStatus, onChange }: FeatureStatusEditorPro
       ...(stage === 'engaged' && !current.engagedAt && { engagedAt: now }),
     };
 
-    onChange(featureId, updated);
+    onUpdate({
+      ...pro,
+      featureStatus: {
+        ...pro.featureStatus,
+        [featureId]: updated,
+      },
+    });
   };
 
   const handleUsageChange = (featureId: FeatureId, usageCount: number) => {
-    onChange(featureId, {
-      ...featureStatus[featureId],
-      usageCount,
+    onUpdate({
+      ...pro,
+      featureStatus: {
+        ...pro.featureStatus,
+        [featureId]: {
+          ...pro.featureStatus[featureId],
+          usageCount,
+        },
+      },
     });
   };
 
-  const handleCompletedTasksChange = (featureId: FeatureId, tasks: string[]) => {
-    onChange(featureId, {
-      ...featureStatus[featureId],
-      completedTasks: tasks,
-    });
-  };
+  // Get onboarding items for a feature at its current stage
+  const getFeatureOnboardingItems = (feature: Feature, stage: AdoptionStage) => {
+    const stageKey = stage === 'not_attached' ? 'notAttached' : stage;
+    const stageData = feature.stages[stageKey as keyof typeof feature.stages];
+    if (!stageData?.onboardingItems) return [];
 
-  const handleRankChange = (featureId: FeatureId, rank: number | undefined) => {
-    onChange(featureId, {
-      ...featureStatus[featureId],
-      rank,
+    return stageData.onboardingItems.map((item) => {
+      const itemDef = allOnboardingItems.find((i) => i.id === item.itemId);
+      return {
+        ...item,
+        definition: itemDef,
+      };
     });
   };
 
   return (
-    <Stack spacing={2}>
-      {allFeatureIds.map((featureId) => {
-        const feature = features.find((f) => f.id === featureId);
-        const status = featureStatus[featureId] || createDefaultFeatureStatus();
+    <Box sx={{ maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', pr: 1 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Configure feature status and view onboarding items for each stage. Onboarding items are defined in the HCP Context Manager.
+      </Typography>
+
+      {features.filter((f) => allFeatureIds.includes(f.id as FeatureId)).map((feature) => {
+        const featureId = feature.id as FeatureId;
+        const status = pro.featureStatus[featureId] || createDefaultFeatureStatus();
+        const onboardingItems = getFeatureOnboardingItems(feature, status.stage);
 
         return (
-          <Card key={featureId} variant="outlined" sx={{ p: 2 }}>
-            <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-              <FeatureIcon iconName={feature?.icon || 'HelpOutlineRounded'} sx={{ color: stageColors[status.stage] }} />
-              <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
-                {feature?.name || featureId}
-              </Typography>
-              <Chip
-                label={stageLabels[status.stage]}
-                size="small"
-                sx={{
-                  bgcolor: alpha(stageColors[status.stage], 0.1),
-                  color: stageColors[status.stage],
-                  fontWeight: 600,
-                }}
-              />
-            </Stack>
+          <Accordion
+            key={featureId}
+            defaultExpanded={false}
+            sx={{
+              mb: 1,
+              border: 1,
+              borderColor: 'divider',
+              '&:before': { display: 'none' },
+              boxShadow: 'none',
+            }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%', pr: 2 }}>
+                <FeatureIcon iconName={feature.icon || 'HelpOutlineRounded'} sx={{ color: stageColors[status.stage] }} />
+                <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
+                  {feature.name}
+                </Typography>
+                <Chip
+                  label={stageLabels[status.stage]}
+                  size="small"
+                  sx={{
+                    bgcolor: alpha(stageColors[status.stage], 0.1),
+                    color: stageColors[status.stage],
+                    fontWeight: 600,
+                  }}
+                />
+              </Stack>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Stack spacing={2}>
+                {/* Stage and usage controls */}
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  <FormControl size="small" sx={{ minWidth: 150 }}>
+                    <InputLabel>Stage</InputLabel>
+                    <Select
+                      value={status.stage}
+                      label="Stage"
+                      onChange={(e) => handleStageChange(featureId, e.target.value as AdoptionStage)}
+                    >
+                      {stages.map((stage) => (
+                        <MenuItem key={stage} value={stage}>
+                          {stageLabels[stage]}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
 
-            <Stack direction="row" spacing={2} alignItems="flex-start">
-              <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel>Stage</InputLabel>
-                <Select
-                  value={status.stage}
-                  label="Stage"
-                  onChange={(e) => handleStageChange(featureId, e.target.value as AdoptionStage)}
-                >
-                  {stages.map((stage) => (
-                    <MenuItem key={stage} value={stage}>
-                      {stageLabels[stage]}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                  <TextField
+                    label="Usage Count"
+                    type="number"
+                    size="small"
+                    value={status.usageCount}
+                    onChange={(e) => handleUsageChange(featureId, parseInt(e.target.value) || 0)}
+                    sx={{ width: 120 }}
+                  />
 
-              <TextField
-                label="Usage Count"
-                type="number"
-                size="small"
-                value={status.usageCount}
-                onChange={(e) => handleUsageChange(featureId, parseInt(e.target.value) || 0)}
-                sx={{ width: 120 }}
-              />
+                  {status.stage !== 'not_attached' && (
+                    <Stack direction="row" spacing={2} alignItems="center" sx={{ ml: 2 }}>
+                      {status.attachedAt && (
+                        <Typography variant="caption" color="text.secondary">
+                          Attached: {status.attachedAt}
+                        </Typography>
+                      )}
+                      {status.activatedAt && (
+                        <Typography variant="caption" color="text.secondary">
+                          Activated: {status.activatedAt}
+                        </Typography>
+                      )}
+                      {status.engagedAt && (
+                        <Typography variant="caption" color="text.secondary">
+                          Engaged: {status.engagedAt}
+                        </Typography>
+                      )}
+                    </Stack>
+                  )}
+                </Stack>
 
-              <TextField
-                label="Rank"
-                type="number"
-                size="small"
-                value={status.rank ?? ''}
-                onChange={(e) => handleRankChange(featureId, e.target.value ? parseInt(e.target.value) : undefined)}
-                sx={{ width: 100 }}
-                placeholder="1, 2, 3..."
-                helperText="Lower = higher priority"
-              />
-
-              <TextField
-                label="Completed Tasks (comma-separated)"
-                size="small"
-                value={status.completedTasks.join(', ')}
-                onChange={(e) => handleCompletedTasksChange(featureId, e.target.value.split(',').map((t) => t.trim()).filter(Boolean))}
-                sx={{ flex: 1 }}
-                placeholder="task-1, task-2"
-              />
-            </Stack>
-
-            {status.stage !== 'not_attached' && (
-              <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-                {status.attachedAt && (
-                  <Typography variant="caption" color="text.secondary">
-                    Attached: {status.attachedAt}
-                  </Typography>
+                {/* Onboarding items for current stage */}
+                {onboardingItems.length > 0 && (
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                      Onboarding Items for {stageLabels[status.stage]} Stage
+                    </Typography>
+                    <Paper variant="outlined" sx={{ p: 1.5 }}>
+                      <Stack spacing={1}>
+                        {onboardingItems.map((item) => {
+                          const isCompleted = status.completedTasks.includes(item.itemId);
+                          return (
+                            <Stack
+                              key={item.itemId}
+                              direction="row"
+                              alignItems="flex-start"
+                              spacing={1}
+                              sx={{
+                                p: 1,
+                                borderRadius: 1,
+                                bgcolor: isCompleted ? alpha(palette.success, 0.05) : 'transparent',
+                              }}
+                            >
+                              <IconButton
+                                size="small"
+                                onClick={() => {
+                                  const newTasks = isCompleted
+                                    ? status.completedTasks.filter((t) => t !== item.itemId)
+                                    : [...status.completedTasks, item.itemId];
+                                  onUpdate({
+                                    ...pro,
+                                    featureStatus: {
+                                      ...pro.featureStatus,
+                                      [featureId]: {
+                                        ...status,
+                                        completedTasks: newTasks,
+                                      },
+                                    },
+                                  });
+                                }}
+                                sx={{ p: 0.25 }}
+                              >
+                                {isCompleted ? (
+                                  <CheckBoxIcon sx={{ color: palette.success }} />
+                                ) : (
+                                  <CheckBoxOutlineBlankIcon sx={{ color: palette.grey[400] }} />
+                                )}
+                              </IconButton>
+                              <Box sx={{ flex: 1 }}>
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      textDecoration: isCompleted ? 'line-through' : 'none',
+                                      color: isCompleted ? 'text.secondary' : 'text.primary',
+                                    }}
+                                  >
+                                    {item.definition?.title || item.itemId}
+                                  </Typography>
+                                  {item.required && (
+                                    <Chip
+                                      label="Required"
+                                      size="small"
+                                      sx={{
+                                        height: 18,
+                                        fontSize: '0.65rem',
+                                        bgcolor: alpha(palette.error, 0.1),
+                                        color: palette.error,
+                                      }}
+                                    />
+                                  )}
+                                </Stack>
+                                {item.definition?.description && (
+                                  <Typography variant="caption" color="text.secondary">
+                                    {item.definition.description}
+                                  </Typography>
+                                )}
+                                {item.stageSpecificNote && (
+                                  <Typography variant="caption" color="primary.main" display="block">
+                                    Note: {item.stageSpecificNote}
+                                  </Typography>
+                                )}
+                              </Box>
+                            </Stack>
+                          );
+                        })}
+                      </Stack>
+                    </Paper>
+                  </Box>
                 )}
-                {status.activatedAt && (
-                  <Typography variant="caption" color="text.secondary">
-                    Activated: {status.activatedAt}
-                  </Typography>
-                )}
-                {status.engagedAt && (
-                  <Typography variant="caption" color="text.secondary">
-                    Engaged: {status.engagedAt}
+
+                {onboardingItems.length === 0 && (
+                  <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                    No onboarding items defined for the {stageLabels[status.stage]} stage.
                   </Typography>
                 )}
               </Stack>
-            )}
-          </Card>
+            </AccordionDetails>
+          </Accordion>
         );
       })}
-    </Stack>
+    </Box>
   );
 }
 
 // =============================================================================
-// WEEKLY PLAN EDITOR
+// WEEKLY PLAN TAB
 // =============================================================================
 
-interface WeeklyPlanEditorProps {
-  weeklyPlan: WeeklyPlan;
-  onChange: (plan: WeeklyPlan) => void;
+interface WeeklyPlanTabProps {
+  pro: ProAccount;
+  onUpdate: (pro: ProAccount) => void;
 }
 
-function WeeklyPlanEditor({ weeklyPlan, onChange }: WeeklyPlanEditorProps) {
+function WeeklyPlanTab({ pro, onUpdate }: WeeklyPlanTabProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const weeklyPlan = pro.weeklyPlan || createDefaultWeeklyPlan();
+
+  const handleWeeklyPlanChange = (plan: WeeklyPlan) => {
+    onUpdate({ ...pro, weeklyPlan: plan });
+  };
 
   // Get all assigned item IDs across all weeks
   const assignedItemIds = [
@@ -832,7 +943,7 @@ function WeeklyPlanEditor({ weeklyPlan, onChange }: WeeklyPlanEditorProps) {
     const maxOrder = currentItems.length > 0
       ? Math.max(...currentItems.map(i => i.order)) + 1
       : 0;
-    onChange({
+    handleWeeklyPlanChange({
       ...weeklyPlan,
       [weekKey]: [...currentItems, { itemId, order: maxOrder }],
     });
@@ -840,7 +951,7 @@ function WeeklyPlanEditor({ weeklyPlan, onChange }: WeeklyPlanEditorProps) {
 
   const handleRemoveFromWeek = (itemId: string, week: WeekNumber) => {
     const weekKey = getWeekKey(week);
-    onChange({
+    handleWeeklyPlanChange({
       ...weeklyPlan,
       [weekKey]: weeklyPlan[weekKey].filter(i => i.itemId !== itemId),
     });
@@ -854,7 +965,7 @@ function WeeklyPlanEditor({ weeklyPlan, onChange }: WeeklyPlanEditorProps) {
       const temp = items[index].order;
       items[index].order = items[index - 1].order;
       items[index - 1].order = temp;
-      onChange({ ...weeklyPlan, [weekKey]: items });
+      handleWeeklyPlanChange({ ...weeklyPlan, [weekKey]: items });
     }
   };
 
@@ -866,7 +977,7 @@ function WeeklyPlanEditor({ weeklyPlan, onChange }: WeeklyPlanEditorProps) {
       const temp = items[index].order;
       items[index].order = items[index + 1].order;
       items[index + 1].order = temp;
-      onChange({ ...weeklyPlan, [weekKey]: items });
+      handleWeeklyPlanChange({ ...weeklyPlan, [weekKey]: items });
     }
   };
 
@@ -952,7 +1063,7 @@ function WeeklyPlanEditor({ weeklyPlan, onChange }: WeeklyPlanEditorProps) {
   };
 
   return (
-    <Box sx={{ display: 'flex', gap: 2, height: '50vh' }}>
+    <Box sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 220px)' }}>
       {/* Left panel: Available items */}
       <Paper
         variant="outlined"
@@ -1053,9 +1164,11 @@ function WeeklyPlanEditor({ weeklyPlan, onChange }: WeeklyPlanEditorProps) {
 // =============================================================================
 
 export function SampleProsView() {
-  const { pros, features: _features, addPro, updatePro, deletePro } = useOnboarding();
-  const [editingPro, setEditingPro] = useState<ProAccount | null>(null);
-  const [isNew, setIsNew] = useState(false);
+  const { pros, features, addPro, updatePro, deletePro } = useOnboarding();
+  const [selectedProId, setSelectedProId] = useState<string | null>(pros[0]?.id || null);
+  const [activeTab, setActiveTab] = useState(0);
+
+  const selectedPro = pros.find((p) => p.id === selectedProId);
 
   const handleAddPro = () => {
     const newPro: ProAccount = {
@@ -1068,226 +1181,101 @@ export function SampleProsView() {
       createdAt: new Date().toISOString().split('T')[0],
       featureStatus: createAllFeatureStatuses('not_attached'),
     };
-    setEditingPro(newPro);
-    setIsNew(true);
+    addPro(newPro);
+    setSelectedProId(newPro.id);
+    setActiveTab(0);
   };
 
-  const handleEditPro = (pro: ProAccount) => {
-    setEditingPro({ ...pro });
-    setIsNew(false);
-  };
-
-  const handleSavePro = (pro: ProAccount) => {
-    if (isNew) {
-      addPro(pro);
-    } else {
-      updatePro(pro);
+  const handleDeletePro = () => {
+    if (selectedPro && window.confirm(`Are you sure you want to delete ${selectedPro.companyName}?`)) {
+      deletePro(selectedPro.id);
+      setSelectedProId(pros.find((p) => p.id !== selectedPro.id)?.id || null);
     }
-    setEditingPro(null);
-  };
-
-  const handleDeletePro = (proId: string) => {
-    if (window.confirm('Are you sure you want to delete this sample pro?')) {
-      deletePro(proId);
-    }
-  };
-
-  const handleApplyPreset = (pro: ProAccount, featureStatus: Record<FeatureId, FeatureStatus>) => {
-    updatePro({
-      ...pro,
-      featureStatus,
-    });
-  };
-
-  const getStageStats = (pro: ProAccount) => {
-    const counts = { not_attached: 0, attached: 0, activated: 0, engaged: 0 };
-    allFeatureIds.forEach((featureId) => {
-      const stage = pro.featureStatus[featureId]?.stage || 'not_attached';
-      counts[stage]++;
-    });
-    return counts;
   };
 
   return (
     <PlanningWrapper elementId="view-sample-pros">
-      <Box>
-        {/* Header */}
-        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 3 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <SettingsApplicationsIcon sx={{ fontSize: 32, color: palette.primary }} />
-            <Box>
-              <Typography variant="h5" fontWeight={600}>
-                Sample Pro Configurations
+      <Box sx={{ display: 'flex', height: 'calc(100vh - 120px)' }}>
+        {/* Left sidebar with pro list */}
+        <ProSidebar
+          pros={pros}
+          selectedProId={selectedProId}
+          onSelectPro={setSelectedProId}
+          onAddPro={handleAddPro}
+        />
+
+        {/* Main content area */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          {selectedPro ? (
+            <>
+              {/* Header */}
+              <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <SettingsApplicationsIcon sx={{ fontSize: 28, color: palette.primary }} />
+                    <Box>
+                      <Typography variant="h6" fontWeight={600}>
+                        {selectedPro.companyName}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {selectedPro.ownerName} • {selectedPro.plan.charAt(0).toUpperCase() + selectedPro.plan.slice(1)} Plan
+                      </Typography>
+                    </Box>
+                  </Stack>
+                  <Tooltip title="Delete this pro">
+                    <IconButton onClick={handleDeletePro} color="error">
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+              </Box>
+
+              {/* Tabs */}
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
+                  <Tab label="Details" />
+                  <Tab label="Features" />
+                  <Tab label="Weekly Plan" />
+                </Tabs>
+              </Box>
+
+              {/* Tab content */}
+              <Box sx={{ flex: 1, p: 2, overflow: 'hidden' }}>
+                {activeTab === 0 && (
+                  <DetailsTab pro={selectedPro} onUpdate={updatePro} />
+                )}
+                {activeTab === 1 && (
+                  <FeaturesTab pro={selectedPro} features={features} onUpdate={updatePro} />
+                )}
+                {activeTab === 2 && (
+                  <WeeklyPlanTab pro={selectedPro} onUpdate={updatePro} />
+                )}
+              </Box>
+            </>
+          ) : (
+            <Box
+              sx={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                gap: 2,
+              }}
+            >
+              <SettingsApplicationsIcon sx={{ fontSize: 64, color: palette.grey[300] }} />
+              <Typography variant="h6" color="text.secondary">
+                No pro selected
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Configure sample pro accounts for testing different scenarios
+                Select a pro from the sidebar or add a new one
               </Typography>
+              <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddPro}>
+                Add Sample Pro
+              </Button>
             </Box>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAddPro}
-          >
-            Add Sample Pro
-          </Button>
-        </Stack>
-
-        {/* Pro Table */}
-        <TableContainer component={Paper} elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: palette.grey[50] }}>
-                <TableCell sx={{ fontWeight: 600 }}>Company</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Owner</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Plan</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Goal</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Feature Stages</TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>Quick Preset</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pros.map((pro) => {
-                const stats = getStageStats(pro);
-                return (
-                  <TableRow key={pro.id} hover>
-                    <TableCell>
-                      <Typography fontWeight={500}>{pro.companyName}</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {pro.businessType}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{pro.ownerName}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={pro.plan}
-                        size="small"
-                        sx={{
-                          textTransform: 'capitalize',
-                          bgcolor: pro.plan === 'max' ? alpha(palette.primary, 0.1) : palette.grey[100],
-                          color: pro.plan === 'max' ? palette.primary : palette.grey[600],
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={pro.goal}
-                        size="small"
-                        variant="outlined"
-                        sx={{ textTransform: 'capitalize' }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={0.5}>
-                        {stats.not_attached > 0 && (
-                          <Chip
-                            label={stats.not_attached}
-                            size="small"
-                            sx={{ bgcolor: alpha(stageColors.not_attached, 0.1), color: stageColors.not_attached, minWidth: 28 }}
-                          />
-                        )}
-                        {stats.attached > 0 && (
-                          <Chip
-                            label={stats.attached}
-                            size="small"
-                            sx={{ bgcolor: alpha(stageColors.attached, 0.1), color: stageColors.attached, minWidth: 28 }}
-                          />
-                        )}
-                        {stats.activated > 0 && (
-                          <Chip
-                            label={stats.activated}
-                            size="small"
-                            sx={{ bgcolor: alpha(stageColors.activated, 0.1), color: stageColors.activated, minWidth: 28 }}
-                          />
-                        )}
-                        {stats.engaged > 0 && (
-                          <Chip
-                            label={stats.engaged}
-                            size="small"
-                            sx={{ bgcolor: alpha(stageColors.engaged, 0.1), color: stageColors.engaged, minWidth: 28 }}
-                          />
-                        )}
-                      </Stack>
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={0.5}>
-                        <Tooltip title="Set all to Not Attached">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleApplyPreset(pro, createAllFeatureStatuses('not_attached'))}
-                          >
-                            <Typography variant="caption" sx={{ color: stageColors.not_attached }}>N</Typography>
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Set all to Attached">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleApplyPreset(pro, createAllFeatureStatuses('attached'))}
-                          >
-                            <Typography variant="caption" sx={{ color: stageColors.attached }}>A</Typography>
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Set all to Activated">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleApplyPreset(pro, createAllFeatureStatuses('activated'))}
-                          >
-                            <Typography variant="caption" sx={{ color: stageColors.activated }}>V</Typography>
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Set all to Engaged">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleApplyPreset(pro, createAllFeatureStatuses('engaged'))}
-                          >
-                            <CheckCircleIcon sx={{ fontSize: 16, color: stageColors.engaged }} />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                    </TableCell>
-                    <TableCell align="right">
-                      <IconButton size="small" onClick={() => handleEditPro(pro)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleDeletePro(pro.id)} color="error">
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {/* Legend */}
-        <Box sx={{ mt: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-          <Typography variant="caption" color="text.secondary">Stage Legend:</Typography>
-          {stages.map((stage) => (
-            <Chip
-              key={stage}
-              label={stageLabels[stage]}
-              size="small"
-              sx={{
-                bgcolor: alpha(stageColors[stage], 0.1),
-                color: stageColors[stage],
-                fontWeight: 500,
-              }}
-            />
-          ))}
+          )}
         </Box>
-
-        {/* Editor Dialog */}
-        {editingPro && (
-          <ProEditorDialog
-            open={Boolean(editingPro)}
-            pro={editingPro}
-            onSave={handleSavePro}
-            onClose={() => setEditingPro(null)}
-            isNew={isNew}
-          />
-        )}
       </Box>
     </PlanningWrapper>
   );
