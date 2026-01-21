@@ -33,3 +33,24 @@ Every item in the @HCP Context Manager MUST have a linked spec doc:
 - Create spec when adding new item
 - Update spec when modifying item configuration
 - Update "Related Prompts" section with prompts that changed the item
+
+## Rule 4: Test-Driven Development (TDD)
+
+Always use a TDD approach when writing code:
+
+1. **Red**: Write a failing test first that defines the expected behavior
+2. **Green**: Write the minimum code necessary to make the test pass
+3. **Refactor**: Clean up the code while keeping tests green
+
+### TDD Guidelines
+- Write tests before implementation code
+- Each test should test one specific behavior
+- Run tests after each change to ensure nothing breaks
+- Keep tests fast and isolated
+- Use descriptive test names that explain the expected behavior
+
+### Test Verification Requirements
+- Always run test commands to confirm code works before moving on to the next task
+- Tests must pass before considering any implementation complete
+- Running tests is a mandatory final step in any plan that writes code
+- If tests fail, fix the issues before proceeding
