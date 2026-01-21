@@ -474,6 +474,7 @@ export function PlanningDrawer() {
         '& .MuiDrawer-paper': {
           width: DRAWER_WIDTH,
           boxSizing: 'border-box',
+          zIndex: 1250, // Above backdrop (1200) but below dialog content (1300)
         },
       }}
     >

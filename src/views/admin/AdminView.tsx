@@ -11,7 +11,6 @@ import {
   TableRow,
   IconButton,
   Button,
-  Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
@@ -51,6 +50,7 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { useOnboarding } from '../../context';
 import { onboardingItems, onboardingCategories } from '../../data';
 import { PlanningWrapper, usePlanningMode, PlanningInfoButton, getItemPlannableId } from '../../planning';
+import { PlanningAwareDialog } from '../../components/common/PlanningAwareDialog';
 import type {
   Feature,
   FeatureReleaseStatus,
@@ -573,7 +573,7 @@ function SimplifiedStageEditor({
         </Button>
 
         {/* Add Onboarding Item Dialog */}
-        <Dialog open={showAddOnboardingItem} onClose={() => setShowAddOnboardingItem(false)} maxWidth="md" fullWidth>
+        <PlanningAwareDialog open={showAddOnboardingItem} onClose={() => setShowAddOnboardingItem(false)} maxWidth="md" fullWidth>
           <DialogTitle>Add Onboarding Item</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={1}>
@@ -626,7 +626,7 @@ function SimplifiedStageEditor({
           <DialogActions>
             <Button onClick={() => setShowAddOnboardingItem(false)}>Cancel</Button>
           </DialogActions>
-        </Dialog>
+        </PlanningAwareDialog>
       </Paper>
 
       {/* Navigation (reference table) */}
@@ -783,7 +783,7 @@ function QuickAddNavigationDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <PlanningAwareDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Add Navigation Item</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -832,7 +832,7 @@ function QuickAddNavigationDialog({
         <Button onClick={onClose}>Cancel</Button>
         <Button variant="contained" onClick={handleAdd} disabled={!name || !url}>Add</Button>
       </DialogActions>
-    </Dialog>
+    </PlanningAwareDialog>
   );
 }
 
@@ -871,7 +871,7 @@ function QuickAddCalendlyDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <PlanningAwareDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Add Call Type</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -916,7 +916,7 @@ function QuickAddCalendlyDialog({
         <Button onClick={onClose}>Cancel</Button>
         <Button variant="contained" onClick={handleAdd} disabled={!name || !url}>Add</Button>
       </DialogActions>
-    </Dialog>
+    </PlanningAwareDialog>
   );
 }
 
@@ -943,7 +943,7 @@ function QuickAddToolDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <PlanningAwareDialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Add Tool</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
@@ -970,7 +970,7 @@ function QuickAddToolDialog({
         <Button onClick={onClose}>Cancel</Button>
         <Button variant="contained" onClick={handleAdd} disabled={!tool.name}>Add</Button>
       </DialogActions>
-    </Dialog>
+    </PlanningAwareDialog>
   );
 }
 
@@ -1009,7 +1009,14 @@ function FeatureEditorModal({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
+    <PlanningAwareDialog
+      open={open}
+      onClose={onClose}
+      maxWidth="lg"
+      fullWidth
+      PaperProps={{ sx: { height: '90vh' } }}
+      plannableId={feature ? getItemPlannableId('feature', feature.id) : undefined}
+    >
       <DialogTitle sx={{ pb: 0 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Typography variant="h6">Edit Feature: {editedFeature.name}</Typography>
@@ -1109,7 +1116,7 @@ function FeatureEditorModal({
         <Button onClick={onClose}>Cancel</Button>
         <Button variant="contained" onClick={handleSave}>Save Changes</Button>
       </DialogActions>
-    </Dialog>
+    </PlanningAwareDialog>
   );
 }
 
@@ -1543,7 +1550,14 @@ function NavigationEditModal({
   if (!open) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
+    <PlanningAwareDialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{ sx: { height: '90vh' } }}
+      plannableId={item?.slugId ? getItemPlannableId('navigation', item.slugId) : undefined}
+    >
       <DialogTitle sx={{ pb: 0 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack direction="row" alignItems="center" spacing={2}>
@@ -1841,7 +1855,7 @@ function NavigationEditModal({
           Save Changes
         </Button>
       </DialogActions>
-    </Dialog>
+    </PlanningAwareDialog>
   );
 }
 
@@ -2201,7 +2215,14 @@ function CallsEditModal({
   if (!open) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
+    <PlanningAwareDialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{ sx: { height: '90vh' } }}
+      plannableId={item?.slugId ? getItemPlannableId('call', item.slugId) : undefined}
+    >
       <DialogTitle sx={{ pb: 0 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack direction="row" alignItems="center" spacing={2}>
@@ -2500,7 +2521,7 @@ function CallsEditModal({
           Save Changes
         </Button>
       </DialogActions>
-    </Dialog>
+    </PlanningAwareDialog>
   );
 }
 
@@ -2905,7 +2926,14 @@ function OnboardingItemEditModal({
   if (!open) return null;
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { height: '90vh' } }}>
+    <PlanningAwareDialog
+      open={open}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{ sx: { height: '90vh' } }}
+      plannableId={item?.id ? getItemPlannableId('onboarding-item', item.id) : undefined}
+    >
       <DialogTitle sx={{ pb: 0 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack direction="row" alignItems="center" spacing={2}>
@@ -3548,7 +3576,7 @@ function OnboardingItemEditModal({
           Save Changes
         </Button>
       </DialogActions>
-    </Dialog>
+    </PlanningAwareDialog>
   );
 }
 
