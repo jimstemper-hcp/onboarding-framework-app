@@ -15,6 +15,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Create your first customer',
     description: 'Add a customer to your account to start sending invoices, estimates, and scheduling jobs.',
     type: 'in_product',
+    category: 'the-basics',
     completionApi: {
       eventName: 'customer.created',
       endpoint: '/api/customers',
@@ -28,6 +29,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Create your first job',
     description: 'Create a job for a customer. Jobs track work, generate invoices, and feed your schedule.',
     type: 'in_product',
+    category: 'jobs',
     completionApi: {
       eventName: 'job.created',
       endpoint: '/api/jobs',
@@ -54,6 +56,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Add your company logo',
     description: 'Upload your logo to appear on invoices, estimates, and customer communications.',
     type: 'in_product',
+    category: 'account-setup',
     completionApi: {
       eventName: 'branding.logo_uploaded',
       endpoint: '/api/settings/branding',
@@ -67,6 +70,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Add your business address',
     description: 'Add your business address to appear on invoices and help with job routing.',
     type: 'in_product',
+    category: 'account-setup',
     completionApi: {
       eventName: 'settings.address_added',
       endpoint: '/api/settings/business',
@@ -114,6 +118,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Connect your payment processor',
     description: 'Connect Stripe or another processor to accept credit card payments.',
     type: 'in_product',
+    category: 'account-setup',
     completionApi: {
       eventName: 'payments.processor_connected',
       endpoint: '/api/settings/payments/connect',
@@ -157,6 +162,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Set your business hours',
     description: 'Define when you\'re available so customers can book at the right times.',
     type: 'in_product',
+    category: 'account-setup',
     completionApi: {
       eventName: 'settings.hours_configured',
       endpoint: '/api/settings/hours',
@@ -170,6 +176,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Add a team member',
     description: 'Add employees or contractors to dispatch jobs to.',
     type: 'in_product',
+    category: 'account-setup',
     completionApi: {
       eventName: 'team.member_added',
       endpoint: '/api/team',
@@ -213,6 +220,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Add items to your price book',
     description: 'Add services and materials with prices for quick estimates.',
     type: 'in_product',
+    category: 'additional-tools',
     completionApi: {
       eventName: 'pricebook.item_added',
       endpoint: '/api/pricebook',
@@ -226,6 +234,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Create your first estimate',
     description: 'Build and send a professional estimate to a potential customer.',
     type: 'in_product',
+    category: 'estimates',
     completionApi: {
       eventName: 'estimate.created',
       endpoint: '/api/estimates',
@@ -355,6 +364,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Connect Google Business Profile',
     description: 'Link your Google listing to manage reviews in one place.',
     type: 'in_product',
+    category: 'additional-tools',
     completionApi: {
       eventName: 'reviews.google_connected',
       endpoint: '/api/settings/reviews/google',
@@ -368,6 +378,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     title: 'Enable review requests',
     description: 'Automatically ask for reviews after completed jobs.',
     type: 'in_product',
+    category: 'additional-tools',
     completionApi: {
       eventName: 'reviews.requests_enabled',
       endpoint: '/api/settings/reviews/requests',
@@ -430,71 +441,8 @@ export const onboardingItems: OnboardingItemDefinition[] = [
   },
 
   // ===========================================================================
-  // CATEGORY: ACCOUNT SETUP (12 items)
+  // CATEGORY: ACCOUNT SETUP
   // ===========================================================================
-  {
-    id: 'company-profile',
-    title: 'Company Profile',
-    description: 'Set up your company profile with business name, logo, and contact information.',
-    type: 'rep_facing',
-    category: 'account-setup',
-    repInstructions: 'Walk through company profile setup including business name, address, logo, and contact details.',
-    estimatedMinutes: 10,
-    contextSnippets: [
-      {
-        id: 'company-profile-value',
-        title: 'Value Statement',
-        content: 'A complete company profile builds credibility with customers. Your business name, logo, and contact info appear on invoices, estimates, and communications - making every touchpoint look professional.',
-      },
-      {
-        id: 'company-profile-guidance',
-        title: 'Guidance',
-        content: 'Have the pro prepare their logo (PNG/JPG, ideally 500x500px or larger). Walk through Settings > Company Profile. Ensure business name matches what customers know them by. Add phone number they want customers to call back on.',
-      },
-    ],
-  },
-  {
-    id: 'business-hours',
-    title: 'Business Hours',
-    description: 'Configure your business hours for scheduling and availability.',
-    type: 'rep_facing',
-    category: 'account-setup',
-    repInstructions: 'Help set up business hours including days of operation and time slots.',
-    estimatedMinutes: 5,
-    contextSnippets: [
-      {
-        id: 'business-hours-value',
-        title: 'Value Statement',
-        content: 'Accurate business hours ensure customers can only book during times you actually work. This prevents missed appointments and sets proper expectations from the start.',
-      },
-      {
-        id: 'business-hours-guidance',
-        title: 'Guidance',
-        content: 'Go to Settings > Business Hours. Ask about their typical start/end times and days off. Consider if they want different hours for different services. Remind them this affects online booking availability.',
-      },
-    ],
-  },
-  {
-    id: 'add-employees',
-    title: 'Add Employees/Employee Permissions',
-    description: 'Add team members and configure their permissions and access levels.',
-    type: 'rep_facing',
-    category: 'account-setup',
-    repInstructions: 'Guide through adding employees and setting up appropriate permission levels.',
-    estimatedMinutes: 15,
-    contextSnippets: [
-      {
-        id: 'add-employees-value',
-        title: 'Value Statement',
-        content: 'Adding employees unlocks dispatching, time tracking, and accountability. Each tech gets their own login to see their schedule, mark jobs complete, and collect payments in the field.',
-      },
-      {
-        id: 'add-employees-guidance',
-        title: 'Guidance',
-        content: 'Go to Settings > Team. Get employee names and email addresses. Discuss permission levels: Admin (full access), Office (no field), Field (mobile only). Set up each employee\'s calendar color for easy dispatch visibility.',
-      },
-    ],
-  },
   {
     id: 'notifications-settings',
     title: 'Notifications',
@@ -580,32 +528,6 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     ],
   },
   {
-    id: 'connect-bank-account',
-    title: 'Connect Bank Account',
-    description: 'Connect a bank account for payment processing and deposits.',
-    type: 'rep_facing',
-    category: 'account-setup',
-    repInstructions: 'Guide through bank account connection for payment processing.',
-    estimatedMinutes: 10,
-    subItems: [
-      { id: 'tap-to-pay', title: 'Tap to Pay' },
-      { id: 'test-payment', title: 'Test Payment' },
-      { id: 'mobile-check-deposit', title: 'Mobile Check Deposit' },
-    ],
-    contextSnippets: [
-      {
-        id: 'connect-bank-account-value',
-        title: 'Value Statement',
-        content: 'Connecting your bank account enables payment processing so you can accept cards in the field, send payment links, and get deposits directly. Most pros see faster payments within the first week.',
-      },
-      {
-        id: 'connect-bank-account-guidance',
-        title: 'Guidance',
-        content: 'Go to Settings > Payments. Click Connect Bank Account and follow Stripe/Plaid flow. Have routing and account numbers ready. After connecting, demonstrate Tap to Pay setup on mobile and run a test payment to verify everything works.',
-      },
-    ],
-  },
-  {
     id: 'consumer-financing',
     title: 'Consumer Financing - Wisetack',
     description: 'Set up consumer financing options through Wisetack integration.',
@@ -630,27 +552,6 @@ export const onboardingItems: OnboardingItemDefinition[] = [
   // ===========================================================================
   // CATEGORY: THE BASICS (8 items)
   // ===========================================================================
-  {
-    id: 'add-new-customers',
-    title: 'Add New Customers',
-    description: 'Learn how to add and manage new customers in the system.',
-    type: 'rep_facing',
-    category: 'the-basics',
-    repInstructions: 'Demonstrate how to add new customers including all required fields.',
-    estimatedMinutes: 5,
-    contextSnippets: [
-      {
-        id: 'add-new-customers-value',
-        title: 'Value Statement',
-        content: 'Your customer database is the foundation of your business. Every customer added becomes a contact for follow-ups, marketing, and repeat business tracking.',
-      },
-      {
-        id: 'add-new-customers-guidance',
-        title: 'Guidance',
-        content: 'Go to Customers > Add New. Show required fields (name, phone/email, address). Demonstrate quick-add from incoming call. Explain duplicate detection. Mention import option for existing customer lists.',
-      },
-    ],
-  },
   {
     id: 'customer-profile-details',
     title: 'Customer Profile Details',
@@ -996,27 +897,6 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     ],
   },
   {
-    id: 'estimates-basics',
-    title: 'Estimates',
-    description: 'Learn the basics of creating and sending estimates.',
-    type: 'rep_facing',
-    category: 'estimates',
-    repInstructions: 'Demonstrate creating, customizing, and sending estimates.',
-    estimatedMinutes: 15,
-    contextSnippets: [
-      {
-        id: 'estimates-basics-value',
-        title: 'Value Statement',
-        content: 'Professional estimates win more jobs. Customers can approve with one click, and approved estimates convert directly to jobs - no retyping required. Track your close rate and follow up on pending estimates.',
-      },
-      {
-        id: 'estimates-basics-guidance',
-        title: 'Guidance',
-        content: 'Create a sample estimate from scratch. Add line items from pricebook. Show how to add photos, notes, and terms. Send via email/SMS. Demonstrate customer approval flow. Show how approved estimate becomes a job.',
-      },
-    ],
-  },
-  {
     id: 'estimate-templates',
     title: 'Estimate Templates',
     description: 'Create and use estimate templates for efficiency.',
@@ -1101,27 +981,6 @@ export const onboardingItems: OnboardingItemDefinition[] = [
         id: 'customer-intake-jobs-guidance',
         title: 'Guidance',
         content: 'Set up intake questions for their common job types. Configure required fields for job creation. Show how CSRs or online booking capture this info. Link intake data to job notes visible to techs.',
-      },
-    ],
-  },
-  {
-    id: 'jobs-basics',
-    title: 'Jobs',
-    description: 'Learn the basics of creating and managing jobs.',
-    type: 'rep_facing',
-    category: 'jobs',
-    repInstructions: 'Demonstrate creating, scheduling, and completing jobs.',
-    estimatedMinutes: 15,
-    contextSnippets: [
-      {
-        id: 'jobs-basics-value',
-        title: 'Value Statement',
-        content: 'Jobs are the core of your business in Housecall Pro. Every job tracks work from booking to payment, building your customer history and feeding your invoicing and reporting automatically.',
-      },
-      {
-        id: 'jobs-basics-guidance',
-        title: 'Guidance',
-        content: 'Create a job from scratch: select customer, add details, schedule. Walk through job lifecycle: Scheduled → En Route → Working → Complete. Show how completing a job creates an invoice. Demonstrate mobile tech workflow.',
       },
     ],
   },
@@ -1516,30 +1375,6 @@ export const onboardingItems: OnboardingItemDefinition[] = [
   // CATEGORY: ADDITIONAL TOOLS (12 items with sub-items)
   // ===========================================================================
   {
-    id: 'pricebook',
-    title: 'Pricebook',
-    description: 'Set up and manage your pricebook.',
-    type: 'rep_facing',
-    category: 'additional-tools',
-    repInstructions: 'Walk through pricebook setup including services, materials, and pricing.',
-    estimatedMinutes: 20,
-    subItems: [
-      { id: 'flat-rate-pricing', title: 'Flat Rate Pricing' },
-    ],
-    contextSnippets: [
-      {
-        id: 'pricebook-value',
-        title: 'Value Statement',
-        content: 'A well-built pricebook is your sales team\'s best friend. Consistent pricing across all techs means fair quotes, better margins, and faster estimate creation.',
-      },
-      {
-        id: 'pricebook-guidance',
-        title: 'Guidance',
-        content: 'Go to Settings > Pricebook. Organize into categories (Labor, Materials, Packages). Set prices with appropriate margins. Show how techs access pricebook on mobile. For flat-rate pricing, explain how to build task-based prices including labor.',
-      },
-    ],
-  },
-  {
     id: 'material-detail-tracking',
     title: 'Material Detail Tracking',
     description: 'Track materials used on jobs.',
@@ -1713,33 +1548,6 @@ export const onboardingItems: OnboardingItemDefinition[] = [
         id: 'online-booking-guidance',
         title: 'Guidance',
         content: 'Go to Settings > Online Booking. Enable and configure booking windows (arrival time windows offered). Set employee availability for online jobs. Configure which services are bookable online. Add booking widget to website. Show POC (point of contact) settings.',
-      },
-    ],
-  },
-  {
-    id: 'reviews-tool',
-    title: 'Reviews',
-    description: 'Manage customer reviews and reputation.',
-    type: 'rep_facing',
-    category: 'additional-tools',
-    repInstructions: 'Set up review requests and reputation management.',
-    estimatedMinutes: 15,
-    subItems: [
-      { id: 'reviews-google', title: 'Google Reviews' },
-      { id: 'reviews-gls', title: 'GLS Reviews' },
-      { id: 'reviews-facebook', title: 'Facebook Reviews' },
-      { id: 'reviews-settings', title: 'Reviews Settings' },
-    ],
-    contextSnippets: [
-      {
-        id: 'reviews-tool-value',
-        title: 'Value Statement',
-        content: 'Reviews drive new business. Automatically request reviews after great experiences, respond to feedback from one dashboard, and build the online reputation that wins new customers.',
-      },
-      {
-        id: 'reviews-tool-guidance',
-        title: 'Guidance',
-        content: 'Go to Settings > Reviews. Connect Google Business Profile and Facebook. Enable automatic review requests after job completion. Set timing (same day, next day). Show the reviews dashboard. Demonstrate responding to reviews. Configure Google Local Services if applicable.',
       },
     ],
   },
