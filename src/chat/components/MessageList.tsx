@@ -39,6 +39,7 @@ export function MessageList({ messages, isLoading, mode }: MessageListProps) {
       <Box
         sx={{
           flex: 1,
+          minHeight: 0, // Important: allows flex child to shrink below content size
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -64,6 +65,7 @@ export function MessageList({ messages, isLoading, mode }: MessageListProps) {
     <Box
       sx={{
         flex: 1,
+        minHeight: 0, // Important: allows flex child to shrink below content size
         overflow: 'auto',
         p: 2,
         display: 'flex',

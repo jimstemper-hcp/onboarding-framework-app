@@ -6,7 +6,7 @@
 // Supports image file attachments for vision API.
 // =============================================================================
 
-import { useState, useCallback, useRef, type KeyboardEvent, type ChangeEvent } from 'react';
+import { useState, useCallback, useRef, useEffect, type KeyboardEvent, type ChangeEvent } from 'react';
 import { Box, TextField, IconButton, Tooltip, Chip, Stack } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
@@ -94,12 +94,25 @@ export function ChatInput({
         }
       });
       setAttachments([]);
-      // Refocus the text input after sending
-      setTimeout(() => {
-        textInputRef.current?.focus();
-      }, 0);
+      // Refocus the text input after sending with multiple attempts
+      // to handle any async state updates that might steal focus
+      const focusInput = () => textInputRef.current?.focus();
+      focusInput();
+      setTimeout(focusInput, 10);
+      setTimeout(focusInput, 100);
     }
   }, [value, attachments, disabled, onSend]);
+
+  // Refocus input when disabled changes from true to false (e.g., after loading completes)
+  useEffect(() => {
+    if (!disabled) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        textInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [disabled]);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
@@ -172,6 +185,9 @@ export function ChatInput({
         borderTop: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
+        flexShrink: 0,
+        position: 'relative',
+        zIndex: 1,
       }}
     >
       {/* Attachment previews */}

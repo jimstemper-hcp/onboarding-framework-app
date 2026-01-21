@@ -61,8 +61,8 @@ export function ChatContainer() {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        height: 'calc(100vh - 200px)',
-        minHeight: 400,
+        flex: 1,
+        minHeight: 0, // Important: allows flex child to shrink below content size
         border: 1,
         borderColor: 'divider',
         borderRadius: 2,

@@ -16,9 +16,17 @@ export function ChatView() {
 
   return (
     <PlanningWrapper elementId="view-chat">
-      <Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          // Calculate height to fit within viewport minus header, tabs, padding, and footer
+          height: 'calc(100vh - 220px)',
+          minHeight: 400,
+        }}
+      >
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexShrink: 0 }}>
           <ChatIcon sx={{ fontSize: 32, color: 'primary.main' }} />
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -31,7 +39,7 @@ export function ChatView() {
           </Box>
         </Box>
 
-        {/* Chat Container */}
+        {/* Chat Container - fills remaining space */}
         <ChatContainer />
       </Box>
     </PlanningWrapper>
