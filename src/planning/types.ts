@@ -78,7 +78,7 @@ export interface PlanningFeedback {
 /**
  * Active tab in the planning drawer.
  */
-export type PlanningTab = 'spec' | 'feedback' | 'status';
+export type PlanningTab = 'spec' | 'feedback' | 'status' | 'versions';
 
 /**
  * View mode for the spec tab (formatted markdown vs raw markdown).

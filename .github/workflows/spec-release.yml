@@ -1,0 +1,134 @@
+# =============================================================================
+# SPEC RELEASE WORKFLOW
+# =============================================================================
+# Triggered when a spec version tag is pushed (spec/**/v*).
+# Deploys a persistent Vercel preview for the specific spec version.
+# =============================================================================
+
+name: Spec Release Deploy
+
+on:
+  push:
+    tags:
+      - 'spec/**/v*'
+
+jobs:
+  deploy:
+    name: Deploy Spec Preview
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract spec info from tag
+        id: spec-info
+        run: |
+          # Tag format: spec/{category}/{spec-name}/v{version}
+          # Example: spec/features/invoicing/v1.0.0
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+          # Extract version (last part after /v)
+          VERSION=$(echo "$TAG" | grep -oP 'v\K[0-9]+\.[0-9]+\.[0-9]+$')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Extract spec ID (everything between spec/ and /v)
+          SPEC_ID=$(echo "$TAG" | sed 's|^spec/||' | sed 's|/v[0-9]*\.[0-9]*\.[0-9]*$||')
+          echo "spec_id=$SPEC_ID" >> $GITHUB_OUTPUT
+
+          # Create URL-safe alias (replace / with -)
+          ALIAS=$(echo "spec-$SPEC_ID-v$VERSION" | tr '/' '-' | tr '.' '-')
+          echo "alias=$ALIAS" >> $GITHUB_OUTPUT
+
+          echo "Tag: $TAG"
+          echo "Version: $VERSION"
+          echo "Spec ID: $SPEC_ID"
+          echo "Alias: $ALIAS"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SPEC_VERSION: ${{ steps.spec-info.outputs.version }}
+          VITE_SPEC_ID: ${{ steps.spec-info.outputs.spec_id }}
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Build with Vercel
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Deploy to Vercel with alias
+        id: deploy
+        run: |
+          # Deploy and capture the URL
+          DEPLOY_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+
+          # Set the alias for persistent URL
+          vercel alias set "$DEPLOY_URL" "${{ steps.spec-info.outputs.alias }}" --token=${{ secrets.VERCEL_TOKEN }} || true
+
+          # Construct the aliased URL
+          ALIAS_URL="https://${{ steps.spec-info.outputs.alias }}.vercel.app"
+          echo "alias_url=$ALIAS_URL" >> $GITHUB_OUTPUT
+
+          echo "Deployed to: $DEPLOY_URL"
+          echo "Aliased to: $ALIAS_URL"
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+      - name: Create deployment summary
+        run: |
+          echo "## Spec Release Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Spec** | \`${{ steps.spec-info.outputs.spec_id }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Version** | \`v${{ steps.spec-info.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Tag** | \`${{ steps.spec-info.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Preview URL** | [${{ steps.deploy.outputs.alias_url }}](${{ steps.deploy.outputs.alias_url }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Usage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To view this specific version locally:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "git checkout ${{ steps.spec-info.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # Optional: Update the registry with the deploy URL
+  update-registry:
+    name: Update Registry
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ false }} # Disabled by default - enable if you want automatic registry updates
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update spec-versions.json with deploy URL
+        run: |
+          # This would update the registry with the Vercel URL
+          # Implementation depends on your preferred approach
+          echo "Registry update would go here"
+          # Could use jq to update the JSON, then commit and push

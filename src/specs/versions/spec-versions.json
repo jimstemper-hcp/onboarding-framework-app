@@ -1,0 +1,190 @@
+{
+  "schemaVersion": "1.0.0",
+  "lastUpdated": "2026-01-21T00:00:00.000Z",
+  "specs": [
+    {
+      "specId": "features/invoicing",
+      "specPath": "pages/hcp-context/features/invoicing.md",
+      "category": "features",
+      "displayName": "Invoicing",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/customers",
+      "specPath": "pages/hcp-context/features/customers.md",
+      "category": "features",
+      "displayName": "Customers",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/estimates",
+      "specPath": "pages/hcp-context/features/estimates.md",
+      "category": "features",
+      "displayName": "Estimates",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/job-scheduling",
+      "specPath": "pages/hcp-context/features/job-scheduling.md",
+      "category": "features",
+      "displayName": "Job Scheduling",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/collecting-payment",
+      "specPath": "pages/hcp-context/features/collecting-payment.md",
+      "category": "features",
+      "displayName": "Collecting Payment",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/online-booking",
+      "specPath": "pages/hcp-context/features/online-booking.md",
+      "category": "features",
+      "displayName": "Online Booking",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/reviews",
+      "specPath": "pages/hcp-context/features/reviews.md",
+      "category": "features",
+      "displayName": "Reviews",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/reporting",
+      "specPath": "pages/hcp-context/features/reporting.md",
+      "category": "features",
+      "displayName": "Reporting",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/automated-communications",
+      "specPath": "pages/hcp-context/features/automated-communications.md",
+      "category": "features",
+      "displayName": "Automated Communications",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/ai-voice-agent",
+      "specPath": "pages/hcp-context/features/ai-voice-agent.md",
+      "category": "features",
+      "displayName": "AI Voice Agent",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/service-plans",
+      "specPath": "pages/hcp-context/features/service-plans.md",
+      "category": "features",
+      "displayName": "Service Plans",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/add-ons",
+      "specPath": "pages/hcp-context/features/add-ons.md",
+      "category": "features",
+      "displayName": "Add-ons",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "features/account-setup",
+      "specPath": "pages/hcp-context/features/account-setup.md",
+      "category": "features",
+      "displayName": "Account Setup",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "navigation/customers-page",
+      "specPath": "pages/hcp-context/navigation/customers-page.md",
+      "category": "navigation",
+      "displayName": "Customers Page Navigation",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "calls/invoicing-setup-call",
+      "specPath": "pages/hcp-context/calls/invoicing-setup-call.md",
+      "category": "calls",
+      "displayName": "Invoicing Setup Call",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "onboarding-items/create-first-customer",
+      "specPath": "pages/hcp-context/onboarding-items/create-first-customer.md",
+      "category": "onboarding-items",
+      "displayName": "Create First Customer",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "onboarding-items/send-first-invoice",
+      "specPath": "pages/hcp-context/onboarding-items/send-first-invoice.md",
+      "category": "onboarding-items",
+      "displayName": "Send First Invoice",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "onboarding-items/connect-payment-processor",
+      "specPath": "pages/hcp-context/onboarding-items/connect-payment-processor.md",
+      "category": "onboarding-items",
+      "displayName": "Connect Payment Processor",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "tools/hcp-create-customer",
+      "specPath": "pages/hcp-context/tools/hcp-create-customer.md",
+      "category": "tools",
+      "displayName": "HCP Create Customer Tool",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "components/planning-mode",
+      "specPath": "components/planning-mode.md",
+      "category": "components",
+      "displayName": "Planning Mode",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "views/admin-view",
+      "specPath": "views/admin-view.md",
+      "category": "views",
+      "displayName": "Admin View",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "views/frontline-view",
+      "specPath": "views/frontline-view.md",
+      "category": "views",
+      "displayName": "Frontline View",
+      "currentVersion": "0.0.0",
+      "releases": []
+    },
+    {
+      "specId": "views/portal-view",
+      "specPath": "views/portal-view.md",
+      "category": "views",
+      "displayName": "Portal View",
+      "currentVersion": "0.0.0",
+      "releases": []
+    }
+  ]
+}

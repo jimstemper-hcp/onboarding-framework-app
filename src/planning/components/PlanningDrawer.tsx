@@ -48,9 +48,11 @@ import {
   Science,
   Code,
   Article,
+  History,
 } from '@mui/icons-material';
 import { usePlanningMode } from '../context/PlanningContext';
 import { MarkdownRenderer } from '../../chat/components/MarkdownRenderer';
+import { VersionsTab } from './VersionsTab';
 import type { PlanningTab, ReleaseStatus, SpecViewMode } from '../types';
 
 // -----------------------------------------------------------------------------
@@ -519,6 +521,8 @@ export function PlanningDrawer() {
           value={activeTab}
           onChange={(_, newValue) => setActiveTab(newValue)}
           sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
+          variant="scrollable"
+          scrollButtons="auto"
         >
           <Tab
             value="spec"
@@ -538,6 +542,13 @@ export function PlanningDrawer() {
             value="status"
             label="Status"
             icon={<Schedule sx={{ fontSize: 18 }} />}
+            iconPosition="start"
+            sx={{ minHeight: 48 }}
+          />
+          <Tab
+            value="versions"
+            label="Versions"
+            icon={<History sx={{ fontSize: 18 }} />}
             iconPosition="start"
             sx={{ minHeight: 48 }}
           />
@@ -573,6 +584,13 @@ export function PlanningDrawer() {
                   owners={element.owners}
                   dependencies={element.dependencies}
                   tags={element.tags}
+                />
+              </TabPanel>
+
+              <TabPanel value={activeTab} tab="versions">
+                <VersionsTab
+                  specPath={element.specPath}
+                  elementName={element.name}
                 />
               </TabPanel>
             </>
