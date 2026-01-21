@@ -269,6 +269,7 @@ export interface OnboardingItemDefinition {
   // Additional metadata
   estimatedMinutes?: number;
   actionUrl?: string;          // Where to go to complete this item
+  points?: number;             // Point value for completion (25, 50, 75, or 100)
 
   // Legacy field for backward compatibility
   description: string;         // LLM description

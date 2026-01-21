@@ -32,7 +32,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import * as MuiIcons from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { useOnboarding, useActivePro } from '../../context';
-import { onboardingItems as allOnboardingItems } from '../../data';
+import { onboardingItems as allOnboardingItems, getItemPoints, DEFAULT_ITEM_POINTS } from '../../data';
 import { PlanningWrapper, usePlanningMode } from '../../planning';
 import type { Feature, FeatureStatus, ProAccount, OnboardingItemAssignment, WeeklyPlan } from '../../types';
 
@@ -130,16 +130,22 @@ function getOptionalItems(feature: Feature): OnboardingItemAssignment[] {
 function calculateFeaturePoints(feature: Feature, status: FeatureStatus | undefined) {
   const allItems = getFeatureOnboardingItems(feature);
 
+  // Calculate total possible points based on each item's individual point value
+  const itemPointsTotal = allItems.reduce((sum, item) => sum + getItemPoints(item.itemId), 0);
+
   const totalPossible =
     POINTS.FEATURE_ATTACHED +
     POINTS.FEATURE_ACTIVATED +
     POINTS.FEATURE_ENGAGED +
-    (allItems.length * POINTS.TASK_COMPLETE);
+    itemPointsTotal;
 
   let earned = 0;
   if (status && status.stage !== 'not_attached') {
     earned += POINTS.FEATURE_ATTACHED;
-    earned += status.completedTasks.length * POINTS.TASK_COMPLETE;
+    // Add points for each completed task based on item's point value
+    status.completedTasks.forEach(taskId => {
+      earned += getItemPoints(taskId);
+    });
     if (status.stage === 'activated' || status.stage === 'engaged') {
       earned += POINTS.FEATURE_ACTIVATED;
     }

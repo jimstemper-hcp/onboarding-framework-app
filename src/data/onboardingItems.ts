@@ -5,6 +5,12 @@ import type { OnboardingItemDefinition } from '../types';
  * These items can be assigned to any feature at any stage.
  * Completion is tracked once - if a pro completes "create a customer" for invoicing,
  * it's also complete for estimates, scheduling, etc.
+ *
+ * Point values:
+ * - 100: Critical/foundational actions (first customer, payment setup, first invoice)
+ * - 75: Important engagement drivers (first job completion, estimates, scheduling)
+ * - 50: Good to have actions (team setup, automation features)
+ * - 25: Nice to have / cosmetic (branding, advanced settings)
  */
 export const onboardingItems: OnboardingItemDefinition[] = [
   // ===========================================================================
@@ -23,6 +29,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/customers/new',
+    points: 100,
   },
   {
     id: 'create-first-job',
@@ -37,6 +44,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 3,
     actionUrl: '/jobs/new',
+    points: 100,
   },
   {
     id: 'complete-first-job',
@@ -50,6 +58,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 1,
     actionUrl: '/jobs',
+    points: 75,
   },
   {
     id: 'add-company-logo',
@@ -64,6 +73,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/settings/branding',
+    points: 25,
   },
   {
     id: 'add-business-address',
@@ -78,6 +88,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/settings/business',
+    points: 25,
   },
 
   // ===========================================================================
@@ -95,6 +106,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/invoices',
+    points: 100,
   },
   {
     id: 'setup-payment-reminders',
@@ -108,6 +120,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 3,
     actionUrl: '/settings/invoicing/reminders',
+    points: 50,
   },
 
   // ===========================================================================
@@ -126,6 +139,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 5,
     actionUrl: '/settings/payments',
+    points: 100,
   },
   {
     id: 'collect-first-payment',
@@ -139,6 +153,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 1,
     actionUrl: '/payments',
+    points: 100,
   },
   {
     id: 'enable-card-on-file',
@@ -152,6 +167,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/settings/payments',
+    points: 50,
   },
 
   // ===========================================================================
@@ -170,6 +186,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 3,
     actionUrl: '/settings/hours',
+    points: 50,
   },
   {
     id: 'add-team-member',
@@ -184,6 +201,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 3,
     actionUrl: '/team/new',
+    points: 50,
   },
   {
     id: 'schedule-first-job',
@@ -197,6 +215,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/schedule',
+    points: 75,
   },
   {
     id: 'dispatch-first-job',
@@ -210,6 +229,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 1,
     actionUrl: '/schedule',
+    points: 75,
   },
 
   // ===========================================================================
@@ -228,6 +248,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 5,
     actionUrl: '/settings/price-book',
+    points: 50,
   },
   {
     id: 'create-first-estimate',
@@ -242,6 +263,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 3,
     actionUrl: '/estimates/new',
+    points: 75,
   },
   {
     id: 'send-first-estimate',
@@ -255,6 +277,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 1,
     actionUrl: '/estimates',
+    points: 75,
   },
 
   // ===========================================================================
@@ -272,6 +295,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/settings/communications/reminders',
+    points: 75,
   },
   {
     id: 'enable-on-my-way',
@@ -285,6 +309,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/settings/communications/on-my-way',
+    points: 50,
   },
   {
     id: 'enable-follow-up',
@@ -298,6 +323,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/settings/communications/follow-up',
+    points: 50,
   },
   {
     id: 'customize-message-templates',
@@ -311,6 +337,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 5,
     actionUrl: '/settings/communications/templates',
+    points: 25,
   },
 
   // ===========================================================================
@@ -328,6 +355,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 5,
     actionUrl: '/settings/ai-voice/greeting',
+    points: 50,
   },
   {
     id: 'configure-ai-services',
@@ -341,6 +369,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 5,
     actionUrl: '/settings/ai-voice/services',
+    points: 50,
   },
   {
     id: 'setup-call-forwarding',
@@ -354,6 +383,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 3,
     actionUrl: '/settings/ai-voice/forwarding',
+    points: 75,
   },
 
   // ===========================================================================
@@ -372,6 +402,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 3,
     actionUrl: '/settings/reviews/google',
+    points: 50,
   },
   {
     id: 'enable-review-requests',
@@ -386,6 +417,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     },
     estimatedMinutes: 2,
     actionUrl: '/settings/reviews/requests',
+    points: 75,
   },
 
   // ===========================================================================
@@ -398,6 +430,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     type: 'rep_facing',
     repInstructions: 'Mark this complete after finishing the introductory call. Cover account overview, goals, and immediate next steps.',
     estimatedMinutes: 30,
+    points: 75,
   },
   {
     id: 'rep-training-session-scheduled',
@@ -406,6 +439,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     type: 'rep_facing',
     repInstructions: 'Use Calendly to schedule a training session. Choose the appropriate session type based on their plan and needs.',
     estimatedMinutes: 5,
+    points: 25,
   },
   {
     id: 'rep-training-session-completed',
@@ -414,6 +448,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     type: 'rep_facing',
     repInstructions: 'Mark complete after the training session. Note any follow-up items or concerns in the account notes.',
     estimatedMinutes: 45,
+    points: 75,
   },
   {
     id: 'rep-reviewed-account-health',
@@ -422,6 +457,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     type: 'rep_facing',
     repInstructions: 'Check adoption metrics, usage patterns, and identify any blockers. Document findings in account notes.',
     estimatedMinutes: 10,
+    points: 25,
   },
   {
     id: 'rep-documented-goals',
@@ -430,6 +466,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     type: 'rep_facing',
     repInstructions: 'Ask about their business goals, what success looks like, and update the account record with this information.',
     estimatedMinutes: 10,
+    points: 50,
   },
   {
     id: 'rep-sent-welcome-resources',
@@ -438,6 +475,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     type: 'rep_facing',
     repInstructions: 'Send the welcome email template with links to help articles, videos, and the getting started guide.',
     estimatedMinutes: 5,
+    points: 25,
   },
 
   // ===========================================================================
@@ -451,6 +489,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'account-setup',
     repInstructions: 'Review and configure notification settings for email, SMS, and push notifications.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'notifications-settings-value',
@@ -472,6 +511,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'account-setup',
     repInstructions: 'Help set up custom SMS templates and messaging preferences.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'custom-sms-value',
@@ -493,6 +533,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'account-setup',
     repInstructions: 'Walk through estimates settings including default terms, expiration, and templates.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'estimates-settings-value',
@@ -514,6 +555,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'account-setup',
     repInstructions: 'Set up invoice settings including payment terms, due dates, and reminder schedules.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'invoice-settings-value',
@@ -535,6 +577,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'account-setup',
     repInstructions: 'Explain and set up Wisetack consumer financing integration.',
     estimatedMinutes: 15,
+    points: 50,
     contextSnippets: [
       {
         id: 'consumer-financing-value',
@@ -560,6 +603,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'the-basics',
     repInstructions: 'Walk through customer profile details and what information can be stored.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'customer-profile-details-value',
@@ -581,6 +625,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'the-basics',
     repInstructions: 'Explain customer portal features and how customers can use it.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'customer-portal-value',
@@ -602,6 +647,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'the-basics',
     repInstructions: 'Show how to create and use customer tags for organization and filtering.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'customer-tags-value',
@@ -623,6 +669,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'the-basics',
     repInstructions: 'Explain how to store credit cards on file and the benefits for recurring payments.',
     estimatedMinutes: 5,
+    points: 50,
     contextSnippets: [
       {
         id: 'cc-on-file-value',
@@ -644,6 +691,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'the-basics',
     repInstructions: 'Explain parent/child billing for property managers or multi-location customers.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'parent-child-billing-value',
@@ -665,6 +713,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'the-basics',
     repInstructions: 'Show how to add and manage multiple addresses for customers with multiple properties.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'multiple-addresses-value',
@@ -686,6 +735,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'the-basics',
     repInstructions: 'Set up customer notification preferences for appointments, invoices, and marketing.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'customer-notifications-value',
@@ -711,6 +761,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'add-ons',
     repInstructions: 'Demonstrate the pipeline feature for tracking leads and opportunities.',
     estimatedMinutes: 15,
+    points: 50,
     contextSnippets: [
       {
         id: 'pipeline-value',
@@ -732,6 +783,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'add-ons',
     repInstructions: 'Explain and set up Profit Rhino integration for flat-rate pricing books.',
     estimatedMinutes: 20,
+    points: 50,
     contextSnippets: [
       {
         id: 'profit-rhino-value',
@@ -753,6 +805,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'add-ons',
     repInstructions: 'Walk through Marketing Center features including email campaigns and postcards.',
     estimatedMinutes: 20,
+    points: 50,
     contextSnippets: [
       {
         id: 'marketing-center-value',
@@ -774,6 +827,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'add-ons',
     repInstructions: 'Configure voice and call tracking for lead source attribution.',
     estimatedMinutes: 15,
+    points: 50,
     contextSnippets: [
       {
         id: 'voice-call-tracking-value',
@@ -795,6 +849,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'add-ons',
     repInstructions: 'Explain and set up HCPA for accounting integration.',
     estimatedMinutes: 20,
+    points: 75,
     contextSnippets: [
       {
         id: 'hcpa-value',
@@ -816,6 +871,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'add-ons',
     repInstructions: 'Configure payroll integration for employee time tracking and payments.',
     estimatedMinutes: 20,
+    points: 75,
     contextSnippets: [
       {
         id: 'payroll-value',
@@ -837,6 +893,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'add-ons',
     repInstructions: 'Explain and configure Conquer integration.',
     estimatedMinutes: 15,
+    points: 50,
     contextSnippets: [
       {
         id: 'conquer-value',
@@ -858,6 +915,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'add-ons',
     repInstructions: 'Configure INHA Accounting integration for financial management.',
     estimatedMinutes: 20,
+    points: 50,
     contextSnippets: [
       {
         id: 'inha-accounting-value',
@@ -883,6 +941,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'estimates',
     repInstructions: 'Walk through customer intake workflow for estimate requests.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'customer-intake-estimates-value',
@@ -904,6 +963,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'estimates',
     repInstructions: 'Show how to create and use estimate templates for common job types.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'estimate-templates-value',
@@ -925,6 +985,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'estimates',
     repInstructions: 'Demonstrate creating good-better-best style multi-option estimates.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'multi-option-estimates-value',
@@ -946,6 +1007,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'estimates',
     repInstructions: 'Walk through the sales proposal tool for creating compelling presentations.',
     estimatedMinutes: 15,
+    points: 75,
     contextSnippets: [
       {
         id: 'sales-proposal-tool-value',
@@ -971,6 +1033,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'jobs',
     repInstructions: 'Walk through customer intake workflow for job requests.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'customer-intake-jobs-value',
@@ -992,6 +1055,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'jobs',
     repInstructions: 'Show how to create and use job tags for organization and reporting.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'job-tags-value',
@@ -1013,6 +1077,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'jobs',
     repInstructions: 'Demonstrate creating job templates for common service types.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'job-templates-value',
@@ -1034,6 +1099,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'jobs',
     repInstructions: 'Show how to create and manage multi-day job appointments.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'multi-day-appointments-value',
@@ -1055,6 +1121,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'jobs',
     repInstructions: 'Explain job segments for multi-part or phased work.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'segments-value',
@@ -1076,6 +1143,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'jobs',
     repInstructions: 'Configure recurring job schedules for maintenance contracts.',
     estimatedMinutes: 10,
+    points: 75,
     contextSnippets: [
       {
         id: 'recurring-jobs-value',
@@ -1097,6 +1165,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'jobs',
     repInstructions: 'Walk through scheduling and dispatching workflows and best practices.',
     estimatedMinutes: 15,
+    points: 75,
     contextSnippets: [
       {
         id: 'scheduling-dispatching-value',
@@ -1118,6 +1187,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'jobs',
     repInstructions: 'Set up calendar preferences including views, colors, and time slots.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'calendar-settings-value',
@@ -1143,6 +1213,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'invoicing',
     repInstructions: 'Demonstrate processing payments including cards, cash, and checks.',
     estimatedMinutes: 10,
+    points: 75,
     contextSnippets: [
       {
         id: 'processing-payments-value',
@@ -1164,6 +1235,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'invoicing',
     repInstructions: 'Explain progress invoicing for milestone-based billing.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'progress-invoicing-value',
@@ -1185,6 +1257,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'invoicing',
     repInstructions: 'Show how to edit invoices, change dates, and properly cancel jobs/invoices.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'cancel-edit-invoice-value',
@@ -1206,6 +1279,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'invoicing',
     repInstructions: 'Configure auto-invoicing settings for completed jobs.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'auto-invoicing-value',
@@ -1227,6 +1301,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'invoicing',
     repInstructions: 'Demonstrate creating batched invoices for commercial clients or property managers.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'batched-invoices-value',
@@ -1248,6 +1323,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'invoicing',
     repInstructions: 'Show how to add checklists to invoices for documentation.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'invoice-checklist-value',
@@ -1269,6 +1345,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'invoicing',
     repInstructions: 'Demonstrate adding photos and file attachments to invoices.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'invoice-attachments-value',
@@ -1294,6 +1371,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'service-plans',
     repInstructions: 'Set up service plan configuration options and defaults.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'service-plans-settings-value',
@@ -1315,6 +1393,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'service-plans',
     repInstructions: 'Create service plan templates for different service tiers.',
     estimatedMinutes: 15,
+    points: 75,
     contextSnippets: [
       {
         id: 'service-plans-templates-value',
@@ -1336,6 +1415,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'service-plans',
     repInstructions: 'Show how to edit existing service plans and properly delete them.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'edit-delete-service-plan-value',
@@ -1357,6 +1437,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'service-plans',
     repInstructions: 'Demonstrate adding service plans to customer accounts.',
     estimatedMinutes: 5,
+    points: 75,
     contextSnippets: [
       {
         id: 'add-service-plan-customer-value',
@@ -1382,6 +1463,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'additional-tools',
     repInstructions: 'Set up material tracking for job costing and inventory management.',
     estimatedMinutes: 15,
+    points: 50,
     contextSnippets: [
       {
         id: 'material-detail-tracking-value',
@@ -1403,6 +1485,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'additional-tools',
     repInstructions: 'Create job checklists for consistent service delivery.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'checklists-value',
@@ -1424,6 +1507,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'additional-tools',
     repInstructions: 'Configure property profiles with equipment, access codes, and history.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'property-profile-value',
@@ -1445,6 +1529,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'additional-tools',
     repInstructions: 'Set up task management for internal follow-ups and reminders.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'tasks-value',
@@ -1466,6 +1551,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'additional-tools',
     repInstructions: 'Create custom job fields for capturing specific information.',
     estimatedMinutes: 10,
+    points: 25,
     contextSnippets: [
       {
         id: 'job-fields-value',
@@ -1487,6 +1573,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'additional-tools',
     repInstructions: 'Configure and use the job inbox for lead management.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'job-inbox-value',
@@ -1508,6 +1595,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'additional-tools',
     repInstructions: 'Set up time tracking for employees including clock in/out.',
     estimatedMinutes: 10,
+    points: 50,
     subItems: [
       { id: 'time-on-job', title: 'Time on Job' },
     ],
@@ -1532,6 +1620,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'additional-tools',
     repInstructions: 'Configure online booking settings and availability.',
     estimatedMinutes: 20,
+    points: 75,
     subItems: [
       { id: 'olb-windows', title: 'OLB Windows' },
       { id: 'employee-availability', title: 'Employee Availability' },
@@ -1563,6 +1652,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'reporting',
     repInstructions: 'Walk through dashboard features and key metrics.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'dashboard-value',
@@ -1584,6 +1674,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'reporting',
     repInstructions: 'Demonstrate using tags to filter reports and views.',
     estimatedMinutes: 5,
+    points: 25,
     contextSnippets: [
       {
         id: 'filtering-tags-value',
@@ -1605,6 +1696,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'reporting',
     repInstructions: 'Show how to create reports filtered by customer and job tags.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'tags-reporting-value',
@@ -1626,6 +1718,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'reporting',
     repInstructions: 'Explain the tech leaderboard and performance metrics.',
     estimatedMinutes: 10,
+    points: 50,
     contextSnippets: [
       {
         id: 'tech-leaderboard-value',
@@ -1647,6 +1740,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'reporting',
     repInstructions: 'Set up job costing for tracking labor and materials.',
     estimatedMinutes: 15,
+    points: 75,
     contextSnippets: [
       {
         id: 'job-costing-value',
@@ -1668,6 +1762,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'reporting',
     repInstructions: 'Configure commission tracking and reporting.',
     estimatedMinutes: 15,
+    points: 50,
     contextSnippets: [
       {
         id: 'commissions-value',
@@ -1689,6 +1784,7 @@ export const onboardingItems: OnboardingItemDefinition[] = [
     category: 'reporting',
     repInstructions: 'Show how to create custom reports with specific filters and metrics.',
     estimatedMinutes: 15,
+    points: 50,
     contextSnippets: [
       {
         id: 'custom-reports-value',
@@ -1717,6 +1813,15 @@ export function getOnboardingItemsByType(type: 'in_product' | 'rep_facing'): Onb
 // Helper to get items by category
 export function getOnboardingItemsByCategory(category: string): OnboardingItemDefinition[] {
   return onboardingItems.filter(item => item.category === category);
+}
+
+// Default points value for items without explicit points
+export const DEFAULT_ITEM_POINTS = 25;
+
+// Helper to get points for an item (with fallback)
+export function getItemPoints(itemId: string): number {
+  const item = getOnboardingItemById(itemId);
+  return item?.points ?? DEFAULT_ITEM_POINTS;
 }
 
 // Export item IDs for type-safe references
