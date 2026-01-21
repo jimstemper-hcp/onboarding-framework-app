@@ -2726,6 +2726,8 @@ function createDefaultOnboardingItem(): OnboardingItemDefinition {
     contextSnippets: createDefaultOnboardingItemSnippets(''),
     prompt: '',
     tools: [],
+    navigation: [],
+    calendlyTypes: [],
     description: '',
   };
 }
@@ -2746,6 +2748,14 @@ function OnboardingItemEditModal({
 }) {
   const [editedItem, setEditedItem] = useState<OnboardingItemDefinition>(createDefaultOnboardingItem());
   const [activeTab, setActiveTab] = useState(0);
+
+  // Navigation & Calls editing state
+  const [editingNavItem, setEditingNavItem] = useState<NavigationItem | null>(null);
+  const [editingNavIndex, setEditingNavIndex] = useState<number>(-1);
+  const [navModalOpen, setNavModalOpen] = useState(false);
+  const [editingCallItem, setEditingCallItem] = useState<CalendlyLink | null>(null);
+  const [editingCallIndex, setEditingCallIndex] = useState<number>(-1);
+  const [callModalOpen, setCallModalOpen] = useState(false);
 
   useEffect(() => {
     if (item) {
@@ -2827,6 +2837,8 @@ function OnboardingItemEditModal({
     }
     if (editedItem.category) payload.category = editedItem.category;
     payload.context = editedItem.contextSnippets;
+    if (editedItem.navigation?.length) payload.navigation = editedItem.navigation;
+    if (editedItem.calendlyTypes?.length) payload.calendlyTypes = editedItem.calendlyTypes;
     if (editedItem.prompt) payload.prompt = editedItem.prompt;
     if (editedItem.tools?.length) payload.tools = editedItem.tools;
     if (editedItem.estimatedMinutes) payload.estimatedMinutes = editedItem.estimatedMinutes;
@@ -2885,6 +2897,7 @@ function OnboardingItemEditModal({
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
           <Tab label="Basic Info" />
           <Tab label="Important Context" />
+          <Tab label="Navigation & Calls" />
           <Tab label="AI Config" />
           <Tab label="JSON Payload" />
         </Tabs>
@@ -3093,8 +3106,284 @@ function OnboardingItemEditModal({
           </Paper>
         )}
 
-        {/* Tab 2: AI Config */}
+        {/* Tab 2: Navigation & Calls */}
         {activeTab === 2 && (
+          <Stack spacing={3}>
+            {/* Navigation Section */}
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<LinkIcon />} title="Navigation" count={editedItem.navigation?.length || 0} />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Links to pages, articles, videos, and other resources related to this item.
+              </Typography>
+              {(editedItem.navigation?.length || 0) === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                  No navigation items configured
+                </Typography>
+              ) : (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                        <TableCell align="right" sx={{ width: 100 }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {editedItem.navigation?.map((nav, index) => (
+                        <TableRow key={nav.slugId || index} hover>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight={500}>{nav.name}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={navigationTypes.find((t) => t.value === nav.navigationType)?.label || nav.navigationType}
+                              size="small"
+                              sx={{
+                                bgcolor: alpha(palette.primary, 0.1),
+                                color: palette.primary,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={navigationStatusOptions.find((s) => s.value === nav.status)?.label || 'Draft'}
+                              size="small"
+                              sx={{
+                                bgcolor: alpha(
+                                  navigationStatusOptions.find((s) => s.value === nav.status)?.color || palette.warning,
+                                  0.1
+                                ),
+                                color: navigationStatusOptions.find((s) => s.value === nav.status)?.color || palette.warning,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setEditingNavItem(nav);
+                                setEditingNavIndex(index);
+                                setNavModalOpen(true);
+                              }}
+                              title="Edit"
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                if (window.confirm(`Delete "${nav.name}"?`)) {
+                                  setEditedItem({
+                                    ...editedItem,
+                                    navigation: editedItem.navigation?.filter((_, i) => i !== index),
+                                  });
+                                }
+                              }}
+                              title="Delete"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+              <Button
+                startIcon={<AddIcon />}
+                size="small"
+                sx={{ mt: 1 }}
+                onClick={() => {
+                  setEditingNavItem(null);
+                  setEditingNavIndex(-1);
+                  setNavModalOpen(true);
+                }}
+              >
+                Add Navigation
+              </Button>
+            </Paper>
+
+            {/* Calls Section */}
+            <Paper sx={{ p: 3 }}>
+              <SectionHeader icon={<CalendarMonthIcon />} title="Calls" count={editedItem.calendlyTypes?.length || 0} />
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Calendly event types for scheduling calls related to this item.
+              </Typography>
+              {(editedItem.calendlyTypes?.length || 0) === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                  No call types configured
+                </Typography>
+              ) : (
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Team</TableCell>
+                        <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                        <TableCell align="right" sx={{ width: 100 }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {editedItem.calendlyTypes?.map((call, index) => (
+                        <TableRow key={call.slugId || index} hover>
+                          <TableCell>
+                            <Typography variant="body2" fontWeight={500}>{call.name}</Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={calendlyTeamOptions.find((t) => t.value === call.team)?.label || call.team}
+                              size="small"
+                              sx={{
+                                bgcolor: alpha(
+                                  calendlyTeamOptions.find((t) => t.value === call.team)?.color || palette.grey[600],
+                                  0.1
+                                ),
+                                color: calendlyTeamOptions.find((t) => t.value === call.team)?.color || palette.grey[600],
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={calendlyStatusOptions.find((s) => s.value === call.status)?.label || 'Draft'}
+                              size="small"
+                              sx={{
+                                bgcolor: alpha(
+                                  calendlyStatusOptions.find((s) => s.value === call.status)?.color || palette.warning,
+                                  0.1
+                                ),
+                                color: calendlyStatusOptions.find((s) => s.value === call.status)?.color || palette.warning,
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell align="right">
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                setEditingCallItem(call);
+                                setEditingCallIndex(index);
+                                setCallModalOpen(true);
+                              }}
+                              title="Edit"
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => {
+                                if (window.confirm(`Delete "${call.name}"?`)) {
+                                  setEditedItem({
+                                    ...editedItem,
+                                    calendlyTypes: editedItem.calendlyTypes?.filter((_, i) => i !== index),
+                                  });
+                                }
+                              }}
+                              title="Delete"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+              <Button
+                startIcon={<AddIcon />}
+                size="small"
+                sx={{ mt: 1 }}
+                onClick={() => {
+                  setEditingCallItem(null);
+                  setEditingCallIndex(-1);
+                  setCallModalOpen(true);
+                }}
+              >
+                Add Call
+              </Button>
+            </Paper>
+
+            {/* Navigation Edit Modal */}
+            <NavigationEditModal
+              item={editingNavItem}
+              open={navModalOpen}
+              onClose={() => {
+                setNavModalOpen(false);
+                setEditingNavItem(null);
+                setEditingNavIndex(-1);
+              }}
+              onSave={(updatedNav) => {
+                if (editingNavIndex >= 0) {
+                  // Editing existing item
+                  const updated = [...(editedItem.navigation || [])];
+                  updated[editingNavIndex] = updatedNav;
+                  setEditedItem({ ...editedItem, navigation: updated });
+                } else {
+                  // Adding new item
+                  setEditedItem({
+                    ...editedItem,
+                    navigation: [...(editedItem.navigation || []), updatedNav],
+                  });
+                }
+                setNavModalOpen(false);
+                setEditingNavItem(null);
+                setEditingNavIndex(-1);
+              }}
+              onDelete={editingNavIndex >= 0 ? () => {
+                setEditedItem({
+                  ...editedItem,
+                  navigation: editedItem.navigation?.filter((_, i) => i !== editingNavIndex),
+                });
+                setNavModalOpen(false);
+                setEditingNavItem(null);
+                setEditingNavIndex(-1);
+              } : undefined}
+            />
+
+            {/* Calls Edit Modal */}
+            <CallsEditModal
+              item={editingCallItem}
+              open={callModalOpen}
+              onClose={() => {
+                setCallModalOpen(false);
+                setEditingCallItem(null);
+                setEditingCallIndex(-1);
+              }}
+              onSave={(updatedCall) => {
+                if (editingCallIndex >= 0) {
+                  // Editing existing item
+                  const updated = [...(editedItem.calendlyTypes || [])];
+                  updated[editingCallIndex] = updatedCall;
+                  setEditedItem({ ...editedItem, calendlyTypes: updated });
+                } else {
+                  // Adding new item
+                  setEditedItem({
+                    ...editedItem,
+                    calendlyTypes: [...(editedItem.calendlyTypes || []), updatedCall],
+                  });
+                }
+                setCallModalOpen(false);
+                setEditingCallItem(null);
+                setEditingCallIndex(-1);
+              }}
+              onDelete={editingCallIndex >= 0 ? () => {
+                setEditedItem({
+                  ...editedItem,
+                  calendlyTypes: editedItem.calendlyTypes?.filter((_, i) => i !== editingCallIndex),
+                });
+                setCallModalOpen(false);
+                setEditingCallItem(null);
+                setEditingCallIndex(-1);
+              } : undefined}
+            />
+          </Stack>
+        )}
+
+        {/* Tab 3: AI Config */}
+        {activeTab === 3 && (
           <Stack spacing={3}>
             <Paper sx={{ p: 3 }}>
               <SectionHeader icon={<SmartToyIcon />} title="Prompt" />
@@ -3168,8 +3457,8 @@ function OnboardingItemEditModal({
           </Stack>
         )}
 
-        {/* Tab 3: JSON Payload */}
-        {activeTab === 3 && (
+        {/* Tab 4: JSON Payload */}
+        {activeTab === 4 && (
           <Paper sx={{ p: 3 }}>
             <SectionHeader icon={<TextSnippetIcon />} title="JSON Payload" />
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

@@ -266,6 +266,12 @@ export interface OnboardingItemDefinition {
   prompt?: string;
   tools?: McpTool[];
 
+  // Navigation links (pages, articles, videos, etc.) - same as features
+  navigation?: NavigationItem[];
+
+  // Calendly event types for scheduling calls - same as features
+  calendlyTypes?: CalendlyLink[];
+
   // Additional metadata
   estimatedMinutes?: number;
   actionUrl?: string;          // Where to go to complete this item
@@ -616,6 +622,7 @@ export interface ProAccount {
   currentWeek: 1 | 2 | 3 | 4;  // Weeks since enrolling in paid plan (1-4)
   featureStatus: Record<FeatureId, FeatureStatus>;
   weeklyPlan?: WeeklyPlan;  // Custom weekly onboarding plan
+  completedItems?: string[];  // Global list of completed onboarding item IDs
 
   // Pro Data (Pro Facets) fields
   billingStatus?: BillingStatus;
@@ -683,6 +690,7 @@ export interface OnboardingContextActions {
   deletePro: (proId: string) => void;
   updateProFeatureStatus: (proId: string, featureId: FeatureId, status: FeatureStatus) => void;
   updateProWeeklyPlan: (proId: string, weeklyPlan: WeeklyPlan) => void;
+  updateProCompletedItems: (proId: string, completedItems: string[]) => void;
 
   // Feature mutations (for Admin view)
   updateFeature: (feature: Feature) => void;
