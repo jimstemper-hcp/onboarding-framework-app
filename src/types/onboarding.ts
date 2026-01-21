@@ -24,7 +24,19 @@ export type FeatureId =
   | 'add-ons'
   | 'service-plans'
   | 'online-booking'
-  | 'reporting';
+  | 'reporting'
+  // Core features for published release:
+  | 'business-setup'
+  | 'jobs'
+  | 'employees';
+
+/**
+ * Release status for features in @HCP Context Manager.
+ * - draft: Feature does NOT appear in any user-facing part of the application
+ * - published: Feature DOES appear in user-facing parts of the application
+ * - archived: Feature does NOT appear in any user-facing part of the application
+ */
+export type FeatureReleaseStatus = 'draft' | 'published' | 'archived';
 
 export type AdoptionStage = 'not_attached' | 'attached' | 'activated' | 'engaged';
 
@@ -354,6 +366,7 @@ export interface Feature {
   description: string;
   icon: string; // MUI icon name
   version: string; // Semantic version (major.minor.patch)
+  releaseStatus?: FeatureReleaseStatus; // Controls visibility in user-facing parts of the app
   stages: {
     notAttached: NotAttachedContext;
     attached: AttachedContext;

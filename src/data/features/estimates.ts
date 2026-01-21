@@ -6,6 +6,7 @@ export const estimatesFeature: Feature = {
   description: 'Create and send professional estimates that win jobs',
   icon: 'RequestQuote',
   version: '1.1.0',
+  releaseStatus: 'published',
 
   stages: {
     // =========================================================================

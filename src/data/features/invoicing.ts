@@ -6,6 +6,7 @@ export const invoicingFeature: Feature = {
   description: 'Create and send professional invoices to your customers',
   icon: 'Receipt',
   version: '1.2.0',
+  releaseStatus: 'published',
 
   stages: {
     // =========================================================================

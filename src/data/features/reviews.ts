@@ -6,6 +6,7 @@ export const reviewsFeature: Feature = {
   description: 'Collect and manage customer reviews to build your reputation',
   icon: 'Star',
   version: '1.1.0',
+  releaseStatus: 'published',
 
   stages: {
     // =========================================================================

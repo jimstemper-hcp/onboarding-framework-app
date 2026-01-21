@@ -3314,9 +3314,12 @@ const frontlinePageToPlanningId: Record<FrontlinePage, string> = {
 };
 
 export function FrontlineView() {
-  const { features, pros, activeProId, completeTask, uncompleteTask, updateProWeeklyPlan } = useOnboarding();
+  const { features: allFeatures, pros, activeProId, completeTask, uncompleteTask, updateProWeeklyPlan } = useOnboarding();
   const [currentPage, setCurrentPage] = useState<FrontlinePage>('information');
   const { setCurrentPage: setPlanningPage, isPlanningMode } = usePlanningMode();
+
+  // Filter to only show published features in user-facing view
+  const features = allFeatures.filter((f) => f.releaseStatus === 'published');
 
   // Report current page to planning context
   useEffect(() => {

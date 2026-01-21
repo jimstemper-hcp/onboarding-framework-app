@@ -6,6 +6,7 @@ export const customersFeature: Feature = {
   description: 'Manage your customer database, profiles, and communication preferences',
   icon: 'Person',
   version: '1.0.0',
+  releaseStatus: 'published',
 
   stages: {
     notAttached: {

@@ -1158,10 +1158,13 @@ function WeeklyJourneyView({ currentWeek, completedItemIds, onToggleTask, weekly
 // =============================================================================
 
 export function PortalView() {
-  const { features, completeTask, uncompleteTask } = useOnboarding();
+  const { features: allFeatures, completeTask, uncompleteTask } = useOnboarding();
   const activePro = useActivePro();
   const [viewMode, setViewMode] = useState<PortalViewMode>('journey');
   const { setCurrentPage, isPlanningMode } = usePlanningMode();
+
+  // Filter to only show published features in user-facing view
+  const features = allFeatures.filter((f) => f.releaseStatus === 'published');
 
   // Report current page to planning context
   useEffect(() => {

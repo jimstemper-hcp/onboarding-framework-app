@@ -6,6 +6,7 @@ export const servicePlansFeature: Feature = {
   description: 'Create and manage recurring service plans for maintenance contracts',
   icon: 'EventRepeat',
   version: '1.0.0',
+  releaseStatus: 'draft',
 
   stages: {
     notAttached: {

@@ -50,9 +50,10 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { useOnboarding } from '../../context';
 import { onboardingItems, onboardingCategories } from '../../data';
-import { PlanningWrapper, usePlanningMode } from '../../planning';
+import { PlanningWrapper, usePlanningMode, PlanningInfoButton, getItemPlannableId } from '../../planning';
 import type {
   Feature,
+  FeatureReleaseStatus,
   CalendlyLink,
   CalendlyTeam,
   CalendlyStatus,
@@ -123,6 +124,12 @@ const navigationStatusOptions: { value: NavigationStatus; label: string; color: 
   { value: 'published', label: 'Published', color: palette.success },
   { value: 'draft', label: 'Draft', color: palette.warning },
   { value: 'archived', label: 'Archived', color: palette.grey[600] },
+];
+
+const featureReleaseStatusOptions: { value: FeatureReleaseStatus; label: string; color: string; description: string }[] = [
+  { value: 'draft', label: 'Draft', color: palette.warning, description: 'Feature does NOT appear in user-facing parts of the app' },
+  { value: 'published', label: 'Published', color: palette.success, description: 'Feature DOES appear in user-facing parts of the app' },
+  { value: 'archived', label: 'Archived', color: palette.grey[600], description: 'Feature does NOT appear in user-facing parts of the app' },
 ];
 
 // =============================================================================
@@ -1007,6 +1014,15 @@ function FeatureEditorModal({
         <Stack direction="row" alignItems="center" spacing={2}>
           <Typography variant="h6">Edit Feature: {editedFeature.name}</Typography>
           <Chip label={editedFeature.id} size="small" sx={{ bgcolor: alpha(palette.primary, 0.1), color: palette.primary }} />
+          <Chip
+            label={featureReleaseStatusOptions.find((s) => s.value === (editedFeature.releaseStatus || 'draft'))?.label || 'Draft'}
+            size="small"
+            sx={{
+              bgcolor: alpha(featureReleaseStatusOptions.find((s) => s.value === (editedFeature.releaseStatus || 'draft'))?.color || palette.warning, 0.1),
+              color: featureReleaseStatusOptions.find((s) => s.value === (editedFeature.releaseStatus || 'draft'))?.color || palette.warning,
+            }}
+          />
+          <PlanningInfoButton elementId={getItemPlannableId('feature', editedFeature.id)} label={`${editedFeature.name} Spec`} />
         </Stack>
       </DialogTitle>
 
@@ -1019,6 +1035,23 @@ function FeatureEditorModal({
             onChange={(e) => setEditedFeature({ ...editedFeature, name: e.target.value })}
             sx={{ flex: 1 }}
           />
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Release Status</InputLabel>
+            <Select
+              value={editedFeature.releaseStatus || 'draft'}
+              label="Release Status"
+              onChange={(e) => setEditedFeature({ ...editedFeature, releaseStatus: e.target.value as FeatureReleaseStatus })}
+            >
+              {featureReleaseStatusOptions.map((opt) => (
+                <MenuItem key={opt.value} value={opt.value}>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: opt.color }} />
+                    <span>{opt.label}</span>
+                  </Stack>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
             size="small"
             label="Version"
@@ -1088,6 +1121,21 @@ function FeatureManagementPage({ onNavigateToPage }: { onNavigateToPage: (page: 
   const { features, updateFeature } = useOnboarding();
   const [selectedFeature, setSelectedFeature] = useState<Feature | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<FeatureReleaseStatus | 'all'>('all');
+
+  // Filter features based on release status
+  const filteredFeatures = features.filter((feature) => {
+    if (statusFilter === 'all') return true;
+    return (feature.releaseStatus || 'draft') === statusFilter;
+  });
+
+  // Count features by status
+  const statusCounts = {
+    all: features.length,
+    draft: features.filter((f) => (f.releaseStatus || 'draft') === 'draft').length,
+    published: features.filter((f) => f.releaseStatus === 'published').length,
+    archived: features.filter((f) => f.releaseStatus === 'archived').length,
+  };
 
   return (
     <Box>
@@ -1101,47 +1149,88 @@ function FeatureManagementPage({ onNavigateToPage }: { onNavigateToPage: (page: 
         <Button variant="contained" startIcon={<AddIcon />} disabled>Add Feature</Button>
       </Stack>
 
+      {/* Release Status Filter */}
+      <Paper sx={{ p: 2, mb: 3, boxShadow: 'none', border: 1, borderColor: 'divider' }}>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Typography variant="body2" fontWeight={500} color="text.secondary">Filter by Release Status:</Typography>
+          <ToggleButtonGroup
+            value={statusFilter}
+            exclusive
+            onChange={(_, value) => value && setStatusFilter(value)}
+            size="small"
+          >
+            <ToggleButton value="all" sx={{ textTransform: 'none' }}>
+              All ({statusCounts.all})
+            </ToggleButton>
+            <ToggleButton value="published" sx={{ textTransform: 'none', '&.Mui-selected': { bgcolor: alpha(palette.success, 0.1), color: palette.success } }}>
+              Published ({statusCounts.published})
+            </ToggleButton>
+            <ToggleButton value="draft" sx={{ textTransform: 'none', '&.Mui-selected': { bgcolor: alpha(palette.warning, 0.1), color: palette.warning } }}>
+              Draft ({statusCounts.draft})
+            </ToggleButton>
+            <ToggleButton value="archived" sx={{ textTransform: 'none', '&.Mui-selected': { bgcolor: alpha(palette.grey[600], 0.1), color: palette.grey[600] } }}>
+              Archived ({statusCounts.archived})
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
+      </Paper>
+
       <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
         <Table>
           <TableHead>
             <TableRow sx={{ bgcolor: palette.grey[50] }}>
               <TableCell sx={{ fontWeight: 600 }}>Feature</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
+              <TableCell sx={{ fontWeight: 600 }} align="center">Status</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="center">Version</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {features.map((feature) => (
-              <TableRow key={feature.id} hover sx={{ '&:last-child td': { border: 0 } }}>
-                <TableCell><Typography fontWeight={500}>{feature.name}</Typography></TableCell>
-                <TableCell>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                  >
-                    {feature.description}
-                  </Typography>
-                </TableCell>
-                <TableCell align="center">
-                  <Chip
-                    label={`v${feature.version}`}
-                    size="small"
-                    sx={{ bgcolor: alpha(palette.primary, 0.1), color: palette.primary, fontFamily: 'monospace' }}
-                  />
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    size="small"
-                    onClick={() => { setSelectedFeature(feature); setEditorOpen(true); }}
-                    sx={{ color: palette.primary }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+            {filteredFeatures.map((feature) => {
+              const status = feature.releaseStatus || 'draft';
+              const statusOption = featureReleaseStatusOptions.find((s) => s.value === status);
+              return (
+                <TableRow key={feature.id} hover sx={{ '&:last-child td': { border: 0 } }}>
+                  <TableCell><Typography fontWeight={500}>{feature.name}</Typography></TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
+                      {feature.description}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Chip
+                      label={statusOption?.label || 'Draft'}
+                      size="small"
+                      sx={{
+                        bgcolor: alpha(statusOption?.color || palette.warning, 0.1),
+                        color: statusOption?.color || palette.warning,
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell align="center">
+                    <Chip
+                      label={`v${feature.version}`}
+                      size="small"
+                      sx={{ bgcolor: alpha(palette.primary, 0.1), color: palette.primary, fontFamily: 'monospace' }}
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => { setSelectedFeature(feature); setEditorOpen(true); }}
+                      sx={{ color: palette.primary }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -1473,6 +1562,9 @@ function NavigationEditModal({
                   color: navigationStatusOptions.find((s) => s.value === editedItem.status)?.color || palette.grey[600],
                 }}
               />
+            )}
+            {editedItem.slugId && (
+              <PlanningInfoButton elementId={getItemPlannableId('navigation', editedItem.slugId)} label={`${editedItem.name || 'Navigation'} Spec`} />
             )}
           </Stack>
           {onDelete && (
@@ -2128,6 +2220,9 @@ function CallsEditModal({
                   color: calendlyStatusOptions.find((s) => s.value === editedItem.status)?.color || palette.grey[600],
                 }}
               />
+            )}
+            {editedItem.slugId && (
+              <PlanningInfoButton elementId={getItemPlannableId('call', editedItem.slugId)} label={`${editedItem.name || 'Call'} Spec`} />
             )}
           </Stack>
           {onDelete && (
@@ -2829,6 +2924,9 @@ function OnboardingItemEditModal({
                   color: onboardingItemStatusOptions.find((s) => s.value === editedItem.status)?.color || palette.grey[600],
                 }}
               />
+            )}
+            {editedItem.id && (
+              <PlanningInfoButton elementId={getItemPlannableId('onboarding-item', editedItem.id)} label={`${editedItem.title || 'Onboarding Item'} Spec`} />
             )}
           </Stack>
           {onDelete && (

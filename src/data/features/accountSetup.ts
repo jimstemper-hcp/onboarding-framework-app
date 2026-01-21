@@ -6,6 +6,7 @@ export const accountSetupFeature: Feature = {
   description: 'Configure your account settings, business profile, and team permissions',
   icon: 'Settings',
   version: '1.0.0',
+  releaseStatus: 'draft',
 
   stages: {
     notAttached: {

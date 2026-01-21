@@ -2,10 +2,11 @@ import type { Feature } from '../../types';
 
 export const paymentsFeature: Feature = {
   id: 'payments',
-  name: 'Collecting Payment',
+  name: 'Payments',
   description: 'Accept credit cards and get paid online',
   icon: 'CreditCard',
   version: '1.0.0',
+  releaseStatus: 'published',
 
   stages: {
     // =========================================================================

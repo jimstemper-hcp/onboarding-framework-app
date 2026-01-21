@@ -6,6 +6,7 @@ export const csrAiFeature: Feature = {
   description: '24/7 AI-powered phone answering and chat for your business',
   icon: 'SmartToy',
   version: '2.0.0',
+  releaseStatus: 'draft',
 
   stages: {
     // =========================================================================

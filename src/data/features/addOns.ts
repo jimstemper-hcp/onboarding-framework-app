@@ -6,6 +6,7 @@ export const addOnsFeature: Feature = {
   description: 'Third-party integrations and premium add-ons to extend your capabilities',
   icon: 'Extension',
   version: '1.0.0',
+  releaseStatus: 'draft',
 
   stages: {
     notAttached: {

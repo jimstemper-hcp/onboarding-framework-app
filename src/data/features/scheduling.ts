@@ -6,6 +6,7 @@ export const schedulingFeature: Feature = {
   description: 'Schedule jobs and dispatch your team efficiently',
   icon: 'CalendarMonth',
   version: '3.0.1',
+  releaseStatus: 'draft',
 
   stages: {
     // =========================================================================

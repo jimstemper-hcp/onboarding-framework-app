@@ -699,4 +699,118 @@ export function getElementsByTag(tag: string): PlannableElement[] {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// -----------------------------------------------------------------------------
+// DYNAMIC ITEM SPEC PATH HELPERS
+// -----------------------------------------------------------------------------
+
+/**
+ * Item types for @HCP Context Manager items.
+ * Each type has a corresponding spec file location.
+ */
+export type HcpContextItemType = 'feature' | 'navigation' | 'call' | 'onboarding-item' | 'tool';
+
+/**
+ * Generate a spec path for an @HCP Context Manager item.
+ *
+ * LLM INSTRUCTIONS:
+ * - Use this to get the spec path for any item in the context manager
+ * - Example: getItemSpecPath('feature', 'invoicing') => 'pages/hcp-context/features/invoicing.md'
+ */
+export function getItemSpecPath(itemType: HcpContextItemType, itemId: string): string {
+  const basePath = 'pages/hcp-context';
+  switch (itemType) {
+    case 'feature':
+      return `${basePath}/features/${itemId}.md`;
+    case 'navigation':
+      return `${basePath}/navigation/${itemId}.md`;
+    case 'call':
+      return `${basePath}/calls/${itemId}.md`;
+    case 'onboarding-item':
+      return `${basePath}/onboarding-items/${itemId}.md`;
+    case 'tool':
+      return `${basePath}/tools/${itemId}.md`;
+    default:
+      return `${basePath}/${itemType}/${itemId}.md`;
+  }
+}
+
+/**
+ * Generate a PlannableId for an @HCP Context Manager item.
+ *
+ * LLM INSTRUCTIONS:
+ * - Use this to get the plannable ID for any item
+ * - Example: getItemPlannableId('feature', 'invoicing') => 'hcp-context-feature-invoicing'
+ */
+export function getItemPlannableId(itemType: HcpContextItemType, itemId: string): PlannableId {
+  return `hcp-context-${itemType}-${itemId}`;
+}
+
+/**
+ * Dynamically register an @HCP Context Manager item.
+ * If the item already exists, it will be updated.
+ *
+ * LLM INSTRUCTIONS:
+ * - Use this when adding new items to the context manager
+ * - Items are registered with prototype status by default
+ */
+export function registerHcpContextItem(
+  itemType: HcpContextItemType,
+  itemId: string,
+  name: string,
+  options?: {
+    status?: ReleaseStatus;
+    releaseDate?: string;
+    releaseNotes?: string;
+    owners?: string[];
+    tags?: string[];
+  }
+): PlannableElement {
+  const plannableId = getItemPlannableId(itemType, itemId);
+  const specPath = getItemSpecPath(itemType, itemId);
+
+  const element = createPlannableElement(
+    plannableId,
+    name,
+    'page', // All context manager items are treated as pages for categorization
+    specPath,
+    options?.status || 'prototype',
+    {
+      releaseDate: options?.releaseDate,
+      releaseNotes: options?.releaseNotes || `@HCP Context Manager ${itemType}: ${name}`,
+      owners: options?.owners || ['Product Team'],
+      tags: options?.tags || [itemType, 'hcp-context'],
+    }
+  );
+
+  plannableRegistry.set(plannableId, element);
+  return element;
+}
+
+/**
+ * Check if an @HCP Context Manager item is registered.
+ */
+export function isItemRegistered(itemType: HcpContextItemType, itemId: string): boolean {
+  const plannableId = getItemPlannableId(itemType, itemId);
+  return plannableRegistry.has(plannableId);
+}
+
+/**
+ * Get or create a plannable element for an @HCP Context Manager item.
+ * If the item doesn't exist, it will be created with default values.
+ */
+export function getOrCreateItem(
+  itemType: HcpContextItemType,
+  itemId: string,
+  name: string
+): PlannableElement {
+  const plannableId = getItemPlannableId(itemType, itemId);
+  const existing = plannableRegistry.get(plannableId);
+
+  if (existing) {
+    return existing;
+  }
+
+  return registerHcpContextItem(itemType, itemId, name);
+}
+
 export default plannableRegistry;

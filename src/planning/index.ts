@@ -19,7 +19,18 @@ export { PlanningModal } from './components/PlanningModal';
 export { PlanningDrawer, DRAWER_WIDTH } from './components/PlanningDrawer';
 
 // Registry
-export { plannableRegistry, getElementsByCategory, getElementsByStatus, getElementsByTag } from './registry/plannableRegistry';
+export {
+  plannableRegistry,
+  getElementsByCategory,
+  getElementsByStatus,
+  getElementsByTag,
+  getItemSpecPath,
+  getItemPlannableId,
+  registerHcpContextItem,
+  isItemRegistered,
+  getOrCreateItem,
+} from './registry/plannableRegistry';
+export type { HcpContextItemType } from './registry/plannableRegistry';
 
 // Types
 export type {

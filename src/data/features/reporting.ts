@@ -6,6 +6,7 @@ export const reportingFeature: Feature = {
   description: 'Dashboards, analytics, and custom reports to track your business performance',
   icon: 'Analytics',
   version: '1.0.0',
+  releaseStatus: 'draft',
 
   stages: {
     notAttached: {

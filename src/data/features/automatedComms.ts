@@ -6,6 +6,7 @@ export const automatedCommsFeature: Feature = {
   description: 'Automated texts and emails to keep customers informed',
   icon: 'Sms',
   version: '2.1.0',
+  releaseStatus: 'draft',
 
   stages: {
     // =========================================================================

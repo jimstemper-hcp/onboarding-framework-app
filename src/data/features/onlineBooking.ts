@@ -6,6 +6,7 @@ export const onlineBookingFeature: Feature = {
   description: 'Let customers book appointments online directly from your website',
   icon: 'EventAvailable',
   version: '1.0.0',
+  releaseStatus: 'draft',
 
   stages: {
     notAttached: {
