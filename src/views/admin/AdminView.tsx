@@ -49,7 +49,7 @@ import PhoneIcon from '@mui/icons-material/Phone';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { useOnboarding } from '../../context';
-import { onboardingItems } from '../../data';
+import { onboardingItems, onboardingCategories } from '../../data';
 import { PlanningWrapper, usePlanningMode } from '../../planning';
 import type {
   Feature,
@@ -66,6 +66,7 @@ import type {
   OnboardingItemDefinition,
   OnboardingItemStatus,
   OnboardingItemType,
+  OnboardingCategoryId,
   CompletionApi,
   ChatExperience,
 } from '../../types';
@@ -2745,7 +2746,6 @@ function OnboardingItemEditModal({
 }) {
   const [editedItem, setEditedItem] = useState<OnboardingItemDefinition>(createDefaultOnboardingItem());
   const [activeTab, setActiveTab] = useState(0);
-  const [newLabel, setNewLabel] = useState('');
 
   useEffect(() => {
     if (item) {
@@ -2798,24 +2798,6 @@ function OnboardingItemEditModal({
     });
   };
 
-  // Label management
-  const handleAddLabel = () => {
-    if (newLabel.trim() && !editedItem.labels?.includes(newLabel.trim())) {
-      setEditedItem({
-        ...editedItem,
-        labels: [...(editedItem.labels || []), newLabel.trim()],
-      });
-      setNewLabel('');
-    }
-  };
-
-  const handleRemoveLabel = (label: string) => {
-    setEditedItem({
-      ...editedItem,
-      labels: (editedItem.labels || []).filter((l) => l !== label),
-    });
-  };
-
   // Completion API handling
   const handleCompletionApiChange = (field: keyof CompletionApi, value: string) => {
     setEditedItem({
@@ -2843,7 +2825,7 @@ function OnboardingItemEditModal({
     if (editedItem.type === 'rep_facing' && editedItem.repInstructions) {
       payload.repInstructions = editedItem.repInstructions;
     }
-    if (editedItem.labels?.length) payload.labels = editedItem.labels;
+    if (editedItem.category) payload.category = editedItem.category;
     payload.context = editedItem.contextSnippets;
     if (editedItem.prompt) payload.prompt = editedItem.prompt;
     if (editedItem.tools?.length) payload.tools = editedItem.tools;
@@ -3031,34 +3013,30 @@ function OnboardingItemEditModal({
             </Paper>
 
             <Paper sx={{ p: 3 }}>
-              <SectionHeader icon={<CategoryIcon />} title="Labels" count={editedItem.labels?.length || 0} />
+              <SectionHeader icon={<CategoryIcon />} title="Category" />
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Labels for categorization and visual representation.
+                The category this item belongs to in the Onboarding Plan view.
               </Typography>
-              <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
-                {(editedItem.labels || []).map((label) => (
-                  <Chip
-                    key={label}
-                    label={label}
-                    size="small"
-                    onDelete={() => handleRemoveLabel(label)}
-                  />
-                ))}
-                {(editedItem.labels || []).length === 0 && (
-                  <Typography variant="body2" color="text.secondary">No labels added</Typography>
-                )}
-              </Stack>
-              <Stack direction="row" spacing={1}>
-                <TextField
-                  size="small"
-                  placeholder="Add label..."
-                  value={newLabel}
-                  onChange={(e) => setNewLabel(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddLabel()}
-                  sx={{ flex: 1 }}
-                />
-                <Button variant="outlined" size="small" onClick={handleAddLabel}>Add</Button>
-              </Stack>
+              <FormControl fullWidth size="small">
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={editedItem.category || ''}
+                  label="Category"
+                  onChange={(e) => setEditedItem({ ...editedItem, category: e.target.value as OnboardingCategoryId || undefined })}
+                >
+                  <MenuItem value="">
+                    <em>None (Shared Item)</em>
+                  </MenuItem>
+                  {onboardingCategories.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                Items without a category are shared across features but won't appear in the category view.
+              </Typography>
             </Paper>
           </Stack>
         )}
@@ -3283,7 +3261,7 @@ function OnboardingItemsManagementPage() {
               <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Labels</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Category</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Completion</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
             </TableRow>
@@ -3339,14 +3317,15 @@ function OnboardingItemsManagementPage() {
                     />
                   </TableCell>
                   <TableCell>
-                    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                      {(item.labels || []).slice(0, 3).map((label) => (
-                        <Chip key={label} label={label} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
-                      ))}
-                      {(item.labels || []).length > 3 && (
-                        <Chip label={`+${(item.labels || []).length - 3}`} size="small" sx={{ height: 20, fontSize: '0.7rem' }} />
-                      )}
-                    </Stack>
+                    {item.category ? (
+                      <Chip
+                        label={onboardingCategories.find(c => c.id === item.category)?.label || item.category}
+                        size="small"
+                        sx={{ height: 24, fontSize: '0.75rem' }}
+                      />
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">—</Typography>
+                    )}
                   </TableCell>
                   <TableCell>
                     {item.type === 'in_product' && item.completionApi ? (
