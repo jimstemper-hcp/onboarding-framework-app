@@ -11,8 +11,10 @@
 
 import {
   createConfluenceClient,
+  CONFLUENCE_STATUS,
   type ConfluenceClient,
   type ConfluenceResult,
+  type ConfluenceStatusType,
 } from './confluenceClient';
 import type { SpecVersionEntry, SpecVersionRelease, VersionLevel } from '../../specs/versions/types';
 import { parseVersion } from '../../specs/versions/types';
@@ -75,6 +77,23 @@ export function createPageTitle(specName: string, majorVersion: number): string 
 }
 
 /**
+ * Gets the Confluence status for a given version level.
+ * - Patch: Rough draft (early planning iteration)
+ * - Minor: In progress (design iteration)
+ * - Major: Verified (ready for engineering)
+ */
+export function getStatusForVersionLevel(level: VersionLevel): ConfluenceStatusType {
+  switch (level) {
+    case 'patch':
+      return CONFLUENCE_STATUS.ROUGH_DRAFT;
+    case 'minor':
+      return CONFLUENCE_STATUS.IN_PROGRESS;
+    case 'major':
+      return CONFLUENCE_STATUS.VERIFIED;
+  }
+}
+
+/**
  * Gets the major version number from a version string.
  */
 export function getMajorVersion(version: string): number {
@@ -123,6 +142,8 @@ export interface SyncOptions {
   specContent: string;
   vercelPreviewUrl?: string;
   gitTag: string;
+  /** Stored Confluence page ID from previous release (if any) */
+  storedConfluenceDocId?: string;
 }
 
 /**
@@ -138,7 +159,7 @@ export async function syncSpecToConfluence(options: SyncOptions): Promise<Conflu
     };
   }
 
-  const { specEntry, newVersion, versionLevel, specContent, vercelPreviewUrl, gitTag } = options;
+  const { specEntry, newVersion, versionLevel, specContent, vercelPreviewUrl, gitTag, storedConfluenceDocId } = options;
 
   try {
     // Convert markdown to Confluence format
@@ -153,10 +174,10 @@ export async function syncSpecToConfluence(options: SyncOptions): Promise<Conflu
 
     if (versionLevel === 'major') {
       // Major release: Create new page or update first major page
-      return await handleMajorRelease(client, specEntry, pageTitle, confluenceBody);
+      return await handleMajorRelease(client, specEntry, pageTitle, confluenceBody, storedConfluenceDocId, versionLevel);
     } else {
       // Minor/Patch: Update existing page from last major
-      return await handleMinorPatchRelease(client, specEntry, pageTitle, confluenceBody);
+      return await handleMinorPatchRelease(client, specEntry, pageTitle, confluenceBody, storedConfluenceDocId, versionLevel);
     }
   } catch (error) {
     return {
@@ -195,9 +216,32 @@ async function handleMajorRelease(
   client: ConfluenceClient,
   specEntry: SpecVersionEntry,
   pageTitle: string,
-  body: string
+  body: string,
+  storedConfluenceDocId?: string,
+  versionLevel?: VersionLevel
 ): Promise<ConfluenceResult> {
-  // Check if a page with this title already exists
+  // First: Try to use stored page ID if available
+  if (storedConfluenceDocId) {
+    const existingPage = await client.getPageById(storedConfluenceDocId);
+    if (existingPage) {
+      const updatedPage = await client.updatePage(existingPage.id, {
+        title: pageTitle,
+        body,
+      });
+      // Set page status based on version level
+      if (versionLevel) {
+        await client.setPageStatus(updatedPage.id, getStatusForVersionLevel(versionLevel));
+      }
+      return {
+        success: true,
+        pageId: updatedPage.id,
+        pageUrl: client.getPageUrl(updatedPage),
+      };
+    }
+    // If stored ID is invalid, fall through to title search
+  }
+
+  // Fallback: Check if a page with this title already exists
   const existingPage = await client.findPageByTitle(pageTitle);
 
   if (existingPage) {
@@ -206,19 +250,28 @@ async function handleMajorRelease(
       title: pageTitle,
       body,
     });
-
+    // Set page status based on version level
+    if (versionLevel) {
+      await client.setPageStatus(updatedPage.id, getStatusForVersionLevel(versionLevel));
+    }
     return {
       success: true,
       pageId: updatedPage.id,
       pageUrl: client.getPageUrl(updatedPage),
     };
   } else {
-    // Create new page
+    // Create new page under category
+    const categoryPage = await client.findOrCreateCategoryPage(specEntry.category);
+
     const newPage = await client.createPage({
       title: pageTitle,
       body,
+      parentId: categoryPage.id,
     });
-
+    // Set page status based on version level
+    if (versionLevel) {
+      await client.setPageStatus(newPage.id, getStatusForVersionLevel(versionLevel));
+    }
     return {
       success: true,
       pageId: newPage.id,
@@ -234,18 +287,47 @@ async function handleMinorPatchRelease(
   client: ConfluenceClient,
   specEntry: SpecVersionEntry,
   pageTitle: string,
-  body: string
+  body: string,
+  storedConfluenceDocId?: string,
+  versionLevel?: VersionLevel
 ): Promise<ConfluenceResult> {
-  // Find the existing page for this major version
+  // First: Try to use stored page ID if available (most reliable)
+  if (storedConfluenceDocId) {
+    const existingPage = await client.getPageById(storedConfluenceDocId);
+    if (existingPage) {
+      const updatedPage = await client.updatePage(existingPage.id, {
+        title: pageTitle,
+        body,
+      });
+      // Set page status based on version level
+      if (versionLevel) {
+        await client.setPageStatus(updatedPage.id, getStatusForVersionLevel(versionLevel));
+      }
+      return {
+        success: true,
+        pageId: updatedPage.id,
+        pageUrl: client.getPageUrl(updatedPage),
+      };
+    }
+    // If stored ID is invalid, fall through to title search
+  }
+
+  // Fallback: Find the existing page for this major version by title
   const existingPage = await client.findPageByTitle(pageTitle);
 
   if (!existingPage) {
-    // No existing page - create one (shouldn't normally happen)
+    // No existing page - create one under category (shouldn't normally happen)
+    const categoryPage = await client.findOrCreateCategoryPage(specEntry.category);
+
     const newPage = await client.createPage({
       title: pageTitle,
       body,
+      parentId: categoryPage.id,
     });
-
+    // Set page status based on version level
+    if (versionLevel) {
+      await client.setPageStatus(newPage.id, getStatusForVersionLevel(versionLevel));
+    }
     return {
       success: true,
       pageId: newPage.id,
@@ -258,7 +340,10 @@ async function handleMinorPatchRelease(
     title: pageTitle,
     body,
   });
-
+  // Set page status based on version level
+  if (versionLevel) {
+    await client.setPageStatus(updatedPage.id, getStatusForVersionLevel(versionLevel));
+  }
   return {
     success: true,
     pageId: updatedPage.id,

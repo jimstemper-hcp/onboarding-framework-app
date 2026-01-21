@@ -13,18 +13,24 @@ description: Release a new version of a spec document with semantic versioning
 Release a new version of a spec document using semantic versioning.
 
 ### Usage
-- `/release-spec features/invoicing major` - Release for engineering (creates new Confluence page)
-- `/release-spec features/invoicing minor` - Design iteration (updates existing Confluence doc)
-- `/release-spec features/invoicing patch` - Planning iteration (updates existing Confluence doc)
+- `/release-spec features/invoicing patch` - Rough draft (early planning)
+- `/release-spec features/invoicing minor` - In progress (design iteration)
+- `/release-spec features/invoicing major` - Verified (ready for engineering)
 - `/release-spec features/invoicing` - Show current version and available actions
 
 ### Semantic Version Meanings
 
-| Level | Meaning | Confluence Behavior |
-|-------|---------|---------------------|
-| **Major** | Ready for engineering | Creates new doc OR updates first major, then future majors create sibling docs |
-| **Minor** | Design iteration | Updates existing doc from last major |
-| **Patch** | Planning iteration | Updates existing doc from last major |
+| Level | Status Label | Page Title | Meaning |
+|-------|--------------|------------|---------|
+| **Patch** | Rough draft | v0.x.x | Early planning iteration |
+| **Minor** | In progress | v0.x.x | Design iteration |
+| **Major** | Verified | v1.x.x | Ready for engineering (final) |
+
+### Versioning Workflow
+
+1. **Start**: First release should be `0.0.1` (patch) - creates page with "Rough draft" status
+2. **Iterate**: Work through `0.x.x` versions with patch/minor updates
+3. **Finalize**: Major release creates `1.0.0` - updates page title to "v1.x.x" with "Verified" status
 
 ### Steps
 
@@ -51,9 +57,12 @@ Release a new version of a spec document using semantic versioning.
        "version": "1.0.0",
        "releasedAt": "2026-01-21T12:00:00.000Z",
        "releaseNotes": "Initial release for engineering review",
-       "gitTag": "spec/features/invoicing/v1.0.0"
+       "gitTag": "spec/features/invoicing/v1.0.0",
+       "confluenceDocId": "123456789",
+       "confluenceDocUrl": "https://company.atlassian.net/wiki/spaces/SPECS/pages/123456789"
      }
      ```
+   - **Important**: Store `confluenceDocId` and `confluenceDocUrl` from Confluence sync result to enable reliable page tracking for subsequent releases
 
 6. **Commit the registry update**:
    ```bash
@@ -81,24 +90,73 @@ Release a new version of a spec document using semantic versioning.
    - Note about Vercel preview deploy (triggered by GitHub workflow)
    - Note about Confluence sync (if configured)
 
-### Example Output
+### Example Output (First Release - Patch)
 
 ```
 Spec Release: features/invoicing
 
 Current version: 0.0.0
+New version: 0.0.1 (Patch)
+Version meaning: Rough draft - early planning
+
+Git tag: spec/features/invoicing/v0.0.1
+Commit: release: Invoicing v0.0.1
+
+Pushed to origin/main
+
+Confluence: Created "Invoicing v0.x.x" under Features
+- Status: Rough draft
+- Page ID: 123456789
+- URL: https://company.atlassian.net/wiki/spaces/SPECS/pages/123456789
+
+Next steps:
+- GitHub Action will deploy to: spec-features-invoicing-v0-0-1.vercel.app
+```
+
+### Example Output (Final Release - Major)
+
+```
+Spec Release: features/invoicing
+
+Current version: 0.2.0
 New version: 1.0.0 (Major)
-Version meaning: Ready for engineering
+Version meaning: Verified - ready for engineering
 
 Git tag: spec/features/invoicing/v1.0.0
 Commit: release: Invoicing v1.0.0
 
 Pushed to origin/main
 
+Confluence: Updated "Invoicing v1.x.x" under Features
+- Status: Verified
+- Page ID: 123456789
+- URL: https://company.atlassian.net/wiki/spaces/SPECS/pages/123456789
+
 Next steps:
 - GitHub Action will deploy to: spec-features-invoicing-v1-0-0.vercel.app
-- Configure CONFLUENCE_* env vars to enable Confluence sync
 ```
+
+### Confluence Page Hierarchy
+
+When `VITE_CONFLUENCE_PARENT_PAGE_ID` is configured, pages are organized as:
+```
+Parent Page (configured)
+├── Features
+│   ├── Invoicing v0.x.x [Rough draft]
+│   ├── Customers v1.x.x [Verified]
+│   └── ...
+├── Navigation
+│   └── Customers Page v1.x.x [Verified]
+├── Tools
+│   └── HCP Create Customer v0.x.x [In progress]
+└── ...
+```
+
+### Confluence Sync Logic
+
+1. **First release (0.0.1)**: Creates new page "Spec v0.x.x" under category with "Rough draft" status
+2. **Subsequent patch/minor**: Updates existing page, sets status based on level
+3. **Major release (1.0.0)**: Updates page title to "Spec v1.x.x" with "Verified" status
 
 ### Registry Location
 

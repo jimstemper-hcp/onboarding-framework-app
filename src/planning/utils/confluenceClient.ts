@@ -5,11 +5,25 @@
 // Used for syncing spec documents to Confluence.
 //
 // Environment variables required:
-// - CONFLUENCE_BASE_URL: https://company.atlassian.net/wiki
-// - CONFLUENCE_SPACE_KEY: SPECS
-// - CONFLUENCE_API_TOKEN: your-api-token
-// - CONFLUENCE_USER_EMAIL: your-email@company.com
+// - VITE_CONFLUENCE_BASE_URL: https://company.atlassian.net/wiki
+// - VITE_CONFLUENCE_SPACE_KEY: SPECS
+// - VITE_CONFLUENCE_API_TOKEN: your-api-token
+// - VITE_CONFLUENCE_USER_EMAIL: your-email@company.com
+//
+// Optional:
+// - VITE_CONFLUENCE_PARENT_PAGE_ID: ID of parent page for all specs
 // =============================================================================
+
+/**
+ * Confluence page status configuration.
+ */
+export const CONFLUENCE_STATUS = {
+  ROUGH_DRAFT: { name: 'Rough draft', color: 'grey' },
+  IN_PROGRESS: { name: 'In progress', color: 'blue' },
+  VERIFIED: { name: 'Verified', color: 'green' },
+} as const;
+
+export type ConfluenceStatusType = typeof CONFLUENCE_STATUS[keyof typeof CONFLUENCE_STATUS];
 
 /**
  * Confluence page content format.
@@ -53,6 +67,7 @@ export interface ConfluenceConfig {
   spaceKey: string;
   apiToken: string;
   userEmail: string;
+  parentPageId?: string;
 }
 
 /**
@@ -64,12 +79,13 @@ export function getConfluenceConfig(): ConfluenceConfig | null {
   const spaceKey = import.meta.env.VITE_CONFLUENCE_SPACE_KEY;
   const apiToken = import.meta.env.VITE_CONFLUENCE_API_TOKEN;
   const userEmail = import.meta.env.VITE_CONFLUENCE_USER_EMAIL;
+  const parentPageId = import.meta.env.VITE_CONFLUENCE_PARENT_PAGE_ID;
 
   if (!baseUrl || !spaceKey || !apiToken || !userEmail) {
     return null;
   }
 
-  return { baseUrl, spaceKey, apiToken, userEmail };
+  return { baseUrl, spaceKey, apiToken, userEmail, parentPageId };
 }
 
 /**
@@ -187,6 +203,118 @@ export class ConfluenceClient {
   getPageUrl(page: ConfluencePage): string {
     return `${page._links.base}${page._links.webui}`;
   }
+
+  /**
+   * Gets page by ID directly. More reliable than title search.
+   */
+  async getPageById(pageId: string): Promise<ConfluencePage | null> {
+    try {
+      return await this.request<ConfluencePage>('GET', `/content/${pageId}?expand=version`);
+    } catch (error) {
+      // Return null if page not found (404)
+      if (error instanceof Error && error.message.includes('404')) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Gets child pages under a parent page.
+   */
+  async getChildPages(parentId: string): Promise<ConfluencePage[]> {
+    const endpoint = `/content/${parentId}/child/page?expand=version`;
+    const result = await this.request<{ results: ConfluencePage[] }>('GET', endpoint);
+    return result.results;
+  }
+
+  /**
+   * Gets the configured parent page ID.
+   */
+  getParentPageId(): string | undefined {
+    return this.config.parentPageId;
+  }
+
+  /**
+   * Verifies the space exists and credentials work.
+   */
+  async verifyConnection(): Promise<{ success: boolean; spaceName?: string; error?: string }> {
+    try {
+      const space = await this.request<{ name: string }>('GET', `/space/${this.config.spaceKey}`);
+      return { success: true, spaceName: space.name };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Finds a child page by title under a specific parent.
+   */
+  async findChildPageByTitle(parentId: string, title: string): Promise<ConfluencePage | null> {
+    const children = await this.getChildPages(parentId);
+    return children.find(page => page.title === title) || null;
+  }
+
+  /**
+   * Sets the status label on a Confluence page.
+   * Uses the Content States API: PUT /content/{pageId}/state
+   */
+  async setPageStatus(pageId: string, status: ConfluenceStatusType): Promise<void> {
+    await this.request('PUT', `/content/${pageId}/state`, {
+      name: status.name,
+      color: status.color,
+    });
+  }
+
+  /**
+   * Finds or creates a category page under the configured parent.
+   * Categories are organized as: Parent > Features, Parent > Navigation, etc.
+   */
+  async findOrCreateCategoryPage(category: string): Promise<ConfluencePage> {
+    const parentId = this.config.parentPageId;
+    const categoryTitle = getCategoryDisplayName(category);
+
+    if (parentId) {
+      // Look for existing category page under parent
+      const existingCategory = await this.findChildPageByTitle(parentId, categoryTitle);
+      if (existingCategory) {
+        return existingCategory;
+      }
+
+      // Create new category page under parent
+      return await this.createPage({
+        title: categoryTitle,
+        body: `<p>Spec documents for <strong>${categoryTitle}</strong>.</p>`,
+        parentId,
+      });
+    } else {
+      // No parent configured - search by title in space
+      const existingCategory = await this.findPageByTitle(categoryTitle);
+      if (existingCategory) {
+        return existingCategory;
+      }
+
+      // Create new category page at space root
+      return await this.createPage({
+        title: categoryTitle,
+        body: `<p>Spec documents for <strong>${categoryTitle}</strong>.</p>`,
+      });
+    }
+  }
+}
+
+/**
+ * Converts a category slug to a display name.
+ * Examples: "features" -> "Features", "onboarding-items" -> "Onboarding Items"
+ */
+export function getCategoryDisplayName(category: string): string {
+  return category
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 /**
