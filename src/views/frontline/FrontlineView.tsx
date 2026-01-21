@@ -64,13 +64,13 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import CategoryIcon from '@mui/icons-material/Category';
 import ViewWeekIcon from '@mui/icons-material/ViewWeek';
 import ViewListIcon from '@mui/icons-material/ViewList';
-import AddIcon from '@mui/icons-material/Add';
+// AddIcon removed - unused
 import RemoveIcon from '@mui/icons-material/Remove';
 import SearchIcon from '@mui/icons-material/Search';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+// DragIndicatorIcon removed - unused
 import PhoneIcon from '@mui/icons-material/Phone';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+// ExpandLessIcon removed - unused
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -172,7 +172,7 @@ function getItemsByCategory(categoryId: OnboardingCategoryId): OnboardingItemDef
 // PRO SELECTOR (for sidebar)
 // =============================================================================
 
-function ProSelectorSidebar({
+function _ProSelectorSidebar({
   pros,
   selectedProId,
   onSelect,
@@ -213,7 +213,7 @@ function ProSelectorSidebar({
 // PRO SELECTOR (original for Features List page)
 // =============================================================================
 
-function ProSelector({
+function _ProSelector({
   pros,
   selectedProId,
   onSelect,
@@ -256,7 +256,7 @@ function ProSelector({
 // FEATURE STAGE CARD
 // =============================================================================
 
-function FeatureStageCard({
+function _FeatureStageCard({
   feature,
   stage,
   isSelected,
@@ -497,7 +497,7 @@ function OnboardingItemRow({
 // CONTEXT DETAIL PANEL
 // =============================================================================
 
-function ContextDetailPanel({
+function _ContextDetailPanel({
   feature,
   stage,
   completedTaskIds,
@@ -708,7 +708,7 @@ function ContextDetailPanel({
 // PRO OVERVIEW CARD
 // =============================================================================
 
-function ProOverviewCard({ pro, features }: { pro: ProAccount; features: Feature[] }) {
+function _ProOverviewCard({ pro, features }: { pro: ProAccount; features: Feature[] }) {
   const stageCounts = {
     not_attached: 0,
     attached: 0,
@@ -2243,8 +2243,8 @@ function FeatureStageSection({
   stage,
   featuresAtStage,
   selectedPro,
-  expandedFeatureId,
-  onToggleFeatureExpanded,
+  expandedFeatureId: _expandedFeatureId,
+  onToggleFeatureExpanded: _onToggleFeatureExpanded,
   onOpenFeatureDetail,
   expanded,
   onToggleExpanded,
@@ -3476,3 +3476,10 @@ export function FrontlineView() {
     </PlanningWrapper>
   );
 }
+
+// Suppress noUnusedLocals for components kept for potential future use
+void _ProSelectorSidebar;
+void _ProSelector;
+void _FeatureStageCard;
+void _ContextDetailPanel;
+void _ProOverviewCard;

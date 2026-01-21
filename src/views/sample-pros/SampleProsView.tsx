@@ -194,6 +194,17 @@ function createAllFeatureStatuses(stage: AdoptionStage): Record<FeatureId, Featu
     estimates: { ...status },
     'csr-ai': { ...status },
     reviews: { ...status },
+    // New features for Frontline Onboarding Plan
+    'account-setup': { ...status },
+    customers: { ...status },
+    'add-ons': { ...status },
+    'service-plans': { ...status },
+    'online-booking': { ...status },
+    reporting: { ...status },
+    // Core features for published release
+    'business-setup': { ...status },
+    jobs: { ...status },
+    employees: { ...status },
   };
 }
 
@@ -1125,6 +1136,7 @@ export function SampleProsView() {
       plan: 'essentials',
       goal: 'growth',
       createdAt: new Date().toISOString().split('T')[0],
+      currentWeek: 1,
       featureStatus: createAllFeatureStatuses('not_attached'),
     };
     addPro(newPro);

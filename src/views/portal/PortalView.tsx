@@ -32,7 +32,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import * as MuiIcons from '@mui/icons-material';
 import { useState, useEffect } from 'react';
 import { useOnboarding, useActivePro } from '../../context';
-import { onboardingItems as allOnboardingItems, getItemPoints, DEFAULT_ITEM_POINTS } from '../../data';
+import { onboardingItems as allOnboardingItems, getItemPoints } from '../../data';
 import { PlanningWrapper, usePlanningMode } from '../../planning';
 import type { Feature, FeatureStatus, ProAccount, OnboardingItemAssignment, WeeklyPlan } from '../../types';
 

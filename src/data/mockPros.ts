@@ -62,6 +62,10 @@ const createAllFeatureStatuses = (
     'service-plans': statuses['service-plans'] ?? defaultStatus,
     'online-booking': statuses['online-booking'] ?? defaultStatus,
     reporting: statuses.reporting ?? defaultStatus,
+    // Core features for published release
+    'business-setup': statuses['business-setup'] ?? defaultStatus,
+    jobs: statuses.jobs ?? defaultStatus,
+    employees: statuses.employees ?? defaultStatus,
   };
 };
 

@@ -111,7 +111,7 @@ export function getConversationState(): ConversationState {
 /**
  * Keywords that map to each feature for detection.
  */
-const featureKeywords: Record<FeatureId, string[]> = {
+const featureKeywords: Partial<Record<FeatureId, string[]>> = {
   'invoicing': ['invoice', 'invoicing', 'bill', 'billing', 'get paid', 'send invoice', 'payment reminder'],
   'payments': ['payment', 'credit card', 'card payment', 'online payment', 'accept payment', 'pay online', 'card on file'],
   'automated-comms': ['automated', 'auto', 'text', 'sms', 'email', 'reminder', 'on my way', 'communication', 'message', 'notify'],
@@ -205,11 +205,11 @@ function getValueProp(stageContext: StageContext | undefined): string | undefine
 /**
  * Sample data generators for each feature.
  */
-const sampleDataGenerators: Record<FeatureId, () => {
+const sampleDataGenerators: Partial<Record<FeatureId, () => {
   customer: Record<string, unknown>;
   job?: Record<string, unknown>;
   lineItems?: Array<Record<string, unknown>>;
-}> = {
+}>> = {
   'invoicing': () => ({
     customer: {
       name: 'Jane Smith',
@@ -487,7 +487,7 @@ function handleInvoiceImageUpload(_proName: string): string {
  * Handle the demo flow for invoice image upload.
  * Shows the extraction workflow with sample data and clear "simulated" messaging.
  */
-function handleInvoiceImageDemoFlow(proName: string): string {
+function handleInvoiceImageDemoFlow(_proName: string): string {
   // Get sample data
   const extractedData = simulateInvoiceExtraction();
 
@@ -767,7 +767,7 @@ function generateActivatedResponse(detected: DetectedFeature, proName: string): 
   response += '\n---\n\n';
 
   // Feature-specific action offers
-  const actionOffers: Record<FeatureId, string> = {
+  const actionOffers: Partial<Record<FeatureId, string>> = {
     'invoicing': `What would you like to do?\n\n1. **Upload your logo** - Make invoices look more professional\n2. **Review your settings** - Check your invoice configuration\n3. **Send a test invoice** - See how it looks to customers\n\nJust let me know which option you'd like!`,
     'payments': `What would you like to do?\n\n1. **Enable tipping** - Boost your technicians' earnings\n2. **Test a payment** - See the customer experience\n3. **Save a card on file** - For repeat customers\n\nJust let me know which option!`,
     'automated-comms': `What would you like to do?\n\n1. **Configure review requests** - Get more 5-star reviews\n2. **Customize your messages** - Add a personal touch\n3. **Preview an on-my-way text** - See what customers receive\n\nJust let me know!`,
@@ -799,7 +799,7 @@ function generateEngagedResponse(detected: DetectedFeature, proName: string): st
   let response = `You're using ${feature.name.toLowerCase()} like a pro, ${proName}! `;
 
   // Advanced tips by feature
-  const advancedTips: Record<FeatureId, string> = {
+  const advancedTips: Partial<Record<FeatureId, string>> = {
     'invoicing': `Here are some power-user tips:\n\n📊 **Invoice Templates** - Create templates for common job types to save time\n🔄 **Recurring Invoices** - Set up automatic billing for maintenance contracts\n📈 **Aging Reports** - Track overdue invoices and optimize collection\n\nI can help you create a new invoice right here through conversation. Just tell me about the job - who's the customer and what work was done?`,
     'payments': `Here are some advanced features:\n\n💳 **Financing Options** - Help customers afford larger jobs\n📱 **Tap to Pay** - Accept cards in the field with your phone\n📊 **Payment Analytics** - See your average payment times\n\nWould you like to explore financing options to increase your average ticket?`,
     'automated-comms': `Here's how to level up:\n\n📣 **Marketing Campaigns** - Reach past customers with targeted messages\n🎯 **Segmentation** - Send different messages to different customer types\n📊 **Message Analytics** - See open and response rates\n\nWant me to help you create a marketing campaign to past customers?`,
@@ -879,7 +879,7 @@ function handleChoiceResponse(message: string, context: MockContext): string {
  */
 function handleActivatedChoice(message: string, featureId: FeatureId, proName: string): string {
   // Map feature-specific options
-  const optionResponses: Record<FeatureId, Record<string, string>> = {
+  const optionResponses: Partial<Record<FeatureId, Record<string, string>>> = {
     'invoicing': {
       'logo': generateLogoUploadFlow(proName),
       'upload': generateLogoUploadFlow(proName),
@@ -949,9 +949,11 @@ function handleActivatedChoice(message: string, featureId: FeatureId, proName: s
   };
 
   const featureOptions = optionResponses[featureId];
-  for (const [keyword, response] of Object.entries(featureOptions)) {
-    if (message.includes(keyword)) {
-      return response;
+  if (featureOptions) {
+    for (const [keyword, response] of Object.entries(featureOptions)) {
+      if (message.includes(keyword)) {
+        return response;
+      }
     }
   }
 
@@ -1003,7 +1005,7 @@ function generateSampleDataFlow(featureId: FeatureId, proName: string): string {
 function generateRealDataFlow(featureId: FeatureId, proName: string): string {
   let response = `Let's use your real customer information, ${proName}.\n\n`;
 
-  const prompts: Record<FeatureId, string> = {
+  const prompts: Partial<Record<FeatureId, string>> = {
     'invoicing': `What's your customer's name? Or if you have an estimate or job note, you can describe it and I'll extract the details.\n\n💡 **Tip:** You can also take a photo of any existing paperwork and I'll pull out the information.`,
     'payments': `Which customer would you like to collect a payment from? You can give me their name or describe the job.`,
     'automated-comms': `What's your customer's name and phone number? I'll show you how the automated messages will look.`,
@@ -1071,7 +1073,7 @@ function executeAction(
   let response = `✅ **Done!** I've created the sample data for you.\n\n`;
 
   // Feature-specific success messages
-  const successMessages: Record<FeatureId, string> = {
+  const successMessages: Partial<Record<FeatureId, string>> = {
     'invoicing': `**Sample Invoice Created** (ID: ${newId})\n\nYou can view it in your [Invoices](/invoices) page. From there you can:\n- Send it to the customer\n- Mark it as paid\n- See how payment reminders work`,
     'payments': `**Sample Payment Ready** (ID: ${newId})\n\nThe customer can now pay online! Check your [Payments Dashboard](/payments) to see incoming payments.`,
     'automated-comms': `**Sample Messages Configured** (ID: ${newId})\n\nAutomatic messages are now set up. Check [Communications](/communications) to see the message templates.`,
@@ -1096,7 +1098,7 @@ function executeAction(
  * Generate next step suggestions after completing an action.
  */
 function generateNextSteps(featureId: FeatureId, proName: string): string {
-  const nextSteps: Record<FeatureId, string[]> = {
+  const nextSteps: Partial<Record<FeatureId, string[]>> = {
     'invoicing': [
       '📤 **Send the invoice** to see the customer experience',
       '🎨 **Upload your logo** to brand your invoices',
@@ -1160,7 +1162,7 @@ function generateLogoUploadFlow(proName: string): string {
 }
 
 function generateSettingsReviewFlow(featureId: FeatureId, proName: string): string {
-  const settingsUrls: Record<FeatureId, string> = {
+  const settingsUrls: Partial<Record<FeatureId, string>> = {
     'invoicing': '/settings/invoicing',
     'payments': '/settings/payments',
     'automated-comms': '/settings/communications',
@@ -1182,7 +1184,7 @@ function generateSettingsReviewFlow(featureId: FeatureId, proName: string): stri
 
 function generateTestActionFlow(featureId: FeatureId, proName: string): string {
   conversationState.flowState = 'initial';
-  const testActions: Record<FeatureId, string> = {
+  const testActions: Partial<Record<FeatureId, string>> = {
     'invoicing': `I'll send a test invoice to your email so you can see exactly what customers receive.\n\n` +
       `**Test Invoice Details:**\n` +
       `- To: Your email\n` +
@@ -1217,7 +1219,7 @@ function generateTestActionFlow(featureId: FeatureId, proName: string): string {
       `"Thanks for choosing [Company]! We'd love to hear about your experience. Would you take a moment to leave us a review?"\n\n` +
       `Reply "send test" to receive it!`,
   };
-  return testActions[featureId];
+  return testActions[featureId] || `Let me help you test ${featureId}. What would you like to try?`;
 }
 
 function generateTippingSetupFlow(proName: string): string {
