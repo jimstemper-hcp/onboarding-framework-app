@@ -82,7 +82,14 @@ Key points to emphasize:
 - Appointment confirmations sent automatically
 - On-my-way texts improve customer experience
 - Follow-up messages bring customers back
-- Review requests build your reputation`,
+- Review requests build your reputation
+
+## Chat Experience
+When the user asks about automated communications at this stage:
+- Response: "Great question about automated messages! Let me explain how they can save you hours every week."
+- Priority Action: call
+- Suggested CTA: "Talk to Sales" - Automated communications isn't enabled on your account yet. I can schedule a demo to show you how pros save 5+ hours per week with automated texts and emails.
+- Escalation Triggers: pricing, cost, how much`,
 
       tools: [
         {
@@ -100,14 +107,6 @@ Key points to emphasize:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great question about automated messages! Let me explain how they can save you hours every week.",
-        priorityAction: 'call',
-        actionPrompt: "Automated communications isn't enabled on your account yet. I can schedule a demo to show you how pros save 5+ hours per week with automated texts and emails.",
-        suggestedCta: "Talk to Sales",
-        escalationTriggers: ['pricing', 'cost', 'how much'],
-      },
     },
 
     // =========================================================================
@@ -187,7 +186,14 @@ If REAL:
 - Help set up appointment reminders
 - Offer to customize message templates
 
-Always show previews before enabling and get confirmation.`,
+Always show previews before enabling and get confirmation.
+
+## Chat Experience
+When the user asks about automated communications at this stage:
+- Response: "You have automated communications! Let's get your messages set up."
+- Priority Action: onboarding
+- Suggested CTA: "Enable Messages" - Would you like to see sample messages to understand the flow, or enable your real automated messages right away?
+- Escalation Triggers: not sending, customers not receiving, phone number`,
 
       tools: [
         {
@@ -213,14 +219,6 @@ Always show previews before enabling and get confirmation.`,
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You have automated communications! Let's get your messages set up.",
-        priorityAction: 'onboarding',
-        actionPrompt: "Would you like to see sample messages to understand the flow, or enable your real automated messages right away?",
-        suggestedCta: "Enable Messages",
-        escalationTriggers: ['not sending', 'customers not receiving', 'phone number'],
-      },
     },
 
     // =========================================================================
@@ -292,7 +290,14 @@ Always show previews before enabling and get confirmation.`,
 Key actions to offer:
 1. Review requests - enable and customize
 2. Customize templates - personalize messages
-3. Preview messages - see customer experience`,
+3. Preview messages - see customer experience
+
+## Chat Experience
+When the user asks about automated communications at this stage:
+- Response: "Your automated messages are working! Now let's take it to the next level."
+- Priority Action: navigation
+- Suggested CTA: "Setup Reviews" - What would you like to do? 1. Set up review requests after jobs 2. Customize your message templates 3. Preview an on-my-way text
+- Escalation Triggers: messages not sending, customer complained, wrong number`,
 
       tools: [
         {
@@ -319,14 +324,6 @@ Key actions to offer:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Your automated messages are working! Now let's take it to the next level.",
-        priorityAction: 'navigation',
-        actionPrompt: "What would you like to do?\n1. Set up review requests after jobs\n2. Customize your message templates\n3. Preview an on-my-way text",
-        suggestedCta: "Setup Reviews",
-        escalationTriggers: ['messages not sending', 'customer complained', 'wrong number'],
-      },
     },
 
     // =========================================================================
@@ -397,7 +394,14 @@ Advanced features to highlight:
 - Marketing campaigns for past customers
 - Customer segmentation
 - Message analytics and insights
-- Seasonal/holiday campaigns`,
+- Seasonal/holiday campaigns
+
+## Chat Experience
+When the user asks about automated communications at this stage:
+- Response: "Great engagement with automated communications! Your customers are staying informed."
+- Priority Action: tip
+- Suggested CTA: "Create Campaign" - Would you like to create a marketing campaign to reach past customers? You can also customize your templates for a more personal touch.
+- Escalation Triggers: unsubscribe, opt out, too many messages`,
 
       tools: [
         {
@@ -425,14 +429,6 @@ Advanced features to highlight:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great engagement with automated communications! Your customers are staying informed.",
-        priorityAction: 'tip',
-        actionPrompt: "Would you like to create a marketing campaign to reach past customers? You can also customize your templates for a more personal touch.",
-        suggestedCta: "Create Campaign",
-        escalationTriggers: ['unsubscribe', 'opt out', 'too many messages'],
-      },
     },
   },
 };

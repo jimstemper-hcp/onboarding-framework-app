@@ -82,7 +82,14 @@ Key points to emphasize:
 - Instant credit card payments
 - Fast deposits (1-2 business days)
 - Professional checkout experience
-- Competitive processing rates`,
+- Competitive processing rates
+
+## Chat Experience
+When the user asks about payments at this stage:
+- Response: "Great question about payments! Let me explain how online payment processing works."
+- Priority Action: call
+- Suggested CTA: "Talk to Sales" - Payment processing isn't enabled on your account yet. I can schedule a call with our team to walk you through rates and show you how easy it is to get paid faster.
+- Escalation Triggers: pricing, rates, fees`,
 
       tools: [
         {
@@ -107,14 +114,6 @@ Key points to emphasize:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great question about payments! Let me explain how online payment processing works.",
-        priorityAction: 'call',
-        actionPrompt: "Payment processing isn't enabled on your account yet. I can schedule a call with our team to walk you through rates and show you how easy it is to get paid faster.",
-        suggestedCta: "Talk to Sales",
-        escalationTriggers: ['pricing', 'rates', 'fees'],
-      },
     },
 
     // =========================================================================
@@ -199,7 +198,14 @@ If REAL:
 - Explain the verification steps
 - Offer to answer questions during setup
 
-Always show previews and get confirmation before making changes.`,
+Always show previews and get confirmation before making changes.
+
+## Chat Experience
+When the user asks about payments at this stage:
+- Response: "You have payments enabled! Let's get your bank account connected so you can start accepting cards."
+- Priority Action: onboarding
+- Suggested CTA: "Connect Bank" - Would you like to see a sample payment flow to understand how it works, or are you ready to connect your bank account?
+- Escalation Triggers: verification failed, bank error, stuck`,
 
       tools: [
         {
@@ -224,14 +230,6 @@ Always show previews and get confirmation before making changes.`,
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You have payments enabled! Let's get your bank account connected so you can start accepting cards.",
-        priorityAction: 'onboarding',
-        actionPrompt: "Would you like to see a sample payment flow to understand how it works, or are you ready to connect your bank account?",
-        suggestedCta: "Connect Bank",
-        escalationTriggers: ['verification failed', 'bank error', 'stuck'],
-      },
     },
 
     // =========================================================================
@@ -303,7 +301,14 @@ Always show previews and get confirmation before making changes.`,
 Key actions to offer:
 1. Enable tipping - navigate to settings with instructions
 2. Test payment - create and send test payment link
-3. Card on file - explain benefits and setup`,
+3. Card on file - explain benefits and setup
+
+## Chat Experience
+When the user asks about payments at this stage:
+- Response: "You're all set up for payments! Ready to accept your first online payment."
+- Priority Action: navigation
+- Suggested CTA: "Enable Tipping" - What would you like to do? 1. Enable tipping for your team 2. Test a payment to see the experience 3. Set up card-on-file for repeat customers
+- Escalation Triggers: payment failed, not receiving, where is my money`,
 
       tools: [
         {
@@ -329,14 +334,6 @@ Key actions to offer:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You're all set up for payments! Ready to accept your first online payment.",
-        priorityAction: 'navigation',
-        actionPrompt: "What would you like to do?\n1. Enable tipping for your team\n2. Test a payment to see the experience\n3. Set up card-on-file for repeat customers",
-        suggestedCta: "Enable Tipping",
-        escalationTriggers: ['payment failed', 'not receiving', 'where is my money'],
-      },
     },
 
     // =========================================================================
@@ -407,7 +404,14 @@ Advanced features to highlight:
 - Customer financing for larger jobs
 - Tap-to-pay mobile payments
 - Payment analytics and insights
-- Recurring payment setup`,
+- Recurring payment setup
+
+## Chat Experience
+When the user asks about payments at this stage:
+- Response: "Your customers love paying online! You're doing great with card payments."
+- Priority Action: tip
+- Suggested CTA: "Explore Financing" - Would you like to explore financing options for larger jobs? It can help customers afford bigger projects and increase your average ticket size.
+- Escalation Triggers: chargeback, dispute, fraud`,
 
       tools: [
         {
@@ -433,14 +437,6 @@ Advanced features to highlight:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Your customers love paying online! You're doing great with card payments.",
-        priorityAction: 'tip',
-        actionPrompt: "Would you like to explore financing options for larger jobs? It can help customers afford bigger projects and increase your average ticket size.",
-        suggestedCta: "Explore Financing",
-        escalationTriggers: ['chargeback', 'dispute', 'fraud'],
-      },
     },
   },
 };

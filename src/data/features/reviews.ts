@@ -82,7 +82,14 @@ Key points to emphasize:
 - Automatic review requests after every job
 - Direct link to Google reviews
 - Reputation monitoring dashboard
-- More reviews = more new customers`,
+- More reviews = more new customers
+
+## Chat Experience
+When the user asks about reviews at this stage:
+- Response: "Great question about reviews! Building your online reputation is key to winning new customers."
+- Priority Action: call
+- Suggested CTA: "Talk to Sales" - Reviews isn't enabled on your account yet. I can schedule a demo to show you how pros are automatically building their online reputation after every job.
+- Escalation Triggers: pricing, cost, how much`,
 
       tools: [
         {
@@ -100,14 +107,6 @@ Key points to emphasize:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great question about reviews! Building your online reputation is key to winning new customers.",
-        priorityAction: 'call',
-        actionPrompt: "Reviews isn't enabled on your account yet. I can schedule a demo to show you how pros are automatically building their online reputation after every job.",
-        suggestedCta: "Talk to Sales",
-        escalationTriggers: ['pricing', 'cost', 'how much'],
-      },
     },
 
     // =========================================================================
@@ -193,7 +192,14 @@ If REAL:
 - Help enable review requests
 - Offer to customize the message
 
-Always show previews and get confirmation.`,
+Always show previews and get confirmation.
+
+## Chat Experience
+When the user asks about reviews at this stage:
+- Response: "You have reviews! Let's get your automatic review requests set up."
+- Priority Action: onboarding
+- Suggested CTA: "Connect Google" - Would you like to see a sample review request to understand how it works, or connect your Google Business Profile now?
+- Escalation Triggers: google not connecting, wrong business, stuck`,
 
       tools: [
         {
@@ -219,14 +225,6 @@ Always show previews and get confirmation.`,
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You have reviews! Let's get your automatic review requests set up.",
-        priorityAction: 'onboarding',
-        actionPrompt: "Would you like to see a sample review request to understand how it works, or connect your Google Business Profile now?",
-        suggestedCta: "Connect Google",
-        escalationTriggers: ['google not connecting', 'wrong business', 'stuck'],
-      },
     },
 
     // =========================================================================
@@ -296,7 +294,14 @@ Always show previews and get confirmation.`,
 Key actions to offer:
 1. Test request - see customer experience
 2. Customize message - improve response rate
-3. Respond to reviews - show you care`,
+3. Respond to reviews - show you care
+
+## Chat Experience
+When the user asks about reviews at this stage:
+- Response: "Your review requests are active! Ready to start building your reputation."
+- Priority Action: navigation
+- Suggested CTA: "Test Request" - What would you like to do? 1. Send a test review request to yourself 2. Customize your review request message 3. Respond to existing reviews
+- Escalation Triggers: reviews not sending, customer didn't receive, wrong link`,
 
       tools: [
         {
@@ -322,14 +327,6 @@ Key actions to offer:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Your review requests are active! Ready to start building your reputation.",
-        priorityAction: 'navigation',
-        actionPrompt: "What would you like to do?\n1. Send a test review request to yourself\n2. Customize your review request message\n3. Respond to existing reviews",
-        suggestedCta: "Test Request",
-        escalationTriggers: ['reviews not sending', 'customer didn\'t receive', 'wrong link'],
-      },
     },
 
     // =========================================================================
@@ -400,7 +397,14 @@ Advanced features to highlight:
 - Social media sharing for positive reviews
 - Professional response templates
 - Reputation trends and analytics
-- Review monitoring across platforms`,
+- Review monitoring across platforms
+
+## Chat Experience
+When the user asks about reviews at this stage:
+- Response: "Great reputation! Your reviews are growing and bringing in new customers."
+- Priority Action: tip
+- Suggested CTA: "Share Reviews" - Would you like to share your best reviews on social media to reach more potential customers? I can also help you respond to recent reviews.
+- Escalation Triggers: negative review, bad rating, fake review`,
 
       tools: [
         {
@@ -428,14 +432,6 @@ Advanced features to highlight:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great reputation! Your reviews are growing and bringing in new customers.",
-        priorityAction: 'tip',
-        actionPrompt: "Would you like to share your best reviews on social media to reach more potential customers? I can also help you respond to recent reviews.",
-        suggestedCta: "Share Reviews",
-        escalationTriggers: ['negative review', 'bad rating', 'fake review'],
-      },
     },
   },
 };

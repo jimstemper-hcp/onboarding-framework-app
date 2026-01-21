@@ -83,7 +83,14 @@ Key points to emphasize:
 - AI sounds natural and professional
 - Books appointments directly on your calendar
 - Captures lead info for follow-up
-- Works 24/7, even after hours`,
+- Works 24/7, even after hours
+
+## Chat Experience
+When the user asks about AI Voice at this stage:
+- Response: "Great question about AI Voice! Let me explain how it answers your calls 24/7."
+- Priority Action: call
+- Suggested CTA: "Hear Sample" - AI Voice isn't enabled on your account yet. Would you like to hear a sample of how the AI sounds, or schedule a demo to see it in action?
+- Escalation Triggers: pricing, how much, live person`,
 
       tools: [
         {
@@ -108,14 +115,6 @@ Key points to emphasize:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great question about AI Voice! Let me explain how it answers your calls 24/7.",
-        priorityAction: 'call',
-        actionPrompt: "AI Voice isn't enabled on your account yet. Would you like to hear a sample of how the AI sounds, or schedule a demo to see it in action?",
-        suggestedCta: "Hear Sample",
-        escalationTriggers: ['pricing', 'how much', 'live person'],
-      },
     },
 
     // =========================================================================
@@ -201,7 +200,14 @@ If TEST CALL:
 - Share the AI phone number
 - Offer to review the transcript after
 
-Always get confirmation before enabling live answering.`,
+Always get confirmation before enabling live answering.
+
+## Chat Experience
+When the user asks about AI Voice at this stage:
+- Response: "You have AI Voice! Let's get your AI configured and ready to answer calls."
+- Priority Action: onboarding
+- Suggested CTA: "Test AI" - Would you like to set up your AI greeting now, or make a test call to hear the default AI first?
+- Escalation Triggers: not working, wrong number, forwarding issue`,
 
       tools: [
         {
@@ -235,14 +241,6 @@ Always get confirmation before enabling live answering.`,
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You have AI Voice! Let's get your AI configured and ready to answer calls.",
-        priorityAction: 'onboarding',
-        actionPrompt: "Would you like to set up your AI greeting now, or make a test call to hear the default AI first?",
-        suggestedCta: "Test AI",
-        escalationTriggers: ['not working', 'wrong number', 'forwarding issue'],
-      },
     },
 
     // =========================================================================
@@ -312,7 +310,14 @@ Always get confirmation before enabling live answering.`,
 Key actions to offer:
 1. Test call - hear the AI themselves
 2. Chat widget - capture website leads
-3. Review greeting - ensure it sounds right`,
+3. Review greeting - ensure it sounds right
+
+## Chat Experience
+When the user asks about AI Voice at this stage:
+- Response: "Your AI Voice is configured! Ready to answer calls 24/7."
+- Priority Action: navigation
+- Suggested CTA: "Test Call" - What would you like to do? 1. Make a test call to hear your AI 2. Add the chat widget to your website 3. Review your AI greeting
+- Escalation Triggers: ai not answering, call not forwarding, wrong greeting`,
 
       tools: [
         {
@@ -337,14 +342,6 @@ Key actions to offer:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Your AI Voice is configured! Ready to answer calls 24/7.",
-        priorityAction: 'navigation',
-        actionPrompt: "What would you like to do?\n1. Make a test call to hear your AI\n2. Add the chat widget to your website\n3. Review your AI greeting",
-        suggestedCta: "Test Call",
-        escalationTriggers: ['ai not answering', 'call not forwarding', 'wrong greeting'],
-      },
     },
 
     // =========================================================================
@@ -415,7 +412,14 @@ Advanced features to highlight:
 - Custom Q&A training
 - Call transcript review
 - Escalation rules for complex calls
-- Call analytics and insights`,
+- Call analytics and insights
+
+## Chat Experience
+When the user asks about AI Voice at this stage:
+- Response: "Your AI is working great! It's capturing leads around the clock."
+- Priority Action: tip
+- Suggested CTA: "Train AI" - Would you like to train your AI with custom Q&A to handle more types of questions? You can also review call transcripts to see how it's doing.
+- Escalation Triggers: ai giving wrong info, customers frustrated, booking errors`,
 
       tools: [
         {
@@ -451,14 +455,6 @@ Advanced features to highlight:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Your AI is working great! It's capturing leads around the clock.",
-        priorityAction: 'tip',
-        actionPrompt: "Would you like to train your AI with custom Q&A to handle more types of questions? You can also review call transcripts to see how it's doing.",
-        suggestedCta: "Train AI",
-        escalationTriggers: ['ai giving wrong info', 'customers frustrated', 'booking errors'],
-      },
     },
   },
 };

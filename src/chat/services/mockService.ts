@@ -2,7 +2,7 @@
 // MOCK AI SERVICE
 // =============================================================================
 // Provides simulated AI responses for demo purposes when no API key is available.
-// Uses the chatExperience data to generate feature-aware, stage-appropriate responses.
+// Uses stage prompts to generate feature-aware, stage-appropriate responses.
 // Supports multi-turn conversational flows with sample/real data options.
 // =============================================================================
 
@@ -1437,7 +1437,7 @@ function handleInputResponse(message: string, _context: MockContext): string {
 // -----------------------------------------------------------------------------
 
 /**
- * Generate a feature-aware response using chatExperience data and conversation state.
+ * Generate a feature-aware response using stage prompts and conversation state.
  */
 function generateFeatureResponse(detected: DetectedFeature, _message: string, context: MockContext): string {
   const { feature, stage } = detected;
@@ -1463,7 +1463,7 @@ function generateFeatureResponse(detected: DetectedFeature, _message: string, co
 }
 
 /**
- * Fallback response when no chatExperience is configured.
+ * Fallback response when feature is detected.
  */
 function generateGenericFeatureResponse(feature: Feature, stage: AdoptionStage): string {
   const stageResponses: Record<AdoptionStage, string> = {

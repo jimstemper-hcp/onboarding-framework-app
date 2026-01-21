@@ -82,7 +82,14 @@ Key points to emphasize:
 - Visual calendar for all jobs and team members
 - Drag and drop to reschedule
 - One-click dispatch to technicians
-- Online booking for customers`,
+- Online booking for customers
+
+## Chat Experience
+When the user asks about scheduling at this stage:
+- Response: "Great question about scheduling! Let me explain how the calendar and dispatch board work."
+- Priority Action: call
+- Suggested CTA: "Talk to Sales" - Scheduling isn't enabled on your account yet. I can schedule a demo to show you how to manage your calendar and dispatch jobs efficiently.
+- Escalation Triggers: pricing, team size, cost`,
 
       tools: [
         {
@@ -100,14 +107,6 @@ Key points to emphasize:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great question about scheduling! Let me explain how the calendar and dispatch board work.",
-        priorityAction: 'call',
-        actionPrompt: "Scheduling isn't enabled on your account yet. I can schedule a demo to show you how to manage your calendar and dispatch jobs efficiently.",
-        suggestedCta: "Talk to Sales",
-        escalationTriggers: ['pricing', 'team size', 'cost'],
-      },
     },
 
     // =========================================================================
@@ -195,7 +194,14 @@ If REAL:
 - Create the job on their calendar
 - Show them how to dispatch if they have team members
 
-Always show previews before creating and get confirmation.`,
+Always show previews before creating and get confirmation.
+
+## Chat Experience
+When the user asks about scheduling at this stage:
+- Response: "You have scheduling! Let's set up your calendar and business hours."
+- Priority Action: onboarding
+- Suggested CTA: "Setup Calendar" - Would you like to create a sample job to see how scheduling works, or schedule a real job right now?
+- Escalation Triggers: calendar not loading, can't schedule, team not showing`,
 
       tools: [
         {
@@ -223,14 +229,6 @@ Always show previews before creating and get confirmation.`,
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You have scheduling! Let's set up your calendar and business hours.",
-        priorityAction: 'onboarding',
-        actionPrompt: "Would you like to create a sample job to see how scheduling works, or schedule a real job right now?",
-        suggestedCta: "Setup Calendar",
-        escalationTriggers: ['calendar not loading', 'can\'t schedule', 'team not showing'],
-      },
     },
 
     // =========================================================================
@@ -300,7 +298,14 @@ Always show previews before creating and get confirmation.`,
 Key actions to offer:
 1. Online booking - enable 24/7 customer self-service
 2. Create job - try the calendar features
-3. Dispatch setup - for teams with multiple techs`,
+3. Dispatch setup - for teams with multiple techs
+
+## Chat Experience
+When the user asks about scheduling at this stage:
+- Response: "Your scheduling is set up! Ready to schedule your first job."
+- Priority Action: navigation
+- Suggested CTA: "Create Job" - What would you like to do? 1. Enable online booking for 24/7 appointments 2. Create your first job on the calendar 3. Set up dispatch for your team
+- Escalation Triggers: job not showing, customer can't book, dispatch error`,
 
       tools: [
         {
@@ -328,14 +333,6 @@ Key actions to offer:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Your scheduling is set up! Ready to schedule your first job.",
-        priorityAction: 'navigation',
-        actionPrompt: "What would you like to do?\n1. Enable online booking for 24/7 appointments\n2. Create your first job on the calendar\n3. Set up dispatch for your team",
-        suggestedCta: "Create Job",
-        escalationTriggers: ['job not showing', 'customer can\'t book', 'dispatch error'],
-      },
     },
 
     // =========================================================================
@@ -406,7 +403,14 @@ Advanced features to highlight:
 - GPS tracking for real-time team visibility
 - Route optimization to minimize drive time
 - Time tracking for accurate job records
-- Scheduling analytics and insights`,
+- Scheduling analytics and insights
+
+## Chat Experience
+When the user asks about scheduling at this stage:
+- Response: "You're a power scheduler! Your scheduling is running smoothly."
+- Priority Action: tip
+- Suggested CTA: "Try Dispatch" - Would you like to set up GPS tracking to see your team's location in real-time? You can also try the dispatch board for better team management.
+- Escalation Triggers: gps not working, team location wrong, schedule conflict`,
 
       tools: [
         {
@@ -432,14 +436,6 @@ Advanced features to highlight:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You're a power scheduler! Your scheduling is running smoothly.",
-        priorityAction: 'tip',
-        actionPrompt: "Would you like to set up GPS tracking to see your team's location in real-time? You can also try the dispatch board for better team management.",
-        suggestedCta: "Try Dispatch",
-        escalationTriggers: ['gps not working', 'team location wrong', 'schedule conflict'],
-      },
     },
   },
 };

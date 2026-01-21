@@ -13,7 +13,6 @@ import type {
   FeatureId,
   AdoptionStage,
   StageContext,
-  ChatExperience,
 } from '../../types';
 import type { PlannableElement, PlanningFeedback } from '../../planning/types';
 
@@ -196,67 +195,6 @@ Pattern:
 1. Generate preview → 2. Show to user → 3. Ask for confirmation → 4. Execute on "yes"
 
 For "no" responses: "No problem! Let me know when you're ready or if you'd like to do something else."
-`;
-}
-
-// -----------------------------------------------------------------------------
-// FEATURE DETECTION INSTRUCTIONS
-// -----------------------------------------------------------------------------
-
-/**
- * Build feature detection instructions for the AI.
- * This section tells the AI how to detect when a user is asking about
- * a specific feature and what action to offer based on their stage.
- */
-function buildFeatureDetectionInstructions(
-  features: Feature[],
-  activePro: ProAccount,
-  getStageContext: (featureId: FeatureId, stage: AdoptionStage) => StageContext | undefined
-): string {
-  const featureInstructions = features
-    .map((feature) => {
-      const status = activePro.featureStatus[feature.id];
-      const stageContext = getStageContext(feature.id, status.stage);
-      const chatExp = stageContext?.chatExperience;
-
-      // Skip if no chat experience configured
-      if (!chatExp) {
-        return null;
-      }
-
-      const stageName = status.stage.replace('_', ' ');
-      const actionTypeLabels: Record<ChatExperience['priorityAction'], string> = {
-        onboarding: 'Onboarding Task',
-        call: 'Schedule Call',
-        navigation: 'Navigate to Page',
-        tip: 'Share Tip',
-      };
-
-      // Get help articles from navigation
-      const helpLinks = stageContext?.navigation
-        .filter(n => n.navigationType === 'hcp_help' || n.navigationType === 'hcp_video')
-        .slice(0, 2)
-        .map(n => `    - ${n.navigationType === 'hcp_video' ? '🎥' : '📖'} ${n.name}: ${n.url}`)
-        .join('\n') || '';
-
-      return `### ${feature.name} (User is: ${stageName})
-Stage Behavior: ${actionTypeLabels[chatExp.priorityAction]}
-Detection Response: "${chatExp.detectionResponse}"
-Action to Offer: "${chatExp.actionPrompt}"
-Suggested CTA: "${chatExp.suggestedCta}"
-${helpLinks ? `Help Resources:\n${helpLinks}` : ''}`;
-    })
-    .filter(Boolean)
-    .join('\n\n');
-
-  if (!featureInstructions) {
-    return '';
-  }
-
-  return `
-## Feature-Specific Context
-
-${featureInstructions}
 `;
 }
 
@@ -482,7 +420,6 @@ When guiding to actions:
 
 Remember: You're their onboarding assistant, here to help them succeed with Housecall Pro!
 ${buildConversationalFlowInstructions()}
-${buildFeatureDetectionInstructions(features, activePro, getStageContext)}
 ${buildImageAnalysisInstructions(features, activePro, getStageContext)}`;
 }
 

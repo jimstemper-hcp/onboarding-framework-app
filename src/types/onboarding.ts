@@ -172,24 +172,6 @@ export interface McpTool {
   }>;
 }
 
-/**
- * Chat experience configuration for AI feature detection.
- * Defines how the AI should respond when detecting a user asking about
- * a specific feature at a specific adoption stage.
- */
-export interface ChatExperience {
-  // What the AI says when detecting this feature at this stage
-  detectionResponse: string;
-  // Primary action type to surface
-  priorityAction: 'onboarding' | 'call' | 'navigation' | 'tip';
-  // Specific prompt for the action CTA
-  actionPrompt: string;
-  // Button text for the call-to-action
-  suggestedCta: string;
-  // Optional: phrases that should trigger escalation
-  escalationTriggers?: string[];
-}
-
 export interface ProductPage {
   name: string;
   path: string;
@@ -350,8 +332,6 @@ export interface StageContext {
   prompt: string;
   // MCP tools available for this stage
   tools: McpTool[];
-  // Chat experience for AI feature detection
-  chatExperience?: ChatExperience;
 }
 
 // Type aliases for each stage - they all use the same structure now

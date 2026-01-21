@@ -82,7 +82,14 @@ Key points to emphasize:
 - Professional, branded estimates
 - One-click customer approval
 - Good/Better/Best pricing increases average ticket 20-30%
-- Estimates convert directly to jobs`,
+- Estimates convert directly to jobs
+
+## Chat Experience
+When the user asks about estimates at this stage:
+- Response: "Great question about estimates! Let me explain how professional quotes help win more jobs."
+- Priority Action: call
+- Suggested CTA: "Talk to Sales" - Estimates isn't enabled on your account yet. I can schedule a demo to show you how pros are winning more jobs with professional quotes that customers approve with one click.
+- Escalation Triggers: pricing, cost, how much`,
 
       tools: [
         {
@@ -100,14 +107,6 @@ Key points to emphasize:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great question about estimates! Let me explain how professional quotes help win more jobs.",
-        priorityAction: 'call',
-        actionPrompt: "Estimates isn't enabled on your account yet. I can schedule a demo to show you how pros are winning more jobs with professional quotes that customers approve with one click.",
-        suggestedCta: "Talk to Sales",
-        escalationTriggers: ['pricing', 'cost', 'how much'],
-      },
     },
 
     // =========================================================================
@@ -194,7 +193,14 @@ If REAL:
 - Help build the estimate with line items
 - Show preview before sending
 
-Always show structured previews and get confirmation.`,
+Always show structured previews and get confirmation.
+
+## Chat Experience
+When the user asks about estimates at this stage:
+- Response: "You have estimates! Let's create your first professional quote."
+- Priority Action: onboarding
+- Suggested CTA: "Create Estimate" - Would you like to create a sample estimate to see how it works, or create a real estimate for a customer?
+- Escalation Triggers: price book not working, estimate error, stuck`,
 
       tools: [
         {
@@ -221,14 +227,6 @@ Always show structured previews and get confirmation.`,
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You have estimates! Let's create your first professional quote.",
-        priorityAction: 'onboarding',
-        actionPrompt: "Would you like to create a sample estimate to see how it works, or create a real estimate for a customer?",
-        suggestedCta: "Create Estimate",
-        escalationTriggers: ['price book not working', 'estimate error', 'stuck'],
-      },
     },
 
     // =========================================================================
@@ -298,7 +296,14 @@ Always show structured previews and get confirmation.`,
 Key actions to offer:
 1. Good/Better/Best - explain tiered pricing benefits
 2. Templates - save time on common estimates
-3. Test estimate - see customer approval experience`,
+3. Test estimate - see customer approval experience
+
+## Chat Experience
+When the user asks about estimates at this stage:
+- Response: "You're set up for estimates! Ready to send your first one."
+- Priority Action: navigation
+- Suggested CTA: "Send Estimate" - What would you like to do? 1. Try Good/Better/Best pricing to increase average ticket 2. Create an estimate template for common jobs 3. Send a test estimate to see the customer view
+- Escalation Triggers: customer can't approve, estimate not sending, pricing wrong`,
 
       tools: [
         {
@@ -325,14 +330,6 @@ Key actions to offer:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You're set up for estimates! Ready to send your first one.",
-        priorityAction: 'navigation',
-        actionPrompt: "What would you like to do?\n1. Try Good/Better/Best pricing to increase average ticket\n2. Create an estimate template for common jobs\n3. Send a test estimate to see the customer view",
-        suggestedCta: "Send Estimate",
-        escalationTriggers: ['customer can\'t approve', 'estimate not sending', 'pricing wrong'],
-      },
     },
 
     // =========================================================================
@@ -403,7 +400,14 @@ Advanced features to highlight:
 - Estimate conversion analytics
 - Customer financing for larger projects
 - Specialized templates by job type
-- Follow-up automation for pending estimates`,
+- Follow-up automation for pending estimates
+
+## Chat Experience
+When the user asks about estimates at this stage:
+- Response: "Great estimate volume! Your estimates are winning jobs."
+- Priority Action: tip
+- Suggested CTA: "View Analytics" - Would you like to track your estimate conversion rate? You can also add financing options to help customers afford larger projects.
+- Escalation Triggers: low conversion, losing jobs, customers not responding`,
 
       tools: [
         {
@@ -430,14 +434,6 @@ Advanced features to highlight:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great estimate volume! Your estimates are winning jobs.",
-        priorityAction: 'tip',
-        actionPrompt: "Would you like to track your estimate conversion rate? You can also add financing options to help customers afford larger projects.",
-        suggestedCta: "View Analytics",
-        escalationTriggers: ['low conversion', 'losing jobs', 'customers not responding'],
-      },
     },
   },
 };

@@ -82,7 +82,14 @@ Key points to emphasize:
 - Professional appearance builds customer trust
 - Automated payment reminders reduce chasing customers
 - Customers can pay online with one click
-- Average 2x faster payment collection than paper invoices`,
+- Average 2x faster payment collection than paper invoices
+
+## Chat Experience
+When the user asks about invoicing at this stage:
+- Response: "Great question about invoicing! Let me explain how it works."
+- Priority Action: call
+- Suggested CTA: "Schedule Demo" - Invoicing isn't enabled on your account yet. I can schedule a quick call with our team to show you how pros are getting paid 2x faster with professional invoices.
+- Escalation Triggers: speak to someone, talk to sales, pricing question`,
 
       tools: [
         {
@@ -108,14 +115,6 @@ Key points to emphasize:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "Great question about invoicing! Let me explain how it works.",
-        priorityAction: 'call',
-        actionPrompt: "Invoicing isn't enabled on your account yet. I can schedule a quick call with our team to show you how pros are getting paid 2x faster with professional invoices.",
-        suggestedCta: "Schedule Demo",
-        escalationTriggers: ['speak to someone', 'talk to sales', 'pricing question'],
-      },
     },
 
     // =========================================================================
@@ -262,7 +261,14 @@ When user uploads an image (photo of invoice, receipt, estimate, or any document
    - "View Invoice" - link to invoice page
    - "View Customer" - link to customer page
 
-Always show structured previews before executing actions and get explicit confirmation.`,
+Always show structured previews before executing actions and get explicit confirmation.
+
+## Chat Experience
+When the user asks about invoicing at this stage:
+- Response: "I see you have invoicing available! You haven't sent your first invoice yet - let me help you get started."
+- Priority Action: onboarding
+- Suggested CTA: "Try Sample" - Would you like to try invoicing with sample data to see how it works, or use your real customer information?
+- Escalation Triggers: stuck, not working, help me`,
 
       tools: [
         {
@@ -356,14 +362,6 @@ Always show structured previews before executing actions and get explicit confir
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "I see you have invoicing available! You haven't sent your first invoice yet - let me help you get started.",
-        priorityAction: 'onboarding',
-        actionPrompt: "Would you like to try invoicing with sample data to see how it works, or use your real customer information?",
-        suggestedCta: "Try Sample",
-        escalationTriggers: ['stuck', 'not working', 'help me'],
-      },
     },
 
     // =========================================================================
@@ -450,7 +448,14 @@ Always show structured previews before executing actions and get explicit confir
 Key actions to offer:
 1. Upload logo - navigate to branding settings
 2. Review settings - show current configuration
-3. Send test invoice - create and send to their email`,
+3. Send test invoice - create and send to their email
+
+## Chat Experience
+When the user asks about invoicing at this stage:
+- Response: "You're all set up with invoicing! Here's how to make the most of it."
+- Priority Action: navigation
+- Suggested CTA: "Send Test Invoice" - What would you like to do? 1. Upload your logo 2. Review your settings 3. Send a test invoice to yourself
+- Escalation Triggers: payment issue, invoice not received`,
 
       tools: [
         {
@@ -506,14 +511,6 @@ Key actions to offer:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You're all set up with invoicing! Here's how to make the most of it.",
-        priorityAction: 'navigation',
-        actionPrompt: "What would you like to do?\n1. Upload your logo\n2. Review your settings\n3. Send a test invoice to yourself",
-        suggestedCta: "Send Test Invoice",
-        escalationTriggers: ['payment issue', 'invoice not received'],
-      },
     },
 
     // =========================================================================
@@ -596,7 +593,14 @@ Advanced features to highlight:
 - Invoice templates for common job types
 - Recurring invoices for maintenance contracts
 - Aging reports to track overdue payments
-- Payment analytics and insights`,
+- Payment analytics and insights
+
+## Chat Experience
+When the user asks about invoicing at this stage:
+- Response: "You're using invoicing like a pro! Here are some advanced tips."
+- Priority Action: tip
+- Suggested CTA: "Create Invoice" - I can help you create a new invoice right here. Just describe the job and I'll set it up for you, or ask about advanced features like templates and recurring invoices.
+- Escalation Triggers: not getting paid, customer dispute, refund`,
 
       tools: [
         {
@@ -685,14 +689,6 @@ Advanced features to highlight:
           },
         },
       ],
-
-      chatExperience: {
-        detectionResponse: "You're using invoicing like a pro! Here are some advanced tips.",
-        priorityAction: 'tip',
-        actionPrompt: "I can help you create a new invoice right here. Just describe the job and I'll set it up for you, or ask about advanced features like templates and recurring invoices.",
-        suggestedCta: "Create Invoice",
-        escalationTriggers: ['not getting paid', 'customer dispute', 'refund'],
-      },
     },
   },
 };
