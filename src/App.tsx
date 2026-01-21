@@ -3,7 +3,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { theme } from './theme/theme';
 import { OnboardingProvider, useOnboarding } from './context';
 import { PlanningModeProvider, PlanningDrawer, PlanningModal } from './planning';
-import { ChatProvider } from './chat';
+import { ChatProvider, ChatDrawer, ChatFab } from './chat';
 import { MainLayout } from './components/layout';
 import { AdminView } from './views/admin';
 import { FrontlineView } from './views/frontline';
@@ -43,6 +43,8 @@ function App() {
             </MainLayout>
             <PlanningDrawer />
             <PlanningModal />
+            <ChatDrawer />
+            <ChatFab />
           </ChatProvider>
         </OnboardingProvider>
       </PlanningModeProvider>

@@ -663,6 +663,9 @@ export interface OnboardingContextState {
 
   // Chat integration - pending prompt to send when chat view opens
   pendingChatPrompt: string | null;
+
+  // Chat drawer state
+  isChatDrawerOpen: boolean;
 }
 
 export interface OnboardingContextActions {
@@ -677,6 +680,11 @@ export interface OnboardingContextActions {
   // Chat integration
   openChatWithPrompt: (prompt: string) => void;
   clearPendingChatPrompt: () => void;
+
+  // Chat drawer controls
+  openChatDrawer: () => void;
+  closeChatDrawer: () => void;
+  toggleChatDrawer: () => void;
 
   // Pro progress mutations
   completeTask: (proId: string, featureId: FeatureId, taskId: string) => void;

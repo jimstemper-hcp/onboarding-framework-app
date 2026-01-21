@@ -83,6 +83,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   // Chat integration - pending prompt to send when chat view opens
   const [pendingChatPrompt, setPendingChatPrompt] = useState<string | null>(null);
 
+  // Chat drawer state
+  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
+
   // ---------------------------------------------------------------------------
   // NAVIGATION ACTIONS
   // ---------------------------------------------------------------------------
@@ -97,11 +100,23 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
   const openChatWithPrompt = useCallback((prompt: string) => {
     setPendingChatPrompt(prompt);
-    setCurrentView('chat');
+    setIsChatDrawerOpen(true);
   }, []);
 
   const clearPendingChatPrompt = useCallback(() => {
     setPendingChatPrompt(null);
+  }, []);
+
+  const openChatDrawer = useCallback(() => {
+    setIsChatDrawerOpen(true);
+  }, []);
+
+  const closeChatDrawer = useCallback(() => {
+    setIsChatDrawerOpen(false);
+  }, []);
+
+  const toggleChatDrawer = useCallback(() => {
+    setIsChatDrawerOpen((prev) => !prev);
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -360,6 +375,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       selectedFeatureId,
       activeProId,
       pendingChatPrompt,
+      isChatDrawerOpen,
 
       // Navigation
       setCurrentView,
@@ -368,6 +384,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setActivePro: setActiveProId,
       openChatWithPrompt,
       clearPendingChatPrompt,
+      openChatDrawer,
+      closeChatDrawer,
+      toggleChatDrawer,
 
       // Pro progress mutations
       completeTask,
@@ -401,10 +420,14 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       selectedFeatureId,
       activeProId,
       pendingChatPrompt,
+      isChatDrawerOpen,
       selectPro,
       selectFeature,
       openChatWithPrompt,
       clearPendingChatPrompt,
+      openChatDrawer,
+      closeChatDrawer,
+      toggleChatDrawer,
       completeTask,
       uncompleteTask,
       setFeatureStage,

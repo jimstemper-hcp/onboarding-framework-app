@@ -2,6 +2,8 @@ import { Box, AppBar, Toolbar, Typography, Container, Stack, useMediaQuery, useT
 import { ViewSwitcher } from './ViewSwitcher';
 import { ProSelectorToolbar } from './ProSelectorToolbar';
 import { PlanningModeToggle, usePlanningMode, DRAWER_WIDTH } from '../../planning';
+import { CHAT_DRAWER_WIDTH } from '../../chat';
+import { useOnboarding } from '../../context';
 import type { ReactNode } from 'react';
 
 interface MainLayoutProps {
@@ -12,9 +14,13 @@ export function MainLayout({ children }: MainLayoutProps) {
   const theme = useTheme();
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
   const { isPlanningMode } = usePlanningMode();
+  const { isChatDrawerOpen } = useOnboarding();
 
-  // Calculate margin for persistent drawer (only on large screens)
-  const drawerMargin = isPlanningMode && isLargeScreen ? DRAWER_WIDTH : 0;
+  // Calculate margin for persistent drawers (only on large screens)
+  // Only one drawer can push content at a time - planning takes priority
+  const drawerMargin = isLargeScreen
+    ? (isPlanningMode ? DRAWER_WIDTH : (isChatDrawerOpen ? CHAT_DRAWER_WIDTH : 0))
+    : 0;
 
   return (
     <Box

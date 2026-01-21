@@ -34,6 +34,8 @@ export { MessageBubble } from './components/MessageBubble';
 export { ChatInput } from './components/ChatInput';
 export { TypingIndicator } from './components/TypingIndicator';
 export { ApiKeyModal } from './components/ApiKeyModal';
+export { ChatDrawer, CHAT_DRAWER_WIDTH } from './components/ChatDrawer';
+export { ChatFab } from './components/ChatFab';
 
 // Types
 export type {
