@@ -687,6 +687,7 @@ export interface OnboardingContextActions {
 
   // Feature mutations (for Admin view)
   updateFeature: (feature: Feature) => void;
+  resetFeatures: () => void;
 
   // Derived data helpers
   getFeatureById: (featureId: FeatureId) => Feature | undefined;

@@ -20,6 +20,38 @@ import { features as initialFeatures } from '../data/features';
 import { mockPros as initialPros } from '../data/mockPros';
 
 // =============================================================================
+// LOCAL STORAGE PERSISTENCE
+// =============================================================================
+
+const STORAGE_KEYS = {
+  features: 'hcp-context-features',
+  // Future: pros, navigation, etc.
+};
+
+/**
+ * Load data from localStorage or fall back to initial data
+ */
+function loadFromStorage<T>(key: string, fallback: T): T {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Save data to localStorage
+ */
+function saveToStorage<T>(key: string, data: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (e) {
+    console.warn('Failed to save to localStorage:', e);
+  }
+}
+
+// =============================================================================
 // CONTEXT CREATION
 // =============================================================================
 
@@ -38,7 +70,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   // STATE
   // ---------------------------------------------------------------------------
 
-  const [features, setFeatures] = useState<Feature[]>(initialFeatures);
+  const [features, setFeatures] = useState<Feature[]>(() =>
+    loadFromStorage(STORAGE_KEYS.features, initialFeatures)
+  );
   const [pros, setPros] = useState<ProAccount[]>(initialPros);
   const [currentView, setCurrentView] = useState<ViewType>('portal');
   const [selectedProId, setSelectedProId] = useState<string | null>(null);
@@ -183,11 +217,18 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   // ---------------------------------------------------------------------------
 
   const updateFeature = useCallback((updatedFeature: Feature) => {
-    setFeatures((currentFeatures) =>
-      currentFeatures.map((feature) =>
+    setFeatures((currentFeatures) => {
+      const newFeatures = currentFeatures.map((feature) =>
         feature.id === updatedFeature.id ? updatedFeature : feature
-      )
-    );
+      );
+      saveToStorage(STORAGE_KEYS.features, newFeatures);
+      return newFeatures;
+    });
+  }, []);
+
+  const resetFeatures = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEYS.features);
+    setFeatures(initialFeatures);
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -329,6 +370,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
       // Feature mutations
       updateFeature,
+      resetFeatures,
 
       // Helpers
       getFeatureById,
@@ -356,6 +398,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       updateProWeeklyPlan,
       updateProCompletedItems,
       updateFeature,
+      resetFeatures,
       getFeatureById,
       getProById,
       getProFeatureStatus,
