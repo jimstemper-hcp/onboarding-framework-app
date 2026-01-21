@@ -1,33 +1,129 @@
 # Weekly Planning View
 
-## Overview
-The Weekly Planning View provides a focused, week-by-week approach to onboarding. It shows the current week's tasks prominently while also surfacing any incomplete items from previous weeks in a "catch up" section.
+## Problem
+Pros can feel overwhelmed seeing all onboarding tasks at once, leading to analysis paralysis and lack of focus.
 
-## Key Features
+## Solution
+Provide a focused week-by-week view that highlights the current week's tasks while surfacing incomplete items from prior weeks in a catch-up section.
+
+## Scope
+**Included:**
 - Current week focus with task list
 - Catch-up section for incomplete prior week items
-- Week progress indicator (dots showing week 1-4)
-- Progress bar for current week completion
+- Week progress indicator (dots for weeks 1-4)
 - Next week preview
-- Task completion with point rewards
+- Task completion with points
 
-## User Stories
-- As a pro, I want to focus on this week's tasks so I'm not overwhelmed
-- As a pro, I want to see incomplete tasks from prior weeks so nothing falls through the cracks
-- As a pro, I want to preview upcoming weeks so I can plan ahead
-- As a pro, I want to complete tasks easily with a single click
+**Excluded:**
+- Week customization
+- Task rescheduling
+- Multi-week view
 
-## UI Components
-- Week status header with avatar and description
-- Week indicator dots (completed/current/upcoming)
-- Task list with checkboxes
-- Catch-up card (when applicable) with week badges
-- Next week preview card
-- Progress bar with task count
+## Dependencies
+- **Depends on:** @HCP Context Manager (onboarding items, point values), Sample Pros Configurations (weekly plan, completion status)
+- **Depended on by:** Housecall Pro Web (as one view mode)
 
-## Data Dependencies
-- Reads: Weekly plan configuration, completed task IDs, onboarding item definitions
-- Writes: Task completion status
+## Success Criteria
+- Current week is prominently displayed
+- Catch-up items are visible when applicable
+- Progress dots show week status
+- Tasks can be completed from this view
 
-## Status
-Prototype - Weekly planning interface with catch-up functionality.
+## Functional Requirements
+
+### FR1: Current Week Focus
+
+#### User Story
+As a pro, I want to see this week's tasks so that I can focus on what's due now.
+
+#### Acceptance Criteria
+| Element | Content |
+|---------|---------|
+| Week header | "Week X" with description |
+| Task list | All items assigned to current week |
+| Progress bar | Completion percentage |
+| Task count | "X of Y completed" |
+
+#### Related Prompts
+- `[Historical]` "Create current week focus for weekly view"
+
+### FR2: Catch-up Section
+
+#### User Story
+As a pro, I want to see missed tasks so that nothing falls through the cracks.
+
+#### Acceptance Criteria
+| Condition | Behavior |
+|-----------|----------|
+| Incomplete prior tasks | Show catch-up card |
+| Week badges | Indicate which week task is from |
+| No incomplete | Hide catch-up section |
+
+#### Related Prompts
+- `[Historical]` "Add catch-up section for missed tasks"
+
+### FR3: Week Progress Indicators
+
+#### User Story
+As a pro, I want to see my overall week progress so that I know where I am in onboarding.
+
+#### Acceptance Criteria
+| Indicator | Display |
+|-----------|---------|
+| Week dots | 4 dots for weeks 1-4 |
+| Completed week | Filled dot |
+| Current week | Highlighted dot |
+| Future weeks | Empty dot |
+
+#### Related Prompts
+- `[Historical]` "Add week progress dots"
+
+### FR4: Next Week Preview
+
+#### User Story
+As a pro, I want to preview next week so that I can plan ahead.
+
+#### Acceptance Criteria
+| Element | Content |
+|---------|---------|
+| Preview card | Summary of next week |
+| Item count | Number of tasks coming |
+| Teaser | First few items listed |
+
+#### Related Prompts
+- `[Historical]` "Add next week preview card"
+
+### FR5: Task Completion
+
+#### User Story
+As a pro, I want to complete tasks easily so that I can track my progress.
+
+#### Acceptance Criteria
+| Action | Behavior |
+|--------|----------|
+| Click checkbox | Mark task complete |
+| Point award | Add item's points to total |
+| Progress update | Update progress bar and count |
+
+#### Related Prompts
+- `[Historical]` "Enable task completion in weekly view"
+
+### FR6: Backend Data Source
+
+#### User Story
+As a pro, I want my weekly plan to reflect my assigned items.
+
+#### Acceptance Criteria
+| Data | Source |
+|------|--------|
+| Weekly plan | Sample Pros Configurations |
+| Onboarding items | @HCP Context Manager Onboarding Items Tab |
+| Point values | @HCP Context Manager Onboarding Items Tab |
+| Completion status | Sample Pros Configurations |
+
+#### Related Prompts
+- `[Historical]` "Pull weekly data from centralized backend"
+
+## Open Questions/Unknowns
+- Should we support week skipping?
+- How should we handle tasks that can't be completed in assigned week?

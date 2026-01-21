@@ -1,106 +1,145 @@
 # Onboarding Items Tab
 
-## Overview
-The Onboarding Items Tab provides a centralized library of all onboarding tasks that can be assigned to features and weekly plans. Each item has completion logic and can be tracked across the system.
+## Problem
+Onboarding tasks need to be consistent across the entire system, but defining them in multiple places leads to inconsistencies and maintenance burden.
 
-## Key Features
-- Centralized item library
+## Solution
+Provide a centralized onboarding item library where all tasks are defined once with their completion logic, point values, and metadata, then referenced throughout the system.
+
+## Scope
+**Included:**
+- Onboarding item CRUD operations
 - Category organization
 - Completion criteria configuration
-- Estimated time tracking
 - Point value assignment
-- Item status management
+- Time estimates
+- Navigation and call associations
+- Item types (in-product, rep-facing)
 
-## User Stories
-- As an admin, I want to define onboarding items so they're consistent everywhere
-- As an admin, I want to categorize items so they're organized
-- As an admin, I want to set completion logic so tracking is automated
-- As an admin, I want to estimate times so users can plan
-- As an admin, I want to assign point values so important items are incentivized
+**Excluded:**
+- Real-time completion tracking (handled by pro accounts)
+- Item recommendations engine
+- A/B testing of items
 
-## UI Components
-- Onboarding item data table
-- Category filters
-- Add/Edit modal
-- Completion logic editor
-- Time estimate controls
-- Point value selector
+## Dependencies
+- **Depends on:** Navigation (for navigation links), Calls (for call links)
+- **Depended on by:** Features (for stage assignments), Org Insights (for plan management), Housecall Pro Web (for journey tasks)
 
-## Point Value System
+## Success Criteria
+- All items can be created and managed centrally
+- Items can be assigned to feature stages
+- Point values follow the defined tier system
+- Navigation and calls can be associated with items
 
-Each onboarding item has a point value that determines how many points a pro earns when completing the task. Points are used in the Housecall Pro Web journey view to gamify onboarding and incentivize completion of high-value actions.
+## Functional Requirements
 
-### Point Tiers
+### FR1: Onboarding Item CRUD
 
+#### User Story
+As an admin, I want to manage onboarding items so that they're consistent everywhere in the system.
+
+#### Acceptance Criteria
+| Action | Behavior |
+|--------|----------|
+| Create | Add new item with all required fields |
+| Read | View item list with filtering |
+| Update | Edit item details and associations |
+| Delete | Remove item from library |
+
+#### Related Prompts
+- `[Historical]` "Create a centralized onboarding item library"
+
+### FR2: Point Value System
+
+#### User Story
+As an admin, I want to assign point values to items so that important items are incentivized appropriately.
+
+#### Acceptance Criteria
 | Points | Criteria | Examples |
 |--------|----------|----------|
-| **100** | Critical/foundational actions that generate revenue or are essential for using the platform | Create first customer, Connect payment processor, Send first invoice, Collect first payment, Create first job |
-| **75** | Important engagement drivers that indicate active usage | Complete first job, Schedule first job, Enable appointment reminders, Complete training session, Setup call forwarding, Online booking, Recurring jobs |
-| **50** | Good to have actions that improve the user experience | Add team member, Set business hours, Customer portal, Job templates, Checklists, Dashboard, Configure AI settings |
-| **25** | Nice to have / cosmetic items or advanced settings | Add company logo, Customize message templates, Customer tags, Calendar settings, Advanced configurations |
+| 100 | Critical/foundational actions that generate revenue or are essential | Create first customer, Connect payment processor, Send first invoice |
+| 75 | Important engagement drivers that indicate active usage | Complete first job, Enable appointment reminders, Online booking |
+| 50 | Good to have actions that improve user experience | Add team member, Set business hours, Customer portal |
+| 25 | Nice to have / cosmetic items or advanced settings | Add company logo, Customize message templates |
 
-### Point Calculation Logic
+#### Related Prompts
+- "Add point values to onboarding items"
 
-Total points for a feature are calculated as:
-- **Feature milestones**: Attached (+50), Activated (+100), Engaged (+150)
-- **Task completion**: Sum of each completed item's individual point value
+### FR3: Item Types
 
-```typescript
-// Example: Pro completes "Create first customer" (100 pts) and "Add company logo" (25 pts)
-// for a feature that is "attached"
-totalEarned = 50 (attached) + 100 (first customer) + 25 (logo) = 175 points
-```
+#### User Story
+As an admin, I want to categorize items by type so that tracking is handled correctly.
 
-### Assignment Guidelines
+#### Acceptance Criteria
+| Type | Description | Tracking |
+|------|-------------|----------|
+| in_product | Tracked automatically by system | API-based completion detection |
+| rep_facing | Completed by reps | Manual checkbox in Org Insights |
 
-When assigning point values to new items:
+#### Related Prompts
+- `[Historical]` "Support both automatic and manual item tracking"
 
-1. **100 points** - Reserve for actions that:
-   - Generate revenue (payments, invoices)
-   - Create foundational data (first customer, first job)
-   - Enable core platform capabilities (payment processor connection)
+### FR4: Navigation and Call Associations
 
-2. **75 points** - Assign to actions that:
-   - Complete workflows (finish a job, send an estimate)
-   - Enable automation (appointment reminders, review requests)
-   - Require meaningful time investment (training sessions)
-   - Drive ongoing engagement (recurring jobs, online booking)
+#### User Story
+As an admin, I want to associate navigation resources and calls with items so that users can easily access related content.
 
-3. **50 points** - Use for actions that:
-   - Improve efficiency (templates, checklists)
-   - Add team capabilities (team members, dispatching)
-   - Enable self-service (customer portal)
-   - Configure important settings (business hours)
+#### Acceptance Criteria
+| Association | Behavior |
+|-------------|----------|
+| Add navigation | Item displays navigation link |
+| Add call | Item displays call booking link |
+| Multiple associations | Item can have multiple navigation/call links |
+| Remove association | Link removed from item display |
 
-4. **25 points** - Default for:
-   - Cosmetic/branding items (logo, custom templates)
-   - Advanced or optional settings
-   - Informational/review items
-   - Low-effort configuration tasks
+#### Related Prompts
+- "Add Navigation & Calls to onboarding items"
 
-### Default Value
+### FR5: Category Organization
 
-Items without an explicit point value default to **25 points** via the `DEFAULT_ITEM_POINTS` constant.
+#### User Story
+As an admin, I want to organize items by category so that they're grouped logically.
 
-## Data Dependencies
-- Reads: Onboarding item definitions, categories
-- Writes: Onboarding item records
+#### Acceptance Criteria
+| Condition | Expected Behavior |
+|-----------|-------------------|
+| Assign category | Item grouped under category |
+| Filter by category | Show only items in selected category |
+| Change category | Item moves to new category group |
 
-## Item Properties
+#### Related Prompts
+- `[Historical]` "Organize onboarding items by category"
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `id` | string | Unique identifier |
-| `title` | string | Display title |
-| `description` | string | Full description |
-| `type` | 'in_product' \| 'rep_facing' | Whether tracked automatically or by reps |
-| `category` | string | Category ID for grouping |
-| `points` | number | Point value (25, 50, 75, or 100) |
-| `estimatedMinutes` | number | Time estimate for completion |
-| `completionApi` | object | API event/endpoint for auto-tracking |
-| `actionUrl` | string | Deep link to complete the action |
-| `repInstructions` | string | Instructions for rep-facing items |
-| `contextSnippets` | array | Value statements and guidance for reps |
+### FR6: Completion Logic Configuration
 
-## Status
-Prototype - Centralized onboarding item management with point-based gamification.
+#### User Story
+As an admin, I want to define completion logic so that item completion is tracked correctly.
+
+#### Acceptance Criteria
+| Field | Purpose |
+|-------|---------|
+| completionApi | API endpoint/event for automatic tracking |
+| actionUrl | Deep link for user to complete action |
+| repInstructions | Instructions for rep-facing items |
+
+#### Related Prompts
+- `[Historical]` "Define completion logic for each item"
+
+### FR7: Context Snippets
+
+#### User Story
+As an admin, I want to add context snippets to items so that reps have talking points when discussing items with pros.
+
+#### Acceptance Criteria
+| Snippet Type | Purpose |
+|--------------|---------|
+| Value statement | Why this item matters |
+| Guidance | How to complete the item |
+| Objection handling | Common questions/concerns |
+
+#### Related Prompts
+- `[Historical]` "Add context snippets for rep guidance"
+
+## Open Questions/Unknowns
+- Should items have dependencies on other items?
+- How should we handle item versioning?

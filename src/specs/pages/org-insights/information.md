@@ -1,29 +1,97 @@
 # Information Page
 
-## Overview
-The Information Page provides reps with a comprehensive overview of the selected pro's account details, onboarding progress, and key metrics at a glance.
+## Problem
+Reps need a quick overview of pro account details before calls, but this information is scattered across different systems.
 
-## Key Features
+## Solution
+Provide a comprehensive pro information dashboard showing account details, onboarding progress, goals, and key metrics at a glance.
+
+## Scope
+**Included:**
 - Pro account details display
 - Company information
 - Current onboarding week indicator
 - Goal and trade information
 - Overall progress summary
 
-## User Stories
-- As a rep, I want to see pro account details quickly so I can prepare for calls
-- As a rep, I want to understand the pro's goals so I can provide relevant guidance
-- As a rep, I want to see overall progress so I can prioritize my outreach
+**Excluded:**
+- Account editing
+- Billing information
+- Activity history
 
-## UI Components
-- Pro info card with company details
-- Goal/trade chips
-- Progress indicators
-- Account metadata display
+## Dependencies
+- **Depends on:** Sample Pros Configurations (pro account data)
+- **Depended on by:** None (end-user interface)
 
-## Data Dependencies
-- Reads: Pro account data, company information, goal settings
-- Writes: None (read-only view)
+## Success Criteria
+- All key pro info is visible at a glance
+- Progress indicators are accurate
+- Goals and trade type are displayed
+- Contact information is accessible
 
-## Status
-Prototype - Basic information display for rep reference.
+## Functional Requirements
+
+### FR1: Account Details
+
+#### User Story
+As a rep, I want to see pro account details so that I can prepare for calls.
+
+#### Acceptance Criteria
+| Field | Content |
+|-------|---------|
+| Company name | Business name |
+| Owner | Pro owner name |
+| Contact | Phone, email |
+| Trade | Business trade type |
+
+#### Related Prompts
+- `[Historical]` "Display pro account details for rep reference"
+
+### FR2: Progress Overview
+
+#### User Story
+As a rep, I want to see onboarding progress so that I know where the pro stands.
+
+#### Acceptance Criteria
+| Indicator | Content |
+|-----------|---------|
+| Current week | Which week of onboarding (1-4) |
+| Overall progress | Percentage complete |
+| Tasks completed | X of Y items done |
+
+#### Related Prompts
+- `[Historical]` "Show progress overview on information page"
+
+### FR3: Goal Display
+
+#### User Story
+As a rep, I want to see pro's goals so that I can provide relevant guidance.
+
+#### Acceptance Criteria
+| Display | Content |
+|---------|---------|
+| Primary goal | Pro's stated onboarding goal |
+| Trade | Business type for context |
+| Plan tier | Current subscription level |
+
+#### Related Prompts
+- `[Historical]` "Display pro goals and trade information"
+
+### FR4: Backend Data Source
+
+#### User Story
+As a rep, I want accurate pro data so that information is up to date.
+
+#### Acceptance Criteria
+| Data | Source |
+|------|--------|
+| Account details | Sample Pros Configurations |
+| Progress | Sample Pros Configurations |
+| Goals | Sample Pros Configurations |
+
+#### Related Prompts
+- `[Historical]` "Pull pro data from Sample Pros backend"
+
+## Open Questions/Unknowns
+- Should we include last contact date?
+- How should we handle incomplete pro profiles?

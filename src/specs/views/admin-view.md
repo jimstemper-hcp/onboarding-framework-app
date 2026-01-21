@@ -1,103 +1,101 @@
 # Admin View
 
-> **Status**: Prototype
-> **Category**: View
-> **Last Updated**: 2025-01-17
+## Problem
+Product teams need a centralized interface to manage onboarding content, but without a unified admin tool, content management is fragmented and error-prone.
 
-## Overview
+## Solution
+Provide the Admin View as the primary interface for the @HCP Context Manager, allowing admins to manage features, navigation resources, calls, onboarding items, and tools through a tabbed interface with modal editors.
 
-The Admin View is the internal content management interface for the onboarding framework. It allows product managers and content administrators to define and manage features, navigation resources, Calendly call types, onboarding items, and AI tools.
+## Scope
+**Included:**
+- Feature management with stage context editing
+- Navigation resource management
+- Calendly call type management
+- Onboarding item library management
+- MCP tool configuration
 
-## Purpose
-
-Product teams need a centralized place to manage the onboarding content that powers all four customer-facing experiences (Portal, Frontline, Chat, and the Pro app). The Admin View provides this centralized management capability with a user-friendly interface.
-
-## Key Features
-
-- **Feature Management**: Define features and configure all four adoption stages (Not Attached, Attached, Activated, Engaged)
-- **Navigation Management**: Create and manage navigation resources (pages, modals, videos, help articles, external links, tours)
-- **Calls Management**: Configure Calendly call types for scheduling
-- **Onboarding Items**: Define centralized onboarding item definitions
-- **Tools Management**: Configure MCP tools for AI assistance (planned)
-
-## User Stories
-
-- As a product manager, I want to define feature stage contexts so that pros see relevant content based on their adoption stage
-- As a content admin, I want to manage navigation resources so that all experiences show consistent links
-- As a product manager, I want to configure onboarding items so that reps and pros can track progress
-
-## Data Model
-
-```typescript
-// Key types from /src/types/onboarding.ts
-interface Feature {
-  id: FeatureId;
-  name: string;
-  description: string;
-  icon: string;
-  version: string;
-  stages: {
-    notAttached: StageContext;
-    attached: StageContext;
-    activated: StageContext;
-    engaged: StageContext;
-  };
-}
-
-interface NavigationItem {
-  slugId?: string;
-  name: string;
-  status?: NavigationStatus;
-  navigationType: NavigationType;
-  typeData?: NavigationTypeData;
-  contextSnippets?: ContextSnippet[];
-  prompt?: string;
-  tools?: McpTool[];
-}
-```
+**Excluded:**
+- Pro account management (handled by Sample Pros)
+- Analytics and reporting
+- User access control
 
 ## Dependencies
+- **Depends on:** OnboardingContext (for data and mutations), Feature data files
+- **Depended on by:** All user-facing views (consume the content managed here)
 
-- **OnboardingContext**: Uses the onboarding context for feature data and mutations
-- **Feature data files**: Reads from /src/data/features/*.ts
+## Success Criteria
+- All five content types are accessible via tabs
+- Edit modals allow full configuration of each content type
+- Changes are validated before saving
+- Content updates propagate to user-facing views
 
-## UI/UX Specifications
+## Functional Requirements
 
-### Layout
-- Left sidebar with navigation tabs (Features, Navigation, Calls, Onboarding Items, Tools)
-- Main content area that changes based on selected tab
-- Full-width modals for editing
+### FR1: Tabbed Navigation
 
-### Interactions
-- Click sidebar item to switch views
-- Click table row to open edit modal
-- Delete button on each row for removal
+#### User Story
+As an admin, I want to switch between content types via tabs so that I can manage all onboarding content from one interface.
 
-### States
-- **Loading**: Skeleton loaders while data loads
-- **Empty**: Empty state message with "Add New" CTA
-- **Error**: Toast notifications for errors
+#### Acceptance Criteria
+| Tab | Content |
+|-----|---------|
+| Features | Feature table with stage context editing |
+| Navigation | Navigation resource table with type filters |
+| Calls | Calendly link table with team organization |
+| Onboarding Items | Item table with category filters |
+| Tools | MCP tool table with parameter configuration |
 
-## Implementation Notes
+#### Related Prompts
+- `[Historical]` "Create tabbed navigation for admin content management"
 
-- Located at `/src/views/admin/AdminView.tsx`
-- Large component (~3000+ lines) - consider splitting into sub-components
-- Edit modals have 4 tabs: Basic Info, Important Context, AI Config, JSON Payload
-- Uses Material UI components throughout
+### FR2: Feature Edit Modal
 
-## Future Enhancements
+#### User Story
+As an admin, I want to edit features in a modal so that I can configure all aspects of a feature.
 
-- [ ] Split into smaller components for better maintainability
-- [ ] Add search/filter functionality to tables
-- [ ] Add bulk operations (delete, duplicate)
-- [ ] Add version history for features
-- [ ] Add import/export functionality
+#### Acceptance Criteria
+| Tab | Contents |
+|-----|----------|
+| Basic Info | Name, icon, description |
+| Important Context | Stage contexts, talking points |
+| AI Config | Prompts, snippets, tool access |
+| JSON Payload | Raw data view for debugging |
 
-## Open Questions
+#### Related Prompts
+- `[Historical]` "Create 4-tab modal for feature editing"
 
-- Should feature editing be split into a separate route?
-- How should we handle concurrent editing conflicts?
+### FR3: CRUD Operations
 
----
+#### User Story
+As an admin, I want to create, read, update, and delete content so that I can maintain the content catalog.
 
-*LLM INSTRUCTIONS: This view is the main content management interface. When adding new content types, follow the existing patterns: table view with edit modal, 4-tab modal structure, delete affordance per row.*
+#### Acceptance Criteria
+| Operation | UI Element |
+|-----------|------------|
+| Create | "Add New" button opens empty modal |
+| Read | Table displays all items with key fields |
+| Update | Click row to open populated modal |
+| Delete | Delete button with confirmation |
+
+#### Related Prompts
+- `[Historical]` "Support CRUD operations for all content types"
+
+### FR4: Data Validation
+
+#### User Story
+As an admin, I want content validated before saving so that I don't introduce errors.
+
+#### Acceptance Criteria
+| Validation | Behavior |
+|------------|----------|
+| Required fields | Prevent save if empty |
+| URL format | Validate navigation URLs |
+| Point values | Must be 25, 50, 75, or 100 |
+| Duplicate check | Warn if slug already exists |
+
+#### Related Prompts
+- `[Inferred]` Validation from implementation patterns
+
+## Open Questions/Unknowns
+- Should we split the AdminView component into smaller sub-components?
+- Should we add search/filter functionality to all tables?

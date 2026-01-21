@@ -1,36 +1,68 @@
 # Add-ons Feature
 
-## Overview
-The Add-ons feature enables pros to offer additional services, warranties, and upgrades to customers, increasing revenue per job.
+## Problem
+Pros leave money on the table by not offering additional services, warranties, and upgrades during job completion.
 
-## Key Features
+## Solution
+Enable pros to create and offer add-ons, upsell prompts, and service bundles that increase revenue per job.
+
+## Scope
+**Included:**
 - Add-on catalog management
 - Upsell prompts during jobs
 - Warranty packages
 - Service upgrades
 - Add-on pricing and bundles
 
-## Stage Contexts
+**Excluded:**
+- Automated upsell recommendations
+- Customer preference learning
+- Add-on subscription management
 
-### Not Attached
-- Benefit messaging: "Increase revenue with service add-ons"
-- Revenue opportunity stats
+## Dependencies
+- **Depends on:** Job Scheduling (for job context), Invoicing (for billing)
+- **Depended on by:** Reporting (for add-on revenue analytics)
 
-### Attached
-- Onboarding items: Create first add-on, set pricing
-- Add-on basics
+## Success Criteria
+- Add-ons can be created and managed
+- Upsell prompts appear at appropriate job stages
+- Add-on revenue is tracked separately
+- Bundles provide pricing discounts
 
-### Activated
-- Onboarding items: Configure upsell prompts, create bundles
-- Advanced add-on features
+## Functional Requirements
 
-### Engaged
-- Add-on performance analytics
-- Optimization strategies
+### FR1: Add-on Catalog
 
-## Data Dependencies
-- Reads: Service catalog, job data, pricing rules
-- Writes: Add-on definitions, upsell configurations
+#### User Story
+As a pro, I want to manage my add-on catalog so that I can offer consistent upsells.
 
-## Status
-Prototype - Add-on and upsell functionality.
+#### Acceptance Criteria
+| Field | Description |
+|-------|-------------|
+| Add-on name | Name of the additional service |
+| Description | What the add-on includes |
+| Price | Additional charge amount |
+| Category | Type of add-on (service, warranty, upgrade) |
+
+#### Related Prompts
+- `[Historical]` "Create add-on catalog management for upselling"
+
+### FR2: Stage Contexts
+
+#### User Story
+As an admin, I want stage-specific content so that pros receive appropriate guidance based on their add-on adoption.
+
+#### Acceptance Criteria
+| Stage | Content Focus |
+|-------|---------------|
+| Not Attached | Benefit messaging: "Increase revenue with service add-ons" |
+| Attached | Onboarding items: Create first add-on, set pricing |
+| Activated | Onboarding items: Configure upsell prompts, create bundles |
+| Engaged | Add-on performance analytics, optimization strategies |
+
+#### Related Prompts
+- `[Historical]` "Define stage contexts for add-ons feature"
+
+## Open Questions/Unknowns
+- Should add-ons have inventory tracking?
+- How should we handle add-on bundling rules?

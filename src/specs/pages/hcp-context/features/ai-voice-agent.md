@@ -1,36 +1,68 @@
 # AI Voice Agent Feature
 
-## Overview
-The AI Voice Agent (CSR AI) is an advanced feature that handles incoming calls using AI, booking appointments and answering customer questions automatically.
+## Problem
+Pros miss calls when busy on jobs, leading to lost leads and frustrated customers who can't reach anyone.
 
-## Key Features
+## Solution
+Provide an AI-powered voice agent (CSR AI) that handles incoming calls, books appointments, and answers customer questions automatically, ensuring no call goes unanswered.
+
+## Scope
+**Included:**
 - AI-powered call handling
 - Automatic appointment booking
 - Customer question answering
 - Call recording and transcription
 - Human handoff when needed
 
-## Stage Contexts
+**Excluded:**
+- Outbound calling
+- Multi-language support
+- Custom voice training
 
-### Not Attached
-- Benefit messaging: "Never miss a call with AI-powered answering"
-- ROI calculator for missed calls
+## Dependencies
+- **Depends on:** Job Scheduling (for booking), Online Booking (for availability), Customers (for customer lookup)
+- **Depended on by:** Reporting (for call analytics)
 
-### Attached
-- Onboarding items: Configure voice settings, set up business hours
-- Initial setup guides
+## Success Criteria
+- Calls are answered automatically
+- Appointments are booked correctly
+- Questions are answered accurately
+- Handoff to humans works when needed
 
-### Activated
-- Onboarding items: Customize AI responses, set booking rules
-- Advanced configuration
+## Functional Requirements
 
-### Engaged
-- Call analytics
-- AI performance optimization
+### FR1: Automated Call Handling
 
-## Data Dependencies
-- Reads: Business hours, service types, scheduling rules
-- Writes: Call records, bookings, transcriptions
+#### User Story
+As a pro, I want calls answered automatically so that I don't miss leads when busy.
 
-## Status
-In Development - Q2 2025 target release.
+#### Acceptance Criteria
+| Scenario | AI Behavior |
+|----------|-------------|
+| New customer | Capture info, offer booking |
+| Existing customer | Recognize, pull history |
+| Simple questions | Answer from knowledge base |
+| Complex issues | Transfer to human |
+
+#### Related Prompts
+- `[Historical]` "Create AI voice agent for automated call handling"
+
+### FR2: Stage Contexts
+
+#### User Story
+As an admin, I want stage-specific content so that pros receive appropriate guidance based on their AI voice agent adoption.
+
+#### Acceptance Criteria
+| Stage | Content Focus |
+|-------|---------------|
+| Not Attached | Benefit messaging: "Never miss a call with AI-powered answering" |
+| Attached | Onboarding items: Configure voice settings, set up business hours |
+| Activated | Onboarding items: Customize AI responses, set booking rules |
+| Engaged | Call analytics, AI performance optimization |
+
+#### Related Prompts
+- `[Historical]` "Define stage contexts for AI voice agent feature"
+
+## Open Questions/Unknowns
+- What's the escalation path when AI can't help?
+- How should we handle call quality issues?

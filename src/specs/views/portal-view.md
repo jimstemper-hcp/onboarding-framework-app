@@ -1,92 +1,98 @@
 # Portal View
 
-> **Status**: Prototype
-> **Category**: View
-> **Last Updated**: 2025-01-17
+## Problem
+Pros need a clear view of their onboarding progress, but without a personalized dashboard, they don't know what features are available or what to do next.
 
-## Overview
+## Solution
+Provide a pro-facing dashboard showing all available features with stage-specific content, quick actions, and progress tracking—all driven by data from @HCP Context Manager and Sample Pros Configurations.
 
-The Portal View is the pro-facing onboarding dashboard that shows a professional their personalized onboarding journey. It displays features relevant to their plan and goal, with stage-specific content based on their adoption progress.
+## Scope
+**Included:**
+- Feature cards with adoption stage indicators
+- Stage-specific content per feature
+- Progress tracking visuals
+- Quick actions and call scheduling
 
-## Purpose
-
-Home service professionals need a clear view of their onboarding progress and what features are available to them. The Portal View provides a personalized dashboard that helps pros understand what they can do, what they should do next, and how to get help.
-
-## Key Features
-
-- **Feature Cards**: Display all features with adoption stage indicators
-- **Stage-Specific Content**: Show relevant context, tasks, and resources for current stage
-- **Progress Tracking**: Visual indicators of onboarding completion
-- **Quick Actions**: Easy access to next steps and scheduling calls
-
-## User Stories
-
-- As a pro, I want to see my onboarding progress so that I know what I've completed and what's next
-- As a pro, I want to see features relevant to my plan so that I don't see features I can't use
-- As a pro, I want to schedule a help call so that I can get support when stuck
-
-## Data Model
-
-```typescript
-// Key types
-interface ProAccount {
-  id: string;
-  companyName: string;
-  ownerName: string;
-  businessType: BusinessType;
-  plan: PlanTier;
-  goal: ProGoal;
-  featureStatus: Record<FeatureId, FeatureStatus>;
-}
-
-interface FeatureStatus {
-  stage: AdoptionStage;
-  completedTasks: string[];
-  usageCount: number;
-}
-```
+**Excluded:**
+- Content editing
+- Rep-facing features
+- Account settings
 
 ## Dependencies
+- **Depends on:** OnboardingContext (for feature data), Sample Pros Configurations (for pro account and progress)
+- **Depended on by:** None (end-user interface)
 
-- **OnboardingContext**: Gets current pro and feature data
-- **Feature definitions**: Uses stage contexts from feature definitions
+## Success Criteria
+- All available features are displayed
+- Current adoption stage is visible per feature
+- Stage-specific content guides next actions
+- Calls can be scheduled from the portal
 
-## UI/UX Specifications
+## Functional Requirements
 
-### Layout
-- Header with pro info and selection
-- Grid of feature cards
-- Each card shows feature icon, name, status, and relevant actions
+### FR1: Feature Cards
 
-### Interactions
-- Click feature card to expand details
-- Complete tasks via checkboxes
-- Schedule calls via Calendly links
+#### User Story
+As a pro, I want to see all features so that I know what's available to me.
 
-### States
-- **Loading**: Skeleton cards while loading
-- **No Pro Selected**: Prompt to select a pro account
-- **Feature Locked**: Grayed out card for unavailable features
+#### Acceptance Criteria
+| Card Element | Content |
+|--------------|---------|
+| Icon | Feature visual identifier |
+| Name | Feature title |
+| Status | Current adoption stage |
+| Actions | Context-appropriate next steps |
 
-## Implementation Notes
+#### Related Prompts
+- `[Historical]` "Create feature cards for pro portal"
 
-- Located at `/src/views/portal/PortalView.tsx`
-- Uses the pro selector in the header
-- Feature cards adapt content based on adoption stage
-- Simulated pro accounts for demo purposes
+### FR2: Stage-Specific Content
 
-## Future Enhancements
+#### User Story
+As a pro, I want content relevant to my stage so that I'm not overwhelmed with advanced features.
 
-- [ ] Add feature search/filter
-- [ ] Add gamification elements (achievements, streaks)
-- [ ] Add personalized recommendations
-- [ ] Add progress charts/graphs
+#### Acceptance Criteria
+| Stage | Card Displays |
+|-------|---------------|
+| Not Attached | Benefit messaging, discovery prompts |
+| Attached | Setup tasks, quick start guides |
+| Activated | Optimization tips, advanced features |
+| Engaged | Best practices, analytics links |
 
-## Open Questions
+#### Related Prompts
+- `[Historical]` "Show stage-specific content in portal cards"
 
+### FR3: Progress Tracking
+
+#### User Story
+As a pro, I want to see my progress so that I stay motivated.
+
+#### Acceptance Criteria
+| Indicator | Displays |
+|-----------|----------|
+| Stage badge | Current adoption stage |
+| Task count | X of Y tasks complete |
+| Progress bar | Visual completion percentage |
+
+#### Related Prompts
+- `[Historical]` "Add progress indicators to feature cards"
+
+### FR4: Backend Data Source
+
+#### User Story
+As a pro, I want consistent information so that my progress is accurately reflected.
+
+#### Acceptance Criteria
+| Data | Source |
+|------|--------|
+| Features | @HCP Context Manager Features Tab |
+| Stage content | @HCP Context Manager Features Tab |
+| Pro progress | Sample Pros Configurations |
+| Calendly links | @HCP Context Manager Calls Tab |
+
+#### Related Prompts
+- `[Historical]` "Pull portal data from centralized backend"
+
+## Open Questions/Unknowns
 - How should we handle features across multiple plan tiers?
-- Should we show all features or filter by relevance?
-
----
-
-*LLM INSTRUCTIONS: This is the primary pro-facing view. Changes should focus on clarity and actionability. Pro experience is the top priority.*
+- Should we add gamification elements?

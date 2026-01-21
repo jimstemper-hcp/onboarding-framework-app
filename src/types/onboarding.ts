@@ -327,7 +327,7 @@ export interface AccessCondition {
 }
 
 export interface AccessConditionRule {
-  operator: 'AND' | 'OR';
+  operator: 'AND' | 'OR' | 'NONE';
   conditions: AccessCondition[];
 }
 

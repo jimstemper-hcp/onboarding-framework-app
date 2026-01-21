@@ -102,6 +102,13 @@ const stageConfig: Record<StageKey, { label: string; color: string }> = {
 
 const stageKeys: StageKey[] = ['notAttached', 'attached', 'activated', 'engaged'];
 
+const stageCompletionDescriptions: Record<StageKey, string> = {
+  notAttached: 'What feature access does the Pro need to be able to complete the core functionality of this feature?',
+  attached: "To be considered 'Attached' the Pro must complete all onboarding items for this stage",
+  activated: "To be considered 'Activated' the Pro must complete all onboarding items for this stage",
+  engaged: 'At this time we consider all pros engaged who have completed all onboarding items. In the future we hope to expand on the transition from Activated to Engaged and include some weekly goal for engaged.',
+};
+
 type AdminPage = 'features' | 'navigation' | 'calls' | 'onboarding-items' | 'tools';
 
 const navigationTypes: { value: NavigationType; label: string; description: string }[] = [
@@ -274,17 +281,20 @@ function ContextSnippetsEditor({
 }
 
 // =============================================================================
-// ACCESS CONDITIONS EDITOR
+// STAGE COMPLETION LOGIC EDITOR
 // =============================================================================
 
-function AccessConditionsEditor({
+function StageCompletionLogicEditor({
+  stageName,
   rule,
   onChange,
 }: {
+  stageName: StageKey;
   rule: AccessConditionRule;
   onChange: (rule: AccessConditionRule) => void;
 }) {
   const [newVariable, setNewVariable] = useState('');
+  const isNotAttached = stageName === 'notAttached';
 
   const handleAddCondition = () => {
     if (newVariable.trim()) {
@@ -309,17 +319,34 @@ function AccessConditionsEditor({
     onChange({ ...rule, conditions: updated });
   };
 
-  const handleOperatorChange = (_: React.MouseEvent<HTMLElement>, newOperator: 'AND' | 'OR' | null) => {
+  const handleOperatorChange = (_: React.MouseEvent<HTMLElement>, newOperator: 'AND' | 'OR' | 'NONE' | null) => {
     if (newOperator) {
       onChange({ ...rule, operator: newOperator });
     }
   };
 
+  // For non-notAttached stages, just show the description
+  if (!isNotAttached) {
+    return (
+      <Box>
+        <SectionHeader icon={<FlagRoundedIcon />} title="Stage Completion Logic" />
+        <Typography variant="body2" color="text.secondary">
+          {stageCompletionDescriptions[stageName]}
+        </Typography>
+      </Box>
+    );
+  }
+
+  // For notAttached stage, show full editor
   return (
     <Box>
-      <SectionHeader icon={<FlagRoundedIcon />} title="Access Conditions" count={rule.conditions.length} />
+      <SectionHeader
+        icon={<FlagRoundedIcon />}
+        title="Stage Completion Logic"
+        count={rule.operator === 'NONE' ? undefined : rule.conditions.length}
+      />
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Feature access controller variables that determine when a pro is in this stage.
+        {stageCompletionDescriptions[stageName]}
       </Typography>
 
       <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
@@ -327,67 +354,84 @@ function AccessConditionsEditor({
         <ToggleButtonGroup value={rule.operator} exclusive onChange={handleOperatorChange} size="small">
           <ToggleButton value="AND" sx={{ px: 2 }}>ALL (AND)</ToggleButton>
           <ToggleButton value="OR" sx={{ px: 2 }}>ANY (OR)</ToggleButton>
+          <ToggleButton value="NONE" sx={{ px: 2 }}>NONE</ToggleButton>
         </ToggleButtonGroup>
       </Stack>
 
-      <Box sx={{ mb: 2 }}>
-        {rule.conditions.map((condition, index) => (
-          <Paper
-            key={index}
-            variant="outlined"
-            sx={{
-              p: 1.5,
-              mb: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              bgcolor: alpha(palette.grey[600], 0.02),
-            }}
-          >
-            <Stack direction="row" alignItems="center" spacing={1.5}>
-              <Chip
-                label={condition.negated ? 'NOT' : 'HAS'}
-                size="small"
-                onClick={() => handleToggleNegated(index)}
+      {rule.operator === 'NONE' ? (
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 2,
+            bgcolor: alpha(palette.grey[600], 0.02),
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            All pros have access to this feature
+          </Typography>
+        </Paper>
+      ) : (
+        <>
+          <Box sx={{ mb: 2 }}>
+            {rule.conditions.map((condition, index) => (
+              <Paper
+                key={index}
+                variant="outlined"
                 sx={{
-                  bgcolor: condition.negated ? alpha(palette.error, 0.1) : alpha(palette.success, 0.1),
-                  color: condition.negated ? palette.error : palette.success,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              />
-              <Typography
-                variant="body2"
-                sx={{
-                  fontFamily: 'monospace',
-                  bgcolor: alpha(palette.primary, 0.08),
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 1,
+                  p: 1.5,
+                  mb: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  bgcolor: alpha(palette.grey[600], 0.02),
                 }}
               >
-                {condition.variable}
-              </Typography>
-            </Stack>
-            <IconButton size="small" onClick={() => handleRemoveCondition(index)}>
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Paper>
-        ))}
-      </Box>
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                  <Chip
+                    label={condition.negated ? 'NOT' : 'HAS'}
+                    size="small"
+                    onClick={() => handleToggleNegated(index)}
+                    sx={{
+                      bgcolor: condition.negated ? alpha(palette.error, 0.1) : alpha(palette.success, 0.1),
+                      color: condition.negated ? palette.error : palette.success,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  />
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontFamily: 'monospace',
+                      bgcolor: alpha(palette.primary, 0.08),
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                    }}
+                  >
+                    {condition.variable}
+                  </Typography>
+                </Stack>
+                <IconButton size="small" onClick={() => handleRemoveCondition(index)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Paper>
+            ))}
+          </Box>
 
-      <Stack direction="row" spacing={1}>
-        <TextField
-          size="small"
-          fullWidth
-          placeholder="e.g., billing.plan.invoicing"
-          value={newVariable}
-          onChange={(e) => setNewVariable(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleAddCondition()}
-          inputProps={{ style: { fontFamily: 'monospace' } }}
-        />
-        <Button variant="outlined" size="small" onClick={handleAddCondition}>Add</Button>
-      </Stack>
+          <Stack direction="row" spacing={1}>
+            <TextField
+              size="small"
+              fullWidth
+              placeholder="e.g., billing.plan.invoicing"
+              value={newVariable}
+              onChange={(e) => setNewVariable(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddCondition()}
+              inputProps={{ style: { fontFamily: 'monospace' } }}
+            />
+            <Button variant="outlined" size="small" onClick={handleAddCondition}>Add</Button>
+          </Stack>
+        </>
+      )}
     </Box>
   );
 }
@@ -566,9 +610,10 @@ function SimplifiedStageEditor({
 
   return (
     <Stack spacing={3}>
-      {/* Access Conditions */}
+      {/* Stage Completion Logic */}
       <Paper sx={{ p: 3 }}>
-        <AccessConditionsEditor
+        <StageCompletionLogicEditor
+          stageName={stageName}
           rule={context.accessConditions}
           onChange={(accessConditions) => updateContext({ accessConditions })}
         />

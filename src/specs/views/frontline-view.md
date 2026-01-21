@@ -1,89 +1,98 @@
 # Frontline View
 
-> **Status**: Prototype
-> **Category**: View
-> **Last Updated**: 2025-01-17
+## Problem
+Customer success reps need tools to efficiently manage multiple pro accounts, but current tools don't provide stage-specific context or integrated task management.
 
-## Overview
+## Solution
+Provide a rep-facing interface with pro list and detail views, showing feature adoption status, rep-facing tasks, and stage-specific talking points—all pulling data from @HCP Context Manager and Sample Pros Configurations.
 
-The Frontline View is the rep-facing interface for managing pro onboarding. It allows customer success and onboarding reps to view pro accounts, track onboarding progress, and take actions to help pros succeed.
+## Scope
+**Included:**
+- Pro account list with status indicators
+- Pro detail view with feature status
+- Rep-facing task completion
+- Stage-specific context cards
 
-## Purpose
-
-Customer-facing reps need tools to efficiently manage multiple pro accounts and guide them through onboarding. The Frontline View provides a workspace for reps to see pro status, complete rep-facing tasks, and access stage-specific context.
-
-## Key Features
-
-- **Pro List**: View all assigned pro accounts
-- **Pro Detail**: Deep dive into individual pro progress
-- **Rep Tasks**: Complete rep-facing onboarding items
-- **Context Cards**: See stage-specific talking points and resources
-
-## User Stories
-
-- As a rep, I want to see all my assigned pros so that I can prioritize my outreach
-- As a rep, I want to see what stage each pro is in so that I can provide relevant guidance
-- As a rep, I want to complete rep-facing tasks so that I can track my work
-
-## Data Model
-
-```typescript
-// Key types
-interface ProAccount {
-  id: string;
-  companyName: string;
-  ownerName: string;
-  featureStatus: Record<FeatureId, FeatureStatus>;
-}
-
-interface OnboardingItemAssignment {
-  itemId: string;
-  required: boolean;
-  stageSpecificNote?: string;
-}
-```
+**Excluded:**
+- Pro account creation
+- Content editing
+- Performance analytics
 
 ## Dependencies
+- **Depends on:** OnboardingContext (for feature data), Onboarding Items (for rep tasks), Sample Pros Configurations (for pro accounts)
+- **Depended on by:** None (end-user interface)
 
-- **OnboardingContext**: Gets pro list and feature data
-- **Onboarding Items**: Uses centralized item definitions
+## Success Criteria
+- Reps can see all assigned pros at a glance
+- Feature adoption stages are visible for each pro
+- Rep-facing tasks can be completed with one click
+- Stage context provides relevant talking points
 
-## UI/UX Specifications
+## Functional Requirements
 
-### Layout
-- Split view: Pro list on left, detail on right
-- Pro list shows status indicators and key metrics
-- Detail view shows all features and their stage contexts
+### FR1: Pro List
 
-### Interactions
-- Click pro to view details
-- Check off rep-facing tasks
-- Quick actions for common operations
+#### User Story
+As a rep, I want to see all my assigned pros so that I can prioritize my outreach.
 
-### States
-- **Loading**: Skeleton list while loading
-- **No Pros**: Empty state with explanation
-- **Pro Selected**: Full detail view
+#### Acceptance Criteria
+| Column | Content |
+|--------|---------|
+| Company | Pro's company name |
+| Owner | Pro owner name |
+| Status | Overall adoption status |
+| Actions | Quick access to common tasks |
 
-## Implementation Notes
+#### Related Prompts
+- `[Historical]` "Create pro list view for rep workspace"
 
-- Located at `/src/views/frontline/FrontlineView.tsx`
-- Designed for rep efficiency
-- Shows rep-facing onboarding items prominently
+### FR2: Pro Detail View
 
-## Future Enhancements
+#### User Story
+As a rep, I want to see detailed pro information so that I can provide relevant guidance.
 
-- [ ] Add pro filtering and sorting
-- [ ] Add bulk actions
-- [ ] Add activity history
-- [ ] Add notes/comments per pro
-- [ ] Add rep performance metrics
+#### Acceptance Criteria
+| Section | Content |
+|---------|---------|
+| Pro info | Company, owner, contact |
+| Feature status | All features with adoption stages |
+| Rep tasks | Outstanding rep-facing items |
+| Context | Stage-specific talking points |
 
-## Open Questions
+#### Related Prompts
+- `[Historical]` "Show feature status and context in pro detail"
 
+### FR3: Rep Task Completion
+
+#### User Story
+As a rep, I want to complete rep-facing tasks so that I can track my work.
+
+#### Acceptance Criteria
+| Action | Behavior |
+|--------|----------|
+| Check task | Mark as complete, update pro status |
+| View instructions | See rep instructions for task |
+| Undo completion | Revert if marked by mistake |
+
+#### Related Prompts
+- `[Historical]` "Enable rep-facing task completion"
+
+### FR4: Backend Data Source
+
+#### User Story
+As a rep, I want consistent data so that information matches what pros see.
+
+#### Acceptance Criteria
+| Data | Source |
+|------|--------|
+| Features | @HCP Context Manager Features Tab |
+| Items | @HCP Context Manager Onboarding Items Tab |
+| Pro accounts | Sample Pros Configurations |
+| Stage contexts | @HCP Context Manager Features Tab |
+
+#### Related Prompts
+- `[Historical]` "Pull rep-facing data from centralized backend"
+
+## Open Questions/Unknowns
 - How should we handle team-based pro assignments?
 - Should we integrate with external CRM?
-
----
-
-*LLM INSTRUCTIONS: This view is optimized for rep efficiency. Focus on quick access to information and minimal clicks to complete tasks.*

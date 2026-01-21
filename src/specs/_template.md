@@ -1,73 +1,34 @@
-# [Element Name]
+# [Page/Feature Name]
 
-> **Status**: [Shipped | In Development | Planned | Proposed | Prototype]
-> **Category**: [View | Page | Modal | Component | Feature]
-> **Last Updated**: YYYY-MM-DD
+## Problem
+[What problem does this page/feature solve?]
 
-## Overview
+## Solution
+[How does this page/feature solve the problem?]
 
-[Brief description of what this element does and why it exists. 2-3 sentences.]
-
-## Purpose
-
-[Why does this element exist? What problem does it solve? What user need does it address?]
-
-## Key Features
-
-- Feature 1: [Brief description]
-- Feature 2: [Brief description]
-- Feature 3: [Brief description]
-
-## User Stories
-
-- As a [user type], I want to [action] so that [benefit]
-- As a [user type], I want to [action] so that [benefit]
-
-## Data Model
-
-[What data does this element work with? Reference types from /src/types/]
-
-```typescript
-// Key types used by this element
-interface Example {
-  id: string;
-  name: string;
-}
-```
+## Scope
+[What is included/excluded in this page/feature?]
 
 ## Dependencies
+[What does this depend on? What depends on this?]
 
-- [Element ID]: [How it depends on this]
-- [Element ID]: [How it depends on this]
+## Success Criteria
+[How do we know this is working correctly?]
 
-## UI/UX Specifications
+## Functional Requirements
 
-### Layout
-[Describe the visual layout, key sections, responsive behavior]
+### FR1: [Requirement Name]
 
-### Interactions
-[Describe key interactions, click behavior, state changes]
+#### User Story
+As a [user type], I want to [action] so that [benefit].
 
-### States
-- **Loading**: [What is shown while loading]
-- **Empty**: [What is shown when no data]
-- **Error**: [How errors are displayed]
+#### Acceptance Criteria
+| Condition | Expected Behavior |
+|-----------|-------------------|
+| ... | ... |
 
-## Implementation Notes
+#### Related Prompts
+- "[verbatim prompt from conversation]"
 
-[Technical notes for implementers. Patterns to follow, gotchas to avoid.]
-
-## Future Enhancements
-
-- [ ] Enhancement 1
-- [ ] Enhancement 2
-- [ ] Enhancement 3
-
-## Open Questions
-
+## Open Questions/Unknowns
 - Question 1?
-- Question 2?
-
----
-
-*LLM INSTRUCTIONS: When modifying this element, update this spec document to reflect changes. Keep the spec in sync with the implementation.*
