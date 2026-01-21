@@ -80,6 +80,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   // The "logged in" pro for the Portal view - defaults to first pro
   const [activeProId, setActiveProId] = useState<string>(initialPros[0]?.id ?? '');
 
+  // Chat integration - pending prompt to send when chat view opens
+  const [pendingChatPrompt, setPendingChatPrompt] = useState<string | null>(null);
+
   // ---------------------------------------------------------------------------
   // NAVIGATION ACTIONS
   // ---------------------------------------------------------------------------
@@ -90,6 +93,15 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
   const selectFeature = useCallback((featureId: FeatureId | null) => {
     setSelectedFeatureId(featureId);
+  }, []);
+
+  const openChatWithPrompt = useCallback((prompt: string) => {
+    setPendingChatPrompt(prompt);
+    setCurrentView('chat');
+  }, []);
+
+  const clearPendingChatPrompt = useCallback(() => {
+    setPendingChatPrompt(null);
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -347,12 +359,15 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       selectedProId,
       selectedFeatureId,
       activeProId,
+      pendingChatPrompt,
 
       // Navigation
       setCurrentView,
       selectPro,
       selectFeature,
       setActivePro: setActiveProId,
+      openChatWithPrompt,
+      clearPendingChatPrompt,
 
       // Pro progress mutations
       completeTask,
@@ -385,8 +400,11 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       selectedProId,
       selectedFeatureId,
       activeProId,
+      pendingChatPrompt,
       selectPro,
       selectFeature,
+      openChatWithPrompt,
+      clearPendingChatPrompt,
       completeTask,
       uncompleteTask,
       setFeatureStage,

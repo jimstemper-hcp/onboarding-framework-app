@@ -5,7 +5,7 @@
 // Handles the overall layout and error display.
 // =============================================================================
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Paper, Alert, Button, AlertTitle } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { ChatHeader } from './ChatHeader';
@@ -15,10 +15,19 @@ import { ApiKeyModal } from './ApiKeyModal';
 import { useChat } from '../hooks/useChat';
 
 // -----------------------------------------------------------------------------
+// TYPES
+// -----------------------------------------------------------------------------
+
+interface ChatContainerProps {
+  initialPrompt?: string | null;
+  onPromptConsumed?: () => void;
+}
+
+// -----------------------------------------------------------------------------
 // COMPONENT
 // -----------------------------------------------------------------------------
 
-export function ChatContainer() {
+export function ChatContainer({ initialPrompt, onPromptConsumed }: ChatContainerProps) {
   const {
     messages,
     isLoading,
@@ -49,6 +58,25 @@ export function ChatContainer() {
     },
     [sendMessage]
   );
+
+  // Track if we've already sent the initial prompt to prevent duplicate sends
+  const initialPromptSentRef = useRef(false);
+
+  // Auto-send initial prompt when provided
+  useEffect(() => {
+    if (initialPrompt && !isLoading && !initialPromptSentRef.current) {
+      initialPromptSentRef.current = true;
+      sendMessage(initialPrompt);
+      onPromptConsumed?.();
+    }
+  }, [initialPrompt, isLoading, sendMessage, onPromptConsumed]);
+
+  // Reset the ref when initialPrompt changes to null
+  useEffect(() => {
+    if (!initialPrompt) {
+      initialPromptSentRef.current = false;
+    }
+  }, [initialPrompt]);
 
   // In demo mode, we can use mock responses without an API key
   // In planning mode, we need an API key

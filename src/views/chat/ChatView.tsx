@@ -3,9 +3,11 @@ import { Box, Typography } from '@mui/material';
 import ChatIcon from '@mui/icons-material/Chat';
 import { PlanningWrapper, PlanningInfoButton, usePlanningMode } from '../../planning';
 import { ChatContainer } from '../../chat';
+import { useOnboarding } from '../../context';
 
 export function ChatView() {
   const { setCurrentPage, isPlanningMode } = usePlanningMode();
+  const { pendingChatPrompt, clearPendingChatPrompt } = useOnboarding();
 
   // Report current page to planning context
   useEffect(() => {
@@ -40,7 +42,10 @@ export function ChatView() {
         </Box>
 
         {/* Chat Container - fills remaining space */}
-        <ChatContainer />
+        <ChatContainer
+          initialPrompt={pendingChatPrompt}
+          onPromptConsumed={clearPendingChatPrompt}
+        />
       </Box>
     </PlanningWrapper>
   );

@@ -660,6 +660,9 @@ export interface OnboardingContextState {
 
   // For Portal view - which pro is "logged in"
   activeProId: string;
+
+  // Chat integration - pending prompt to send when chat view opens
+  pendingChatPrompt: string | null;
 }
 
 export interface OnboardingContextActions {
@@ -670,6 +673,10 @@ export interface OnboardingContextActions {
   selectPro: (proId: string | null) => void;
   selectFeature: (featureId: FeatureId | null) => void;
   setActivePro: (proId: string) => void;
+
+  // Chat integration
+  openChatWithPrompt: (prompt: string) => void;
+  clearPendingChatPrompt: () => void;
 
   // Pro progress mutations
   completeTask: (proId: string, featureId: FeatureId, taskId: string) => void;
