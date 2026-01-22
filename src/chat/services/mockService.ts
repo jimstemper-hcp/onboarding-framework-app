@@ -7,7 +7,7 @@
 // =============================================================================
 
 import type { Feature, ProAccount, FeatureId, AdoptionStage, StageContext } from '../../types';
-import type { FileAttachment, DebugConversationState, DebugFeatureInfo, DebugToolCall } from '../types';
+import type { FileAttachment, DebugConversationState, DebugFeatureInfo, DebugToolCall, DebugStageContext } from '../types';
 
 // -----------------------------------------------------------------------------
 // TYPES
@@ -84,6 +84,7 @@ export interface MockResponseResult {
     conversationState: DebugConversationState;
     detectedFeature?: DebugFeatureInfo;
     toolCalls?: DebugToolCall[];
+    stageContext?: DebugStageContext;
   };
 }
 
@@ -112,6 +113,9 @@ export function getConversationState(): ConversationState {
  * Keywords that map to each feature for detection.
  */
 const featureKeywords: Partial<Record<FeatureId, string[]>> = {
+  'customers': ['customer', 'customers', 'client', 'clients', 'contact', 'add customer', 'new customer', 'customer database'],
+  'jobs': ['job', 'jobs', 'work order', 'service call', 'create job', 'schedule job', 'complete job'],
+  'employees': ['employee', 'employees', 'team', 'technician', 'staff', 'worker', 'dispatch', 'assign'],
   'invoicing': ['invoice', 'invoicing', 'bill', 'billing', 'get paid', 'send invoice', 'payment reminder'],
   'payments': ['payment', 'credit card', 'card payment', 'online payment', 'accept payment', 'pay online', 'card on file'],
   'automated-comms': ['automated', 'auto', 'text', 'sms', 'email', 'reminder', 'on my way', 'communication', 'message', 'notify'],
@@ -210,6 +214,40 @@ const sampleDataGenerators: Partial<Record<FeatureId, () => {
   job?: Record<string, unknown>;
   lineItems?: Array<Record<string, unknown>>;
 }>> = {
+  'customers': () => ({
+    customer: {
+      name: 'Jane Smith',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      email: 'jane.smith@example.com',
+      phone: '(555) 123-4567',
+      address: '123 Main St, Springfield, IL 62701',
+      street: '123 Main St',
+      city: 'Springfield',
+      state: 'IL',
+      zip: '62701',
+    },
+  }),
+  'jobs': () => ({
+    customer: {
+      name: 'Jane Smith',
+      firstName: 'Jane',
+      lastName: 'Smith',
+      email: 'jane.smith@example.com',
+      phone: '(555) 123-4567',
+      address: '123 Main St, Springfield, IL 62701',
+    },
+    job: {
+      description: 'Home Service - General Maintenance',
+      scheduledDate: 'Today',
+      scheduledTime: '10:00 AM',
+      status: 'Scheduled',
+      estimatedDuration: '2 hours',
+    },
+    lineItems: [
+      { service: 'General Maintenance', quantity: 1, price: 150.00 },
+    ],
+  }),
   'invoicing': () => ({
     customer: {
       name: 'Jane Smith',
@@ -1547,7 +1585,8 @@ export async function generateMockResponse(
 
   // Track detected feature for debug context
   let detectedFeatureInfo: DebugFeatureInfo | undefined;
-  let toolCalls: DebugToolCall[] = [];
+  let detectedStageContext: DebugStageContext | undefined;
+  const toolCalls: DebugToolCall[] = [];
 
   // Helper to build result with debug context
   const buildResult = (content: string): MockResponseResult => ({
@@ -1561,6 +1600,7 @@ export async function generateMockResponse(
       },
       detectedFeature: detectedFeatureInfo,
       toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+      stageContext: detectedStageContext,
     },
   });
 
@@ -1642,6 +1682,35 @@ export async function generateMockResponse(
       completedTasks: status?.completedTasks.length || 0,
       usageCount: status?.usageCount || 0,
     };
+
+    // Capture stage context for debug context
+    if (detectedFeature.stageContext) {
+      const sc = detectedFeature.stageContext;
+      detectedStageContext = {
+        onboardingItems: sc.onboardingItems?.map(item => ({
+          id: item.itemId,
+          title: item.itemId, // Just use itemId as title since we don't have displayTitle here
+          completed: status?.completedTasks.includes(item.itemId) || false,
+        })),
+        navigation: sc.navigation?.map(nav => ({
+          name: nav.name,
+          url: nav.url,
+          navigationType: nav.navigationType,
+        })),
+        contextSnippets: sc.contextSnippets?.map(snippet => ({
+          id: snippet.id,
+          title: snippet.title,
+          content: snippet.content,
+        })),
+        calendlyLinks: sc.calendlyTypes?.map(link => ({
+          id: link.slugId || link.name,
+          label: link.name,
+          url: link.url,
+        })),
+        tools: sc.tools?.map(t => t.name),
+      };
+    }
+
     return buildResult(generateFeatureResponse(detectedFeature, message, context));
   }
 

@@ -224,6 +224,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
             model: 'mock',
             isMockMode: true,
           },
+          stageContext: mockResult.debugContext.stageContext,
         };
       } else if (!apiKeyConfig.hasKey) {
         // No API key and not in demo mode (or no active pro)

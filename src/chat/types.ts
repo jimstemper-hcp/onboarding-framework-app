@@ -236,6 +236,53 @@ export interface DebugApiDetails {
 }
 
 /**
+ * Onboarding item for debug context.
+ */
+export interface DebugOnboardingItem {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+/**
+ * Navigation link for debug context.
+ */
+export interface DebugNavigation {
+  name: string;
+  url: string;
+  navigationType: string;
+}
+
+/**
+ * Context snippet for debug context.
+ */
+export interface DebugContextSnippet {
+  id: string;
+  title: string;
+  content: string;
+}
+
+/**
+ * Calendly link for debug context.
+ */
+export interface DebugCalendlyLink {
+  id: string;
+  label: string;
+  url: string;
+}
+
+/**
+ * Stage context data for debug context.
+ */
+export interface DebugStageContext {
+  onboardingItems?: DebugOnboardingItem[];
+  navigation?: DebugNavigation[];
+  contextSnippets?: DebugContextSnippet[];
+  calendlyLinks?: DebugCalendlyLink[];
+  tools?: string[];
+}
+
+/**
  * Complete debug context attached to assistant messages.
  * Shows the @HCP Context Manager information used to generate the response.
  */
@@ -247,4 +294,5 @@ export interface MessageDebugContext {
   toolCalls?: DebugToolCall[];
   timing?: DebugTiming;
   apiDetails?: DebugApiDetails;
+  stageContext?: DebugStageContext;
 }

@@ -11,7 +11,6 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { DebugContextDropdown } from './DebugContextDropdown';
-import { usePlanningMode } from '../../planning/context/PlanningContext';
 import type { ChatMessage, FileAttachment } from '../types';
 
 // -----------------------------------------------------------------------------
@@ -119,11 +118,10 @@ function AttachmentDisplay({ attachments, isUser }: AttachmentDisplayProps) {
 // -----------------------------------------------------------------------------
 
 export function MessageBubble({ message }: MessageBubbleProps) {
-  const { isPlanningMode } = usePlanningMode();
   const isUser = message.role === 'user';
   const isAssistant = message.role === 'assistant';
   const hasAttachments = message.attachments && message.attachments.length > 0;
-  const showDebugContext = isPlanningMode && isAssistant && message.debugContext;
+  const showDebugContext = isAssistant && message.debugContext;
 
   return (
     <Box
@@ -182,7 +180,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           )
         )}
 
-        {/* Debug Context Dropdown - only shown in Planning Mode for assistant messages */}
+        {/* Debug Context Dropdown - shown for assistant messages with debug context */}
         {showDebugContext && (
           <DebugContextDropdown debugContext={message.debugContext!} />
         )}
