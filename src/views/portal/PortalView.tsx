@@ -97,12 +97,10 @@ function FeatureIcon({ iconName, ...props }: { iconName: string } & Record<strin
 function FeatureCard({
   feature,
   isCompleted,
-  isOptedOut,
   onClick,
 }: {
   feature: Feature;
   isCompleted: boolean;
-  isOptedOut: boolean;
   onClick: () => void;
 }) {
   return (
@@ -152,22 +150,9 @@ function FeatureCard({
 
           {/* Time + Arrow */}
           <Stack direction="row" spacing={1} alignItems="center">
-            {isOptedOut ? (
-              <Chip
-                label="Opted out"
-                size="small"
-                sx={{
-                  height: 24,
-                  fontSize: '0.7rem',
-                  bgcolor: alpha(palette.slate, 0.1),
-                  color: palette.text.muted,
-                }}
-              />
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                1-3 mins
-              </Typography>
-            )}
+            <Typography variant="body2" color="text.secondary">
+              1-3 mins
+            </Typography>
             <ChevronRightIcon sx={{ color: palette.text.muted }} />
           </Stack>
         </Stack>
@@ -670,15 +655,9 @@ export function PortalView() {
               <Typography variant="body2" color="text.secondary">
                 Progress {completedCount} of {totalCount}
               </Typography>
-              <Stack direction="row" spacing={2}>
-                <Stack direction="row" spacing={0.5} alignItems="center">
-                  <CheckCircleIcon sx={{ fontSize: 16, color: palette.success }} />
-                  <Typography variant="caption">Completed</Typography>
-                </Stack>
-                <Stack direction="row" spacing={0.5} alignItems="center">
-                  <CheckCircleOutlinedIcon sx={{ fontSize: 16, color: palette.text.muted }} />
-                  <Typography variant="caption">Opted out</Typography>
-                </Stack>
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <CheckCircleIcon sx={{ fontSize: 16, color: palette.success }} />
+                <Typography variant="caption">Completed</Typography>
               </Stack>
             </Stack>
           </Box>
@@ -687,15 +666,12 @@ export function PortalView() {
           {journeyFeatures.map((feature) => {
             const status = activePro.featureStatus[feature.id];
             const isCompleted = status && (status.stage === 'activated' || status.stage === 'engaged');
-            // Consider "not interested" stages as opted out (stage exists but no engagement)
-            const isOptedOut = status && status.stage === 'attached' && status.completedTasks.length === 0;
 
             return (
               <FeatureCard
                 key={feature.id}
                 feature={feature}
                 isCompleted={isCompleted}
-                isOptedOut={isOptedOut}
                 onClick={() => openChatWithPrompt(`How do I get started with ${feature.name}?`)}
               />
             );

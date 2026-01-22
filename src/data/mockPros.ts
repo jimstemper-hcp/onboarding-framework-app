@@ -118,8 +118,13 @@ export const mockPros: ProAccount[] = [
         completedTasks: ['invoicing-create-customer'],
         usageCount: 0,
       },
-      // Payments: Not attached (needs to upgrade or add-on)
-      payments: createStatus('not_attached'),
+      // Payments: Attached
+      payments: {
+        stage: 'attached',
+        attachedAt: '2024-01-10',
+        completedTasks: [],
+        usageCount: 0,
+      },
       // Scheduling: Engaged - uses it daily
       scheduling: {
         stage: 'engaged',
@@ -151,8 +156,38 @@ export const mockPros: ProAccount[] = [
       },
       // CSR AI: Not attached
       'csr-ai': createStatus('not_attached'),
-      // Reviews: Not attached
-      reviews: createStatus('not_attached'),
+      // Reviews: Attached
+      reviews: {
+        stage: 'attached',
+        attachedAt: '2024-01-10',
+        completedTasks: [],
+        usageCount: 0,
+      },
+      // Core features: Attached
+      'business-setup': {
+        stage: 'attached',
+        attachedAt: '2024-01-10',
+        completedTasks: [],
+        usageCount: 0,
+      },
+      employees: {
+        stage: 'attached',
+        attachedAt: '2024-01-10',
+        completedTasks: [],
+        usageCount: 0,
+      },
+      customers: {
+        stage: 'attached',
+        attachedAt: '2024-01-10',
+        completedTasks: [],
+        usageCount: 0,
+      },
+      jobs: {
+        stage: 'attached',
+        attachedAt: '2024-01-10',
+        completedTasks: [],
+        usageCount: 0,
+      },
     }),
   },
 

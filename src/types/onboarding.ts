@@ -704,6 +704,13 @@ export interface OnboardingContextActions {
   updateFeature: (feature: Feature) => void;
   resetFeatures: () => void;
 
+  // Onboarding item mutations (for Admin view)
+  onboardingItemsList: OnboardingItemDefinition[];
+  updateOnboardingItem: (item: OnboardingItemDefinition) => void;
+  addOnboardingItem: (item: OnboardingItemDefinition) => void;
+  deleteOnboardingItem: (itemId: string) => void;
+  resetOnboardingItems: () => void;
+
   // Derived data helpers
   getFeatureById: (featureId: FeatureId) => Feature | undefined;
   getProById: (proId: string) => ProAccount | undefined;

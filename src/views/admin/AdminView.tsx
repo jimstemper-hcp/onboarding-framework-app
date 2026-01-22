@@ -3581,9 +3581,15 @@ function OnboardingItemEditModal({
 }
 
 function OnboardingItemsManagementPage() {
+  const {
+    onboardingItemsList,
+    updateOnboardingItem,
+    addOnboardingItem,
+    deleteOnboardingItem,
+  } = useOnboarding();
+
   const [selectedItem, setSelectedItem] = useState<OnboardingItemDefinition | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [localItems, setLocalItems] = useState<OnboardingItemDefinition[]>(onboardingItems);
 
   const handleEdit = (item: OnboardingItemDefinition) => {
     setSelectedItem(item);
@@ -3592,22 +3598,21 @@ function OnboardingItemsManagementPage() {
 
   const handleDelete = (item: OnboardingItemDefinition) => {
     if (!window.confirm(`Delete "${item.title}"?`)) return;
-    setLocalItems(localItems.filter((i) => i.id !== item.id));
+    deleteOnboardingItem(item.id);
   };
 
   const handleSave = (updatedItem: OnboardingItemDefinition) => {
-    const index = localItems.findIndex((i) => i.id === selectedItem?.id);
-    if (index >= 0) {
-      const updated = [...localItems];
-      updated[index] = updatedItem;
-      setLocalItems(updated);
+    if (selectedItem) {
+      updateOnboardingItem(updatedItem);
+    } else {
+      addOnboardingItem(updatedItem);
     }
     setSelectedItem(null);
   };
 
   const handleDeleteFromModal = () => {
     if (!selectedItem) return;
-    setLocalItems(localItems.filter((i) => i.id !== selectedItem.id));
+    deleteOnboardingItem(selectedItem.id);
     setSelectedItem(null);
   };
 
@@ -3638,7 +3643,7 @@ function OnboardingItemsManagementPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {localItems.length === 0 ? (
+            {onboardingItemsList.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6}>
                   <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
@@ -3647,7 +3652,7 @@ function OnboardingItemsManagementPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              localItems.map((item) => (
+              onboardingItemsList.map((item) => (
                 <TableRow key={item.id} hover>
                   <TableCell>
                     <Stack direction="row" spacing={1} alignItems="center">

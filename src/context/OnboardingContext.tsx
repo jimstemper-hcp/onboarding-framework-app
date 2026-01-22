@@ -15,9 +15,11 @@ import type {
   ViewType,
   OnboardingContextValue,
   WeeklyPlan,
+  OnboardingItemDefinition,
 } from '../types';
 import { features as initialFeatures } from '../data/features';
 import { mockPros as initialPros } from '../data/mockPros';
+import { onboardingItems as initialOnboardingItems } from '../data/onboardingItems';
 
 // =============================================================================
 // LOCAL STORAGE PERSISTENCE
@@ -25,7 +27,7 @@ import { mockPros as initialPros } from '../data/mockPros';
 
 const STORAGE_KEYS = {
   features: 'hcp-context-features',
-  // Future: pros, navigation, etc.
+  onboardingItems: 'hcp-context-onboarding-items',
 };
 
 /**
@@ -72,6 +74,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
   const [features, setFeatures] = useState<Feature[]>(() =>
     loadFromStorage(STORAGE_KEYS.features, initialFeatures)
+  );
+  const [onboardingItemsList, setOnboardingItemsList] = useState<OnboardingItemDefinition[]>(() =>
+    loadFromStorage(STORAGE_KEYS.onboardingItems, initialOnboardingItems)
   );
   const [pros, setPros] = useState<ProAccount[]>(initialPros);
   const [currentView, setCurrentView] = useState<ViewType>('portal');
@@ -259,6 +264,41 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   }, []);
 
   // ---------------------------------------------------------------------------
+  // ONBOARDING ITEM MUTATIONS (for Admin view)
+  // ---------------------------------------------------------------------------
+
+  const updateOnboardingItem = useCallback((updatedItem: OnboardingItemDefinition) => {
+    setOnboardingItemsList((current) => {
+      const newItems = current.map((item) =>
+        item.id === updatedItem.id ? updatedItem : item
+      );
+      saveToStorage(STORAGE_KEYS.onboardingItems, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const addOnboardingItem = useCallback((newItem: OnboardingItemDefinition) => {
+    setOnboardingItemsList((current) => {
+      const newItems = [...current, newItem];
+      saveToStorage(STORAGE_KEYS.onboardingItems, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const deleteOnboardingItem = useCallback((itemId: string) => {
+    setOnboardingItemsList((current) => {
+      const newItems = current.filter((item) => item.id !== itemId);
+      saveToStorage(STORAGE_KEYS.onboardingItems, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const resetOnboardingItems = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEYS.onboardingItems);
+    setOnboardingItemsList(initialOnboardingItems);
+  }, []);
+
+  // ---------------------------------------------------------------------------
   // PRO CRUD MUTATIONS (for Sample Pros view)
   // ---------------------------------------------------------------------------
 
@@ -406,6 +446,13 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       updateFeature,
       resetFeatures,
 
+      // Onboarding item mutations
+      onboardingItemsList,
+      updateOnboardingItem,
+      addOnboardingItem,
+      deleteOnboardingItem,
+      resetOnboardingItems,
+
       // Helpers
       getFeatureById,
       getProById,
@@ -440,6 +487,11 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       updateProCompletedItems,
       updateFeature,
       resetFeatures,
+      onboardingItemsList,
+      updateOnboardingItem,
+      addOnboardingItem,
+      deleteOnboardingItem,
+      resetOnboardingItems,
       getFeatureById,
       getProById,
       getProFeatureStatus,
