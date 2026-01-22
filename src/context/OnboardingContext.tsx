@@ -16,10 +16,14 @@ import type {
   OnboardingContextValue,
   WeeklyPlan,
   OnboardingItemDefinition,
+  NavigationItem,
+  CalendlyLink,
+  McpTool,
 } from '../types';
 import { features as initialFeatures } from '../data/features';
 import { mockPros as initialPros } from '../data/mockPros';
 import { onboardingItems as initialOnboardingItems } from '../data/onboardingItems';
+import { navigationItems as initialNavigationItems } from '../data/navigation';
 
 // =============================================================================
 // LOCAL STORAGE PERSISTENCE
@@ -28,6 +32,9 @@ import { onboardingItems as initialOnboardingItems } from '../data/onboardingIte
 const STORAGE_KEYS = {
   features: 'hcp-context-features',
   onboardingItems: 'hcp-context-onboarding-items',
+  navigation: 'hcp-context-navigation',
+  calls: 'hcp-context-calls',
+  tools: 'hcp-context-tools',
 };
 
 /**
@@ -77,6 +84,15 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   );
   const [onboardingItemsList, setOnboardingItemsList] = useState<OnboardingItemDefinition[]>(() =>
     loadFromStorage(STORAGE_KEYS.onboardingItems, initialOnboardingItems)
+  );
+  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>(() =>
+    loadFromStorage(STORAGE_KEYS.navigation, initialNavigationItems)
+  );
+  const [callItems, setCallItems] = useState<CalendlyLink[]>(() =>
+    loadFromStorage(STORAGE_KEYS.calls, [])
+  );
+  const [toolItems, setToolItems] = useState<McpTool[]>(() =>
+    loadFromStorage(STORAGE_KEYS.tools, [])
   );
   const [pros, setPros] = useState<ProAccount[]>(initialPros);
   const [currentView, setCurrentView] = useState<ViewType>('portal');
@@ -299,6 +315,111 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   }, []);
 
   // ---------------------------------------------------------------------------
+  // NAVIGATION MUTATIONS (for Admin view)
+  // ---------------------------------------------------------------------------
+
+  const updateNavigationItem = useCallback((updatedItem: NavigationItem) => {
+    setNavigationItems((current) => {
+      const newItems = current.map((item) =>
+        item.slugId === updatedItem.slugId ? updatedItem : item
+      );
+      saveToStorage(STORAGE_KEYS.navigation, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const addNavigationItem = useCallback((newItem: NavigationItem) => {
+    setNavigationItems((current) => {
+      const newItems = [...current, newItem];
+      saveToStorage(STORAGE_KEYS.navigation, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const deleteNavigationItem = useCallback((itemId: string) => {
+    setNavigationItems((current) => {
+      const newItems = current.filter((item) => item.slugId !== itemId);
+      saveToStorage(STORAGE_KEYS.navigation, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const resetNavigation = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEYS.navigation);
+    setNavigationItems(initialNavigationItems);
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // CALLS MUTATIONS (for Admin view)
+  // ---------------------------------------------------------------------------
+
+  const updateCallItem = useCallback((updatedItem: CalendlyLink) => {
+    setCallItems((current) => {
+      const newItems = current.map((item) =>
+        item.slugId === updatedItem.slugId ? updatedItem : item
+      );
+      saveToStorage(STORAGE_KEYS.calls, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const addCallItem = useCallback((newItem: CalendlyLink) => {
+    setCallItems((current) => {
+      const newItems = [...current, newItem];
+      saveToStorage(STORAGE_KEYS.calls, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const deleteCallItem = useCallback((itemId: string) => {
+    setCallItems((current) => {
+      const newItems = current.filter((item) => item.slugId !== itemId);
+      saveToStorage(STORAGE_KEYS.calls, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const resetCalls = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEYS.calls);
+    setCallItems([]);
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // TOOLS MUTATIONS (for Admin view)
+  // ---------------------------------------------------------------------------
+
+  const updateToolItem = useCallback((updatedItem: McpTool) => {
+    setToolItems((current) => {
+      const newItems = current.map((item) =>
+        item.name === updatedItem.name ? updatedItem : item
+      );
+      saveToStorage(STORAGE_KEYS.tools, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const addToolItem = useCallback((newItem: McpTool) => {
+    setToolItems((current) => {
+      const newItems = [...current, newItem];
+      saveToStorage(STORAGE_KEYS.tools, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const deleteToolItem = useCallback((itemId: string) => {
+    setToolItems((current) => {
+      const newItems = current.filter((item) => item.name !== itemId);
+      saveToStorage(STORAGE_KEYS.tools, newItems);
+      return newItems;
+    });
+  }, []);
+
+  const resetTools = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEYS.tools);
+    setToolItems([]);
+  }, []);
+
+  // ---------------------------------------------------------------------------
   // PRO CRUD MUTATIONS (for Sample Pros view)
   // ---------------------------------------------------------------------------
 
@@ -453,6 +574,27 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       deleteOnboardingItem,
       resetOnboardingItems,
 
+      // Navigation mutations
+      navigationItems,
+      updateNavigationItem,
+      addNavigationItem,
+      deleteNavigationItem,
+      resetNavigation,
+
+      // Calls mutations
+      callItems,
+      updateCallItem,
+      addCallItem,
+      deleteCallItem,
+      resetCalls,
+
+      // Tools mutations
+      toolItems,
+      updateToolItem,
+      addToolItem,
+      deleteToolItem,
+      resetTools,
+
       // Helpers
       getFeatureById,
       getProById,
@@ -492,6 +634,21 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       addOnboardingItem,
       deleteOnboardingItem,
       resetOnboardingItems,
+      navigationItems,
+      updateNavigationItem,
+      addNavigationItem,
+      deleteNavigationItem,
+      resetNavigation,
+      callItems,
+      updateCallItem,
+      addCallItem,
+      deleteCallItem,
+      resetCalls,
+      toolItems,
+      updateToolItem,
+      addToolItem,
+      deleteToolItem,
+      resetTools,
       getFeatureById,
       getProById,
       getProFeatureStatus,

@@ -228,6 +228,40 @@ export interface CompletionApi {
 }
 
 /**
+ * Operators for state-based completion conditions.
+ * Used to compare pro account data against target values.
+ */
+export type CompletionOperator =
+  | 'gt'         // greater than
+  | 'gte'        // greater than or equal
+  | 'lt'         // less than
+  | 'lte'        // less than or equal
+  | 'eq'         // equals
+  | 'neq'        // not equals
+  | 'exists'     // value is truthy
+  | 'not_exists'; // value is falsy
+
+/**
+ * State-based completion condition for onboarding items.
+ * Checks actual pro account data (from HCP API) to determine completion.
+ *
+ * Available variables (based on HCP Public API endpoints):
+ * - customers_count: Total number of customers
+ * - jobs_count: Total number of jobs
+ * - completed_jobs_count: Jobs with completed status
+ * - invoices_count: Total number of invoices
+ * - sent_invoices_count: Invoices that have been sent
+ * - employees_count: Total number of employees
+ * - estimates_count: Total number of estimates
+ */
+export interface CompletionCondition {
+  variable: string;                        // e.g., "customers_count", "jobs_count"
+  operator: CompletionOperator;
+  value?: number | string | boolean;       // Required for comparison operators (gt, gte, lt, lte, eq, neq)
+  description: string;                     // Human-readable: "Pro has more than 1 customer"
+}
+
+/**
  * A centralized onboarding item definition.
  * These are stored in a central repository and referenced by features.
  */
@@ -245,8 +279,10 @@ export interface OnboardingItemDefinition {
 
   // Type and completion
   type: OnboardingItemType;
-  // For in_product items - how we track completion
+  // For in_product items - event-based completion tracking
   completionApi?: CompletionApi;
+  // For in_product items - state-based completion checking
+  completionCondition?: CompletionCondition;
   // For rep_facing items - instructions for the rep
   repInstructions?: string;
 
@@ -710,6 +746,27 @@ export interface OnboardingContextActions {
   addOnboardingItem: (item: OnboardingItemDefinition) => void;
   deleteOnboardingItem: (itemId: string) => void;
   resetOnboardingItems: () => void;
+
+  // Navigation mutations (for Admin view)
+  navigationItems: NavigationItem[];
+  updateNavigationItem: (item: NavigationItem) => void;
+  addNavigationItem: (item: NavigationItem) => void;
+  deleteNavigationItem: (itemId: string) => void;
+  resetNavigation: () => void;
+
+  // Calls mutations (for Admin view)
+  callItems: CalendlyLink[];
+  updateCallItem: (item: CalendlyLink) => void;
+  addCallItem: (item: CalendlyLink) => void;
+  deleteCallItem: (itemId: string) => void;
+  resetCalls: () => void;
+
+  // Tools mutations (for Admin view)
+  toolItems: McpTool[];
+  updateToolItem: (item: McpTool) => void;
+  addToolItem: (item: McpTool) => void;
+  deleteToolItem: (itemId: string) => void;
+  resetTools: () => void;
 
   // Derived data helpers
   getFeatureById: (featureId: FeatureId) => Feature | undefined;

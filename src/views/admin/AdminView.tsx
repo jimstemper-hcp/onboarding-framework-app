@@ -258,7 +258,6 @@ function ContextSnippetsEditor({
                   value={snippet.title}
                   onChange={(e) => handleSnippetChange(index, 'title', e.target.value)}
                   sx={{ flex: 1 }}
-                  disabled={index === 0}
                 />
                 {index > 0 && (
                   <IconButton size="small" onClick={() => handleRemoveSnippet(index)}>
@@ -1602,8 +1601,6 @@ function NavigationEditModal({
       <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3, pt: 1 }}>
         <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
           <Tab label="Basic Info" />
-          <Tab label="Important Context" />
-          <Tab label="AI Config" />
           <Tab label="JSON Payload" />
         </Tabs>
       </Box>
@@ -1657,6 +1654,16 @@ function NavigationEditModal({
                     </Select>
                   </FormControl>
                 </Stack>
+                <TextField
+                  size="small"
+                  fullWidth
+                  label="Description"
+                  value={editedItem.description}
+                  onChange={(e) => setEditedItem({ ...editedItem, description: e.target.value })}
+                  multiline
+                  rows={3}
+                  placeholder="A short description of what this navigation does..."
+                />
               </Stack>
             </Paper>
 
@@ -1695,131 +1702,8 @@ function NavigationEditModal({
           </Stack>
         )}
 
-        {/* Tab 1: Important Context */}
+        {/* Tab 1: JSON Payload */}
         {activeTab === 1 && (
-          <Paper sx={{ p: 3 }}>
-            <SectionHeader icon={<TextSnippetIcon />} title="Important Context" count={(editedItem.contextSnippets || []).length} />
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Context snippets help the AI understand when and how to use this navigation resource.
-            </Typography>
-            <Stack spacing={2}>
-              {(editedItem.contextSnippets || []).map((snippet, index) => (
-                <Paper key={snippet.id} variant="outlined" sx={{ p: 2 }}>
-                  <Stack spacing={1.5}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <TextField
-                        size="small"
-                        label="Title"
-                        value={snippet.title}
-                        onChange={(e) => handleSnippetChange(index, 'title', e.target.value)}
-                        sx={{ flex: 1 }}
-                        disabled={index === 0}
-                      />
-                      {index === 0 && (
-                        <Chip label="Required" size="small" color="primary" variant="outlined" />
-                      )}
-                      {index > 0 && (
-                        <IconButton size="small" onClick={() => handleRemoveSnippet(index)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                    </Stack>
-                    <TextField
-                      size="small"
-                      fullWidth
-                      multiline
-                      rows={3}
-                      placeholder={index === 0 ? "Describe this resource for the AI..." : "Additional context..."}
-                      value={snippet.content}
-                      onChange={(e) => handleSnippetChange(index, 'content', e.target.value)}
-                    />
-                  </Stack>
-                </Paper>
-              ))}
-            </Stack>
-            <Button startIcon={<AddIcon />} size="small" onClick={handleAddSnippet} sx={{ mt: 2 }}>
-              Add Context Snippet
-            </Button>
-          </Paper>
-        )}
-
-        {/* Tab 2: AI Config */}
-        {activeTab === 2 && (
-          <Stack spacing={3}>
-            <Paper sx={{ p: 3 }}>
-              <SectionHeader icon={<SmartToyIcon />} title="Prompt" />
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Additional instructions for the AI when this navigation resource is relevant.
-              </Typography>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                value={editedItem.prompt || ''}
-                onChange={(e) => setEditedItem({ ...editedItem, prompt: e.target.value })}
-                placeholder="e.g., When the user asks about invoice settings, guide them to this page and explain the key options available..."
-              />
-            </Paper>
-
-            <Paper sx={{ p: 3 }}>
-              <SectionHeader icon={<BuildIcon />} title="Tools" count={editedItem.tools?.length || 0} />
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                MCP tools that can be used with this navigation resource.
-              </Typography>
-              {(editedItem.tools?.length || 0) === 0 ? (
-                <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
-                  No tools configured
-                </Typography>
-              ) : (
-                <Stack spacing={1}>
-                  {editedItem.tools?.map((tool, i) => (
-                    <Paper key={i} variant="outlined" sx={{ p: 1.5 }}>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Box>
-                          <Typography variant="body2" fontWeight={500} sx={{ fontFamily: 'monospace' }}>
-                            {tool.name}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {tool.description}
-                          </Typography>
-                        </Box>
-                        <IconButton
-                          size="small"
-                          onClick={() => setEditedItem({
-                            ...editedItem,
-                            tools: editedItem.tools?.filter((_, idx) => idx !== i),
-                          })}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Stack>
-                    </Paper>
-                  ))}
-                </Stack>
-              )}
-              <Button
-                startIcon={<AddIcon />}
-                size="small"
-                sx={{ mt: 1 }}
-                onClick={() => {
-                  const toolName = window.prompt('Enter tool name:');
-                  if (toolName) {
-                    const toolDesc = window.prompt('Enter tool description:') || '';
-                    setEditedItem({
-                      ...editedItem,
-                      tools: [...(editedItem.tools || []), { name: toolName, description: toolDesc, parameters: {} }],
-                    });
-                  }
-                }}
-              >
-                Add Tool
-              </Button>
-            </Paper>
-          </Stack>
-        )}
-
-        {/* Tab 3: JSON Payload */}
-        {activeTab === 3 && (
           <Paper sx={{ p: 3 }}>
             <SectionHeader icon={<TextSnippetIcon />} title="JSON Payload" />
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -1860,113 +1744,57 @@ function NavigationEditModal({
 }
 
 function NavigationManagementPage() {
-  const { features, updateFeature } = useOnboarding();
-  const [selectedItem, setSelectedItem] = useState<{
-    item: NavigationItem;
-    featureId: string;
-    stageKey: StageKey;
-    index: number;
-  } | null>(null);
+  const { navigationItems, addNavigationItem, updateNavigationItem, deleteNavigationItem } = useOnboarding();
+  const [selectedItem, setSelectedItem] = useState<NavigationItem | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
-  const [, setIsCreating] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
-  // Collect all navigation items across all features/stages
-  const allNavItems: {
-    featureId: string;
-    featureName: string;
-    stageKey: StageKey;
-    stageName: string;
-    item: NavigationItem;
-    index: number;
-  }[] = [];
+  const handleCreate = () => {
+    const newItem: NavigationItem = {
+      slugId: '',
+      name: '',
+      navigationType: 'hcp_navigate',
+      status: 'draft',
+      description: '',
+      url: '',
+    };
+    setSelectedItem(newItem);
+    setIsCreating(true);
+    setEditorOpen(true);
+  };
 
-  features.forEach((feature) => {
-    stageKeys.forEach((stageKey) => {
-      const stage = feature.stages[stageKey];
-      (stage.navigation || []).forEach((nav, index) => {
-        allNavItems.push({
-          featureId: feature.id,
-          featureName: feature.name,
-          stageKey,
-          stageName: stageConfig[stageKey].label,
-          item: nav,
-          index,
-        });
-      });
-    });
-  });
-
-  const handleEdit = (entry: typeof allNavItems[0]) => {
-    setSelectedItem({
-      item: entry.item,
-      featureId: entry.featureId,
-      stageKey: entry.stageKey,
-      index: entry.index,
-    });
+  const handleEdit = (item: NavigationItem) => {
+    setSelectedItem(item);
     setIsCreating(false);
     setEditorOpen(true);
   };
 
-  const handleDelete = (entry: typeof allNavItems[0]) => {
-    if (!window.confirm(`Delete "${entry.item.name}"?`)) return;
-
-    const feature = features.find((f) => f.id === entry.featureId);
-    if (!feature) return;
-
-    const updatedFeature = {
-      ...feature,
-      stages: {
-        ...feature.stages,
-        [entry.stageKey]: {
-          ...feature.stages[entry.stageKey],
-          navigation: feature.stages[entry.stageKey].navigation.filter((_, i) => i !== entry.index),
-        },
-      },
-    };
-    updateFeature(updatedFeature);
+  const handleDelete = (item: NavigationItem) => {
+    if (!window.confirm(`Delete "${item.name}"?`)) return;
+    if (item.slugId) {
+      deleteNavigationItem(item.slugId);
+    }
   };
 
   const handleSave = (updatedItem: NavigationItem) => {
-    if (!selectedItem) return;
-
-    const feature = features.find((f) => f.id === selectedItem.featureId);
-    if (!feature) return;
-
-    const currentNav = [...feature.stages[selectedItem.stageKey].navigation];
-    currentNav[selectedItem.index] = updatedItem;
-
-    const updatedFeature = {
-      ...feature,
-      stages: {
-        ...feature.stages,
-        [selectedItem.stageKey]: {
-          ...feature.stages[selectedItem.stageKey],
-          navigation: currentNav,
-        },
-      },
-    };
-    updateFeature(updatedFeature);
+    if (isCreating) {
+      // Generate slugId if not provided
+      if (!updatedItem.slugId) {
+        updatedItem.slugId = updatedItem.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      }
+      addNavigationItem(updatedItem);
+    } else {
+      updateNavigationItem(updatedItem);
+    }
     setSelectedItem(null);
+    setIsCreating(false);
   };
 
   const handleDeleteFromModal = () => {
-    if (!selectedItem) return;
-
-    const feature = features.find((f) => f.id === selectedItem.featureId);
-    if (!feature) return;
-
-    const updatedFeature = {
-      ...feature,
-      stages: {
-        ...feature.stages,
-        [selectedItem.stageKey]: {
-          ...feature.stages[selectedItem.stageKey],
-          navigation: feature.stages[selectedItem.stageKey].navigation.filter((_, i) => i !== selectedItem.index),
-        },
-      },
-    };
-    updateFeature(updatedFeature);
+    if (!selectedItem || !selectedItem.slugId) return;
+    deleteNavigationItem(selectedItem.slugId);
     setSelectedItem(null);
+    setIsCreating(false);
   };
 
   return (
@@ -1978,7 +1806,7 @@ function NavigationManagementPage() {
             Manage navigation items, links, and resources used across features
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} disabled>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           Add Navigation
         </Button>
       </Stack>
@@ -1991,48 +1819,47 @@ function NavigationManagementPage() {
               <TableCell sx={{ fontWeight: 600 }}>Type</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>URL / ID</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Used In</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {allNavItems.length === 0 ? (
+            {navigationItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={5}>
                   <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                    No navigation resources defined
+                    No navigation resources defined. Click "Add Navigation" to create one.
                   </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              allNavItems.map((entry, i) => (
-                <TableRow key={i} hover>
+              navigationItems.map((item) => (
+                <TableRow key={item.slugId || item.name} hover>
                   <TableCell>
                     <Stack>
-                      <Typography fontWeight={500}>{entry.item.name}</Typography>
-                      {entry.item.slugId && (
+                      <Typography fontWeight={500}>{item.name}</Typography>
+                      {item.slugId && (
                         <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                          {entry.item.slugId}
+                          {item.slugId}
                         </Typography>
                       )}
                     </Stack>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={navigationTypes.find((t) => t.value === entry.item.navigationType)?.label || entry.item.navigationType}
+                      label={navigationTypes.find((t) => t.value === item.navigationType)?.label || item.navigationType}
                       size="small"
                     />
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={navigationStatusOptions.find((s) => s.value === entry.item.status)?.label || entry.item.status || 'Draft'}
+                      label={navigationStatusOptions.find((s) => s.value === item.status)?.label || item.status || 'Draft'}
                       size="small"
                       sx={{
                         bgcolor: alpha(
-                          navigationStatusOptions.find((s) => s.value === entry.item.status)?.color || palette.warning,
+                          navigationStatusOptions.find((s) => s.value === item.status)?.color || palette.warning,
                           0.1
                         ),
-                        color: navigationStatusOptions.find((s) => s.value === entry.item.status)?.color || palette.warning,
+                        color: navigationStatusOptions.find((s) => s.value === item.status)?.color || palette.warning,
                       }}
                     />
                   </TableCell>
@@ -2048,25 +1875,20 @@ function NavigationManagementPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {getNavigationUrl(entry.item) || entry.item.url || '—'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {entry.featureName} → {entry.stageName}
+                      {getNavigationUrl(item) || item.url || '—'}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
                     <IconButton
                       size="small"
-                      onClick={() => handleEdit(entry)}
+                      onClick={() => handleEdit(item)}
                       sx={{ color: palette.primary }}
                     >
                       <EditIcon fontSize="small" />
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleDelete(entry)}
+                      onClick={() => handleDelete(item)}
                       sx={{ color: palette.error }}
                     >
                       <DeleteIcon fontSize="small" />
@@ -2080,14 +1902,15 @@ function NavigationManagementPage() {
       </TableContainer>
 
       <NavigationEditModal
-        item={selectedItem?.item || null}
+        item={selectedItem}
         open={editorOpen}
         onClose={() => {
           setEditorOpen(false);
           setSelectedItem(null);
+          setIsCreating(false);
         }}
         onSave={handleSave}
-        onDelete={selectedItem ? handleDeleteFromModal : undefined}
+        onDelete={!isCreating && selectedItem ? handleDeleteFromModal : undefined}
       />
     </Box>
   );
@@ -2379,7 +2202,6 @@ function CallsEditModal({
                         value={snippet.title}
                         onChange={(e) => handleSnippetChange(index, 'title', e.target.value)}
                         sx={{ flex: 1 }}
-                        disabled={index === 0}
                       />
                       {index === 0 && (
                         <Chip label="Required" size="small" color="primary" variant="outlined" />
@@ -2526,111 +2348,58 @@ function CallsEditModal({
 }
 
 function CallsManagementPage() {
-  const { features, updateFeature } = useOnboarding();
-  const [selectedItem, setSelectedItem] = useState<{
-    item: CalendlyLink;
-    featureId: string;
-    stageKey: StageKey;
-    index: number;
-  } | null>(null);
+  const { callItems, addCallItem, updateCallItem, deleteCallItem } = useOnboarding();
+  const [selectedItem, setSelectedItem] = useState<CalendlyLink | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
-  // Collect all calendly items across all features/stages
-  const allCallItems: {
-    featureId: string;
-    featureName: string;
-    stageKey: StageKey;
-    stageName: string;
-    item: CalendlyLink;
-    index: number;
-  }[] = [];
-
-  features.forEach((feature) => {
-    stageKeys.forEach((stageKey) => {
-      const stage = feature.stages[stageKey];
-      (stage.calendlyTypes || []).forEach((cal, index) => {
-        allCallItems.push({
-          featureId: feature.id,
-          featureName: feature.name,
-          stageKey,
-          stageName: stageConfig[stageKey].label,
-          item: cal,
-          index,
-        });
-      });
-    });
-  });
-
-  const handleEdit = (entry: typeof allCallItems[0]) => {
-    setSelectedItem({
-      item: entry.item,
-      featureId: entry.featureId,
-      stageKey: entry.stageKey,
-      index: entry.index,
-    });
+  const handleCreate = () => {
+    const newItem: CalendlyLink = {
+      slugId: '',
+      name: '',
+      status: 'draft',
+      team: 'onboarding',
+      eventType: '',
+      url: '',
+      description: '',
+    };
+    setSelectedItem(newItem);
+    setIsCreating(true);
     setEditorOpen(true);
   };
 
-  const handleDelete = (entry: typeof allCallItems[0]) => {
-    if (!window.confirm(`Delete "${entry.item.name}"?`)) return;
+  const handleEdit = (item: CalendlyLink) => {
+    setSelectedItem(item);
+    setIsCreating(false);
+    setEditorOpen(true);
+  };
 
-    const feature = features.find((f) => f.id === entry.featureId);
-    if (!feature) return;
-
-    const updatedFeature = {
-      ...feature,
-      stages: {
-        ...feature.stages,
-        [entry.stageKey]: {
-          ...feature.stages[entry.stageKey],
-          calendlyTypes: feature.stages[entry.stageKey].calendlyTypes.filter((_, i) => i !== entry.index),
-        },
-      },
-    };
-    updateFeature(updatedFeature);
+  const handleDelete = (item: CalendlyLink) => {
+    if (!window.confirm(`Delete "${item.name}"?`)) return;
+    if (item.slugId) {
+      deleteCallItem(item.slugId);
+    }
   };
 
   const handleSave = (updatedItem: CalendlyLink) => {
-    if (!selectedItem) return;
-
-    const feature = features.find((f) => f.id === selectedItem.featureId);
-    if (!feature) return;
-
-    const currentCalls = [...feature.stages[selectedItem.stageKey].calendlyTypes];
-    currentCalls[selectedItem.index] = updatedItem;
-
-    const updatedFeature = {
-      ...feature,
-      stages: {
-        ...feature.stages,
-        [selectedItem.stageKey]: {
-          ...feature.stages[selectedItem.stageKey],
-          calendlyTypes: currentCalls,
-        },
-      },
-    };
-    updateFeature(updatedFeature);
+    if (isCreating) {
+      // Generate slugId if not provided
+      if (!updatedItem.slugId) {
+        updatedItem.slugId = updatedItem.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      }
+      addCallItem(updatedItem);
+    } else {
+      updateCallItem(updatedItem);
+    }
     setSelectedItem(null);
+    setIsCreating(false);
   };
 
   const handleDeleteFromModal = () => {
-    if (!selectedItem) return;
-
-    const feature = features.find((f) => f.id === selectedItem.featureId);
-    if (!feature) return;
-
-    const updatedFeature = {
-      ...feature,
-      stages: {
-        ...feature.stages,
-        [selectedItem.stageKey]: {
-          ...feature.stages[selectedItem.stageKey],
-          calendlyTypes: feature.stages[selectedItem.stageKey].calendlyTypes.filter((_, i) => i !== selectedItem.index),
-        },
-      },
-    };
-    updateFeature(updatedFeature);
+    if (!selectedItem || !selectedItem.slugId) return;
+    deleteCallItem(selectedItem.slugId);
     setSelectedItem(null);
+    setIsCreating(false);
   };
 
   return (
@@ -2642,7 +2411,7 @@ function CallsManagementPage() {
             Manage Calendly event types and call scheduling
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} disabled>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           Add Call Type
         </Button>
       </Stack>
@@ -2655,55 +2424,54 @@ function CallsManagementPage() {
               <TableCell sx={{ fontWeight: 600 }}>Team</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Booking Link</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Used In</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {allCallItems.length === 0 ? (
+            {callItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={5}>
                   <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                    No call types defined
+                    No call types defined. Click "Add Call Type" to create one.
                   </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              allCallItems.map((entry, i) => (
-                <TableRow key={i} hover>
+              callItems.map((item) => (
+                <TableRow key={item.slugId || item.name} hover>
                   <TableCell>
                     <Stack>
-                      <Typography fontWeight={500}>{entry.item.name}</Typography>
-                      {entry.item.eventType && (
+                      <Typography fontWeight={500}>{item.name}</Typography>
+                      {item.eventType && (
                         <Typography variant="caption" color="text.secondary">
-                          {entry.item.eventType}
+                          {item.eventType}
                         </Typography>
                       )}
                     </Stack>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={entry.item.team.charAt(0).toUpperCase() + entry.item.team.slice(1)}
+                      label={item.team.charAt(0).toUpperCase() + item.team.slice(1)}
                       size="small"
                       sx={{
                         bgcolor: alpha(
-                          calendlyTeamOptions.find((t) => t.value === entry.item.team)?.color || palette.grey[600],
+                          calendlyTeamOptions.find((t) => t.value === item.team)?.color || palette.grey[600],
                           0.1
                         ),
-                        color: calendlyTeamOptions.find((t) => t.value === entry.item.team)?.color || palette.grey[600],
+                        color: calendlyTeamOptions.find((t) => t.value === item.team)?.color || palette.grey[600],
                       }}
                     />
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={calendlyStatusOptions.find((s) => s.value === entry.item.status)?.label || 'Draft'}
+                      label={calendlyStatusOptions.find((s) => s.value === item.status)?.label || 'Draft'}
                       size="small"
                       sx={{
                         bgcolor: alpha(
-                          calendlyStatusOptions.find((s) => s.value === entry.item.status)?.color || palette.warning,
+                          calendlyStatusOptions.find((s) => s.value === item.status)?.color || palette.warning,
                           0.1
                         ),
-                        color: calendlyStatusOptions.find((s) => s.value === entry.item.status)?.color || palette.warning,
+                        color: calendlyStatusOptions.find((s) => s.value === item.status)?.color || palette.warning,
                       }}
                     />
                   </TableCell>
@@ -2719,25 +2487,20 @@ function CallsManagementPage() {
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      {entry.item.url}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {entry.featureName} → {entry.stageName}
+                      {item.url}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
                     <IconButton
                       size="small"
-                      onClick={() => handleEdit(entry)}
+                      onClick={() => handleEdit(item)}
                       sx={{ color: palette.primary }}
                     >
                       <EditIcon fontSize="small" />
                     </IconButton>
                     <IconButton
                       size="small"
-                      onClick={() => handleDelete(entry)}
+                      onClick={() => handleDelete(item)}
                       sx={{ color: palette.error }}
                     >
                       <DeleteIcon fontSize="small" />
@@ -2751,14 +2514,15 @@ function CallsManagementPage() {
       </TableContainer>
 
       <CallsEditModal
-        item={selectedItem?.item || null}
+        item={selectedItem}
         open={editorOpen}
         onClose={() => {
           setEditorOpen(false);
           setSelectedItem(null);
+          setIsCreating(false);
         }}
         onSave={handleSave}
-        onDelete={selectedItem ? handleDeleteFromModal : undefined}
+        onDelete={!isCreating && selectedItem ? handleDeleteFromModal : undefined}
       />
     </Box>
   );
@@ -3756,22 +3520,43 @@ function OnboardingItemsManagementPage() {
 // =============================================================================
 
 function ToolsManagementPage() {
-  const { features } = useOnboarding();
+  const { toolItems, addToolItem, updateToolItem, deleteToolItem } = useOnboarding();
+  const [selectedItem, setSelectedItem] = useState<McpTool | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
-  // Collect all unique tools across all features/stages
-  const allTools: { featureName: string; stageName: string; tool: McpTool }[] = [];
-  features.forEach((feature) => {
-    stageKeys.forEach((stageKey) => {
-      const stage = feature.stages[stageKey];
-      (stage.tools || []).forEach((tool) => {
-        allTools.push({
-          featureName: feature.name,
-          stageName: stageConfig[stageKey].label,
-          tool,
-        });
-      });
-    });
-  });
+  const handleCreate = () => {
+    const newItem: McpTool = {
+      name: '',
+      description: '',
+      parameters: {},
+    };
+    setSelectedItem(newItem);
+    setIsCreating(true);
+    setEditorOpen(true);
+  };
+
+  const handleEdit = (item: McpTool) => {
+    setSelectedItem(item);
+    setIsCreating(false);
+    setEditorOpen(true);
+  };
+
+  const handleDelete = (item: McpTool) => {
+    if (!window.confirm(`Delete "${item.name}"?`)) return;
+    deleteToolItem(item.name);
+  };
+
+  const handleSave = (updatedItem: McpTool) => {
+    if (isCreating) {
+      addToolItem(updatedItem);
+    } else {
+      updateToolItem(updatedItem);
+    }
+    setSelectedItem(null);
+    setIsCreating(false);
+    setEditorOpen(false);
+  };
 
   return (
     <Box>
@@ -3782,7 +3567,7 @@ function ToolsManagementPage() {
             Manage MCP tools available to the AI assistant
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<AddIcon />} disabled>Add Tool</Button>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>Add Tool</Button>
       </Stack>
 
       <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
@@ -3791,37 +3576,42 @@ function ToolsManagementPage() {
             <TableRow sx={{ bgcolor: palette.grey[50] }}>
               <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
               <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Used In</TableCell>
+              <TableCell sx={{ fontWeight: 600 }}>Parameters</TableCell>
               <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {allTools.length === 0 ? (
+            {toolItems.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4}>
                   <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                    No tools defined yet
+                    No tools defined yet. Click "Add Tool" to create one.
                   </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              allTools.map((entry, i) => (
-                <TableRow key={i} hover>
+              toolItems.map((item) => (
+                <TableRow key={item.name} hover>
                   <TableCell>
-                    <Typography fontWeight={500} sx={{ fontFamily: 'monospace' }}>{entry.tool.name}</Typography>
+                    <Typography fontWeight={500} sx={{ fontFamily: 'monospace' }}>{item.name}</Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {entry.tool.description}
+                      {item.description}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" color="text.secondary">
-                      {entry.featureName} → {entry.stageName}
+                      {Object.keys(item.parameters || {}).length} parameters
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton size="small" disabled><EditIcon fontSize="small" /></IconButton>
+                    <IconButton size="small" onClick={() => handleEdit(item)} sx={{ color: palette.primary }}>
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton size="small" onClick={() => handleDelete(item)} sx={{ color: palette.error }}>
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
                   </TableCell>
                 </TableRow>
               ))
@@ -3829,6 +3619,71 @@ function ToolsManagementPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Simple Tool Edit Dialog */}
+      <PlanningAwareDialog
+        open={editorOpen}
+        onClose={() => {
+          setEditorOpen(false);
+          setSelectedItem(null);
+          setIsCreating(false);
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{isCreating ? 'Add Tool' : 'Edit Tool'}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              label="Tool Name"
+              value={selectedItem?.name || ''}
+              onChange={(e) => setSelectedItem(selectedItem ? { ...selectedItem, name: e.target.value } : null)}
+              fullWidth
+              size="small"
+              placeholder="e.g., hcp_create_customer"
+            />
+            <TextField
+              label="Description"
+              value={selectedItem?.description || ''}
+              onChange={(e) => setSelectedItem(selectedItem ? { ...selectedItem, description: e.target.value } : null)}
+              fullWidth
+              multiline
+              rows={3}
+              size="small"
+              placeholder="Describe what this tool does..."
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          {!isCreating && (
+            <Button
+              color="error"
+              onClick={() => {
+                if (selectedItem && window.confirm(`Delete "${selectedItem.name}"?`)) {
+                  deleteToolItem(selectedItem.name);
+                  setEditorOpen(false);
+                  setSelectedItem(null);
+                }
+              }}
+            >
+              Delete
+            </Button>
+          )}
+          <Box sx={{ flex: 1 }} />
+          <Button onClick={() => {
+            setEditorOpen(false);
+            setSelectedItem(null);
+            setIsCreating(false);
+          }}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={() => selectedItem && handleSave(selectedItem)}
+            disabled={!selectedItem?.name}
+          >
+            {isCreating ? 'Add Tool' : 'Save Changes'}
+          </Button>
+        </DialogActions>
+      </PlanningAwareDialog>
     </Box>
   );
 }
