@@ -54,7 +54,7 @@ export function markdownToConfluence(markdown: string): string {
   html = html.replace(/^\s*\d+\. (.*$)/gm, '<li>$1</li>');
 
   // Tables (basic)
-  html = html.replace(/\|(.+)\|/g, (match, content) => {
+  html = html.replace(/\|(.+)\|/g, (_match, content) => {
     const cells = content.split('|').map((cell: string) => cell.trim());
     const row = cells.map((cell: string) => `<td>${cell}</td>`).join('');
     return `<tr>${row}</tr>`;

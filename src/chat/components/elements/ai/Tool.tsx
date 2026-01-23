@@ -81,7 +81,7 @@ export function Tool({
   const [expanded, setExpanded] = useState(defaultExpanded);
   const config = statusConfig[tool.status];
 
-  const hasDetails = Object.keys(tool.parameters).length > 0 || tool.result || tool.error;
+  const hasDetails = Object.keys(tool.parameters).length > 0 || tool.result !== undefined || !!tool.error;
 
   return (
     <Card
@@ -161,13 +161,13 @@ export function Tool({
                     fontFamily: 'monospace',
                   }}
                 >
-                  {JSON.stringify(tool.parameters, null, 2)}
+                  {JSON.stringify(tool.parameters, null, 2) as string}
                 </Box>
               </Box>
             )}
 
             {/* Result */}
-            {tool.result && (
+            {tool.result !== undefined && (
               <Box sx={{ mb: 1 }}>
                 <Typography
                   variant="caption"

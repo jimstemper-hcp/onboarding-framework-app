@@ -591,7 +591,6 @@ export function PlanningDrawer() {
               <TabPanel value={activeTab} tab="versions">
                 <VersionsTab
                   specPath={element.specPath}
-                  elementName={element.name}
                 />
               </TabPanel>
             </>

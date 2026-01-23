@@ -148,7 +148,7 @@ export function Plan({
             },
           }}
         >
-          {steps.map((step, index) => (
+          {steps.map((step) => (
             <Step key={step.id} completed={step.status === 'completed'}>
               <StepLabel
                 StepIconComponent={() => (

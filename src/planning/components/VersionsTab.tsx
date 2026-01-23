@@ -9,11 +9,9 @@ import { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Button,
   Chip,
   List,
   ListItem,
-  ListItemText,
   Paper,
   Divider,
   Alert,
@@ -40,7 +38,6 @@ import { VERSION_LEVEL_MEANINGS } from '../../specs/versions/types';
 
 interface VersionsTabProps {
   specPath: string;
-  elementName: string;
 }
 
 interface VersionHistoryItemProps {
@@ -169,10 +166,9 @@ function VersionHistoryItem({ release, isLatest }: VersionHistoryItemProps) {
 interface ReleaseButtonSectionProps {
   specId: string;
   currentVersion: string;
-  displayName: string;
 }
 
-function ReleaseButtonSection({ specId, currentVersion, displayName }: ReleaseButtonSectionProps) {
+function ReleaseButtonSection({ specId, currentVersion }: ReleaseButtonSectionProps) {
   const isUnreleased = currentVersion === '0.0.0';
 
   return (
@@ -241,7 +237,7 @@ function ReleaseButtonSection({ specId, currentVersion, displayName }: ReleaseBu
 // MAIN COMPONENT
 // -----------------------------------------------------------------------------
 
-export function VersionsTab({ specPath, elementName }: VersionsTabProps) {
+export function VersionsTab({ specPath }: VersionsTabProps) {
   const [specEntry, setSpecEntry] = useState<SpecVersionEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -255,10 +251,10 @@ export function VersionsTab({ specPath, elementName }: VersionsTabProps) {
         const versionsModule = await import('../../specs/versions/spec-versions.json');
         const registry = versionsModule.default;
 
-        // Find the spec by path
+        // Find the spec by path (cast to handle JSON import typing)
         const spec = registry.specs.find(
-          (s: SpecVersionEntry) => s.specPath === specPath
-        );
+          (s: { specPath: string }) => s.specPath === specPath
+        ) as SpecVersionEntry | undefined;
 
         if (spec) {
           setSpecEntry(spec);
@@ -339,7 +335,6 @@ export function VersionsTab({ specPath, elementName }: VersionsTabProps) {
       <ReleaseButtonSection
         specId={specEntry.specId}
         currentVersion={specEntry.currentVersion}
-        displayName={specEntry.displayName}
       />
 
       <Divider sx={{ my: 2 }} />
