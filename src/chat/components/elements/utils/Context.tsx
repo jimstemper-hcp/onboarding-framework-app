@@ -15,7 +15,6 @@ import {
   Chip,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
   Divider,
 } from '@mui/material';

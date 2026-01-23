@@ -193,7 +193,7 @@ export function Tool({
                 >
                   {typeof tool.result === 'string'
                     ? tool.result
-                    : JSON.stringify(tool.result, null, 2)}
+                    : JSON.stringify(tool.result, null, 2) as string}
                 </Box>
               </Box>
             )}

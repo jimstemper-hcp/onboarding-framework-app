@@ -48,10 +48,9 @@ export interface PlanProps {
 
 interface StepIconProps {
   status: PlanStep['status'];
-  index: number;
 }
 
-function StepIcon({ status, index }: StepIconProps) {
+function StepIcon({ status }: StepIconProps) {
   switch (status) {
     case 'completed':
       return <CheckCircleIcon color="success" />;
@@ -153,7 +152,7 @@ export function Plan({
             <Step key={step.id} completed={step.status === 'completed'}>
               <StepLabel
                 StepIconComponent={() => (
-                  <StepIcon status={step.status} index={index} />
+                  <StepIcon status={step.status} />
                 )}
                 error={step.status === 'error'}
               >

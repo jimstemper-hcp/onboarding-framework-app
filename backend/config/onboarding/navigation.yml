@@ -1,0 +1,180 @@
+# Navigation Items - Links to HCP pages, help articles, videos, etc.
+
+- slugId: customers-page
+  name: Customers
+  description: View and manage your customers
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /customers
+  url: /customers
+
+- slugId: customers-new
+  name: New Customer
+  description: Add a new customer
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /customers/new
+  url: /customers/new
+
+- slugId: customers-import
+  name: Import Customers
+  description: Import customers from a CSV file
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /data_import/imports/new/customers_import_options
+  url: /data_import/imports/new/customers_import_options
+
+- slugId: jobs-page
+  name: Jobs
+  description: View and manage your jobs
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /jobs
+  url: /jobs
+
+- slugId: jobs-new
+  name: New Job
+  description: Create a new job
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /jobs/new
+  url: /jobs/new
+
+- slugId: estimates-page
+  name: Estimates
+  description: View and manage your estimates
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /estimates
+  url: /estimates
+
+- slugId: estimates-new
+  name: New Estimate
+  description: Create a new estimate
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /estimates/new
+  url: /estimates/new
+
+- slugId: schedule-page
+  name: Schedule
+  description: View your calendar and schedule
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /schedule
+  url: /schedule
+
+- slugId: invoices-page
+  name: Invoices
+  description: View and manage your invoices
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /invoices
+  url: /invoices
+
+- slugId: settings-company
+  name: Company Settings
+  description: Manage company profile and settings
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /settings/company/profile
+  url: /settings/company/profile
+
+- slugId: settings-team
+  name: Team Settings
+  description: Manage team members and employees
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /settings/employees
+  url: /settings/employees
+
+- slugId: settings-payments
+  name: Payment Settings
+  description: Configure payment processing
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /settings/payments
+  url: /settings/payments
+
+- slugId: settings-online-booking
+  name: Online Booking Settings
+  description: Configure online booking availability and services
+  navigationType: hcp_navigate
+  status: published
+  typeData:
+    pagePath: /settings/online_booking/settings/general
+  url: /settings/online_booking/settings/general
+
+# Help Articles
+- slugId: help-getting-started
+  name: Getting Started Guide
+  description: Complete guide to getting started with Housecall Pro
+  navigationType: hcp_help
+  status: published
+  typeData:
+    helpArticleUrl: https://help.housecallpro.com/getting-started
+    helpArticleId: getting-started-001
+  url: https://help.housecallpro.com/getting-started
+
+- slugId: help-customer-management
+  name: Customer Management Help
+  description: Learn how to manage customers effectively
+  navigationType: hcp_help
+  status: published
+  typeData:
+    helpArticleUrl: https://help.housecallpro.com/customer-management
+    helpArticleId: customers-001
+  url: https://help.housecallpro.com/customer-management
+
+- slugId: help-scheduling
+  name: Scheduling Help
+  description: Learn how to use the scheduling and dispatch features
+  navigationType: hcp_help
+  status: published
+  typeData:
+    helpArticleUrl: https://help.housecallpro.com/scheduling
+    helpArticleId: scheduling-001
+  url: https://help.housecallpro.com/scheduling
+
+- slugId: help-invoicing
+  name: Invoicing Help
+  description: Learn how to create and send invoices
+  navigationType: hcp_help
+  status: published
+  typeData:
+    helpArticleUrl: https://help.housecallpro.com/invoicing
+    helpArticleId: invoicing-001
+  url: https://help.housecallpro.com/invoicing
+
+# Videos
+- slugId: video-getting-started
+  name: Getting Started Video
+  description: Quick overview of Housecall Pro features
+  navigationType: hcp_video
+  status: published
+  typeData:
+    videoUrl: https://www.youtube.com/watch?v=hcp-getting-started
+    videoDurationSeconds: 300
+  url: https://www.youtube.com/watch?v=hcp-getting-started
+
+- slugId: video-customer-management
+  name: Customer Management Video
+  description: Video walkthrough of customer features
+  navigationType: hcp_video
+  status: published
+  typeData:
+    videoUrl: https://www.youtube.com/watch?v=hcp-customer-management
+    videoDurationSeconds: 240
+  url: https://www.youtube.com/watch?v=hcp-customer-management

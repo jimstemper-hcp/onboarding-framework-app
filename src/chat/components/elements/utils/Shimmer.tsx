@@ -92,10 +92,11 @@ export function Shimmer({
     );
   }
 
-  // Single skeleton
+  // Single skeleton (variant is guaranteed to be text/circular/rectangular/rounded here)
+  const skeletonVariant = variant as 'text' | 'circular' | 'rectangular' | 'rounded';
   return (
     <Skeleton
-      variant={variant === 'message' ? 'rounded' : variant}
+      variant={skeletonVariant}
       width={width}
       height={height}
       animation={animation}

@@ -1,0 +1,182 @@
+id: customers
+name: Customers
+description: Manage your customer database, profiles, and communication preferences
+icon: Person
+version: '1.1.0'
+releaseStatus: published
+
+stages:
+  notAttached:
+    accessConditions:
+      operator: AND
+      conditions:
+        - variable: customers.access
+          negated: true
+    onboardingItems: []
+    contextSnippets:
+      - id: value-prop
+        title: Value Proposition
+        content: A well-organized customer database is the foundation of your business operations. Track customer history, preferences, and contact info in one place.
+      - id: stat-highlight
+        title: Key Statistic
+        content: Pros with organized customer databases report 40% faster job scheduling and better repeat business.
+    navigation:
+      - name: Customer Management Overview
+        description: Learn how customer management helps your business
+        url: https://help.housecallpro.com/customer-management
+        navigationType: hcp_help
+    calendlyTypes: []
+    prompt: |
+      When user asks about customers:
+      1. Explain the importance of customer management for business operations
+      2. Reference the help article: "Customer Management Overview"
+      3. Highlight the benefits: organized customer history, faster scheduling, better repeat business
+    tools: []
+
+  attached:
+    accessConditions:
+      operator: AND
+      conditions:
+        - variable: customers.access
+          negated: false
+        - variable: customers.first_added
+          negated: true
+    onboardingItems:
+      - itemId: add-new-customers
+        required: true
+      - itemId: customer-profile-details
+        required: true
+      - itemId: customer-portal
+        required: false
+      - itemId: customer-tags
+        required: false
+    contextSnippets:
+      - id: getting-started
+        title: Getting Started
+        content: Start by adding your first customer. You can import existing customers or add them manually through conversation.
+      - id: sample-flow
+        title: Sample Data Option
+        content: Offer to create a sample customer (Jane Smith) to demonstrate the customer management workflow without affecting real data.
+    navigation:
+      - name: Adding Your First Customer
+        description: Step-by-step guide to adding customers
+        url: https://help.housecallpro.com/adding-customers
+        navigationType: hcp_help
+      - name: Customers
+        description: View and manage your customers
+        url: /customers
+        navigationType: hcp_navigate
+      - name: Import Customers
+        description: Import customers from a CSV file
+        url: /customers/import
+        navigationType: hcp_navigate
+    calendlyTypes:
+      - name: Customer Setup Help
+        url: https://calendly.com/hcp-onboarding/customer-setup
+        team: onboarding
+        description: Get help setting up your customer database
+    prompt: |
+      When user asks about customers:
+      1. First explain how customer management works with help article reference
+      2. Then ask: "Would you like to add a sample customer to see how it works, or add a real one?"
+
+      If SAMPLE:
+      - Say "Great! Let me create a sample customer for you."
+      - Show preview table with sample customer data
+      - Ask for confirmation before creating
+
+      If REAL:
+      - Ask: "What's your customer's name?"
+      - Collect info conversationally: name, email, phone, address
+      - Show preview before creating
+    tools:
+      - name: hcp_create_customer
+        description: Create a new customer in Housecall Pro with name, contact info, and address
+        parameters:
+          first_name:
+            type: string
+            description: Customer first name
+            required: true
+          last_name:
+            type: string
+            description: Customer last name
+            required: true
+          email:
+            type: string
+            description: Customer email address
+          mobile_number:
+            type: string
+            description: Customer phone number
+      - name: hcp_list_customers
+        description: List existing customers in Housecall Pro
+        parameters:
+          limit:
+            type: number
+            description: Maximum number of customers to return
+          search:
+            type: string
+            description: Search term to filter customers
+
+  activated:
+    accessConditions:
+      operator: AND
+      conditions:
+        - variable: customers.first_added
+          negated: false
+    onboardingItems:
+      - itemId: customer-tags
+        required: false
+        stageSpecificNote: Organize customers for easier filtering
+      - itemId: customer-portal
+        required: false
+        stageSpecificNote: Let customers self-serve and view their job history
+      - itemId: customer-notifications
+        required: false
+        stageSpecificNote: Keep customers informed automatically
+    contextSnippets:
+      - id: next-steps
+        title: Next Steps
+        content: Great start! Now organize your customers with tags and enable the customer portal for self-service.
+      - id: pro-tip
+        title: Pro Tip
+        content: Use customer tags to segment your database - try tags like "VIP", "Commercial", or "Maintenance Plan" for easy filtering.
+    navigation:
+      - name: Customer Tags Guide
+        description: Learn how to organize customers with tags
+        url: https://help.housecallpro.com/customer-tags
+        navigationType: hcp_help
+      - name: Customers
+        description: View and manage your customers
+        url: /customers
+        navigationType: hcp_navigate
+    calendlyTypes:
+      - name: Customer Organization Tips
+        url: https://calendly.com/hcp-success/customer-tips
+        team: support
+        description: Learn best practices for organizing customers
+    prompt: |
+      When user asks about customers:
+      1. Provide help content - they've added their first customer!
+      2. Offer these specific next steps:
+         - "Would you like to set up customer tags to organize your database?"
+         - "Would you like to enable the customer portal so customers can view their job history?"
+    tools:
+      - name: hcp_list_customers
+        description: List existing customers in Housecall Pro
+        parameters:
+          limit:
+            type: number
+            description: Maximum number of customers to return
+          search:
+            type: string
+            description: Search term to filter customers
+      - name: hcp_update_customer
+        description: Update customer information
+        parameters:
+          customer_id:
+            type: string
+            description: Customer ID to update
+            required: true
+          tags:
+            type: array
+            description: Customer tags

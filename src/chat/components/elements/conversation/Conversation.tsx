@@ -11,7 +11,6 @@ import {
   useState,
   useCallback,
   type ReactNode,
-  type UIEvent,
 } from 'react';
 import { Box, type SxProps, type Theme } from '@mui/material';
 
@@ -58,7 +57,7 @@ export function Conversation({
   }, [bottomThreshold]);
 
   // Handle scroll events
-  const handleScroll = useCallback((e: UIEvent<HTMLDivElement>) => {
+  const handleScroll = useCallback(() => {
     const newIsAtBottom = checkIsAtBottom();
     if (newIsAtBottom !== isAtBottom) {
       setIsAtBottom(newIsAtBottom);
@@ -72,13 +71,6 @@ export function Conversation({
       bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [children, autoScroll, isAtBottom]);
-
-  // Scroll to bottom imperatively
-  const scrollToBottom = useCallback((smooth = true) => {
-    bottomRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
-    setIsAtBottom(true);
-    onScrollChange?.(true);
-  }, [onScrollChange]);
 
   return (
     <Box
