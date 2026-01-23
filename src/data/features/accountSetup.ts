@@ -110,26 +110,5 @@ export const accountSetupFeature: Feature = {
       tools: [],
     },
 
-    engaged: {
-      accessConditions: {
-        operator: 'AND',
-        conditions: [
-          { variable: 'account.setup_complete', negated: false },
-          { variable: 'account.settings_updated', negated: false },
-        ],
-      },
-      onboardingItems: [],
-      contextSnippets: [
-        {
-          id: 'optimized',
-          title: 'Optimized',
-          content: 'Account is fully configured and being actively maintained.',
-        },
-      ],
-      navigation: [],
-      calendlyTypes: [],
-      prompt: 'Account is well-maintained. Offer advanced configuration tips as needed.',
-      tools: [],
-    },
   },
 };

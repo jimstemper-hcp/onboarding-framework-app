@@ -67,13 +67,12 @@ function createDefaultWeeklyPlan(): WeeklyPlan {
 function getFeatureOnboardingItems(feature: Feature): OnboardingItemAssignment[] {
   const attached = feature.stages.attached.onboardingItems || [];
   const activated = feature.stages.activated.onboardingItems || [];
-  const engaged = feature.stages.engaged.onboardingItems || [];
 
   // Deduplicate by itemId
   const seen = new Set<string>();
   const items: OnboardingItemAssignment[] = [];
 
-  for (const item of [...attached, ...activated, ...engaged]) {
+  for (const item of [...attached, ...activated]) {
     if (!seen.has(item.itemId)) {
       seen.add(item.itemId);
       items.push(item);
@@ -574,7 +573,7 @@ export function PortalView() {
   // Calculate progress for the simple progress bar
   const completedCount = journeyFeatures.filter((f) => {
     const status = activePro.featureStatus[f.id];
-    return status && (status.stage === 'activated' || status.stage === 'engaged');
+    return status && status.stage === 'activated';
   }).length;
   const totalCount = journeyFeatures.length;
   const allComplete = totalCount > 0 && completedCount === totalCount;
@@ -665,7 +664,7 @@ export function PortalView() {
           {/* Feature List */}
           {journeyFeatures.map((feature) => {
             const status = activePro.featureStatus[feature.id];
-            const isCompleted = status && (status.stage === 'activated' || status.stage === 'engaged');
+            const isCompleted = status && status.stage === 'activated';
 
             return (
               <FeatureCard

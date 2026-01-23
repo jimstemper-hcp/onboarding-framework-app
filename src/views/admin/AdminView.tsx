@@ -91,25 +91,23 @@ const palette = {
   },
 };
 
-type StageKey = 'notAttached' | 'attached' | 'activated' | 'engaged';
+type StageKey = 'notAttached' | 'attached' | 'activated';
 
 const stageConfig: Record<StageKey, { label: string; color: string }> = {
   notAttached: { label: 'Not Attached', color: palette.grey[600] },
   attached: { label: 'Attached', color: palette.warning },
-  activated: { label: 'Activated', color: palette.primary },
-  engaged: { label: 'Engaged', color: palette.success },
+  activated: { label: 'Activated', color: palette.success },
 };
 
-const stageKeys: StageKey[] = ['notAttached', 'attached', 'activated', 'engaged'];
+const stageKeys: StageKey[] = ['notAttached', 'attached', 'activated'];
 
 const stageCompletionDescriptions: Record<StageKey, string> = {
   notAttached: 'What feature access does the Pro need to be able to complete the core functionality of this feature?',
   attached: "To be considered 'Attached' the Pro must complete all onboarding items for this stage",
-  activated: "To be considered 'Activated' the Pro must complete all onboarding items for this stage",
-  engaged: 'At this time we consider all pros engaged who have completed all onboarding items. In the future we hope to expand on the transition from Activated to Engaged and include some weekly goal for engaged.',
+  activated: "To be considered 'Activated' the Pro has completed setup and is actively using the feature",
 };
 
-type AdminPage = 'features' | 'navigation' | 'calls' | 'onboarding-items' | 'tools';
+type AdminPage = 'features' | 'navigation' | 'calls' | 'completion-steps' | 'tools';
 
 const navigationTypes: { value: NavigationType; label: string; description: string }[] = [
   { value: 'hcp_navigate', label: 'Page Navigation', description: 'Navigate to a page path in the product' },
@@ -555,25 +553,25 @@ function SimplifiedStageEditor({
         />
       </Paper>
 
-      {/* Onboarding Items (reference table) */}
+      {/* Completion Steps (reference table) */}
       <Paper sx={{ p: 3 }}>
-        <SectionHeader icon={<ChecklistIcon />} title="Onboarding Items" count={context.onboardingItems?.length || 0} />
+        <SectionHeader icon={<ChecklistIcon />} title="Completion Steps" count={context.onboardingItems?.length || 0} />
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Centralized onboarding items assigned to this stage.
+          Centralized completion steps assigned to this stage.
         </Typography>
         <ReferenceTable
           items={onboardingTableItems}
-          onNavigate={() => onNavigateToPage('onboarding-items')}
+          onNavigate={() => onNavigateToPage('completion-steps')}
           onRemove={handleRemoveOnboardingItem}
-          emptyMessage="No onboarding items assigned"
+          emptyMessage="No completion steps assigned"
         />
         <Button startIcon={<AddIcon />} size="small" onClick={() => setShowAddOnboardingItem(true)} sx={{ mt: 1 }}>
-          Add Onboarding Item
+          Add Completion Step
         </Button>
 
-        {/* Add Onboarding Item Dialog */}
+        {/* Add Completion Step Dialog */}
         <PlanningAwareDialog open={showAddOnboardingItem} onClose={() => setShowAddOnboardingItem(false)} maxWidth="md" fullWidth>
-          <DialogTitle>Add Onboarding Item</DialogTitle>
+          <DialogTitle>Add Completion Step</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={1}>
               {availableOnboardingItems.map((item) => (
@@ -1495,8 +1493,8 @@ function NavigationEditModal({
     setEditedItem({ ...editedItem, ...updates });
   };
 
-  // Update context snippets
-  const handleSnippetChange = (index: number, field: 'title' | 'content', value: string) => {
+  // Update context snippets (TODO: wire these up to UI)
+  void function _handleSnippetChange(index: number, field: 'title' | 'content', value: string) {
     const snippets = editedItem.contextSnippets || [];
     const updated = [...snippets];
     updated[index] = { ...updated[index], [field]: value };
@@ -1505,7 +1503,7 @@ function NavigationEditModal({
     setEditedItem({ ...editedItem, contextSnippets: updated, description: newDesc });
   };
 
-  const handleAddSnippet = () => {
+  void function _handleAddSnippet() {
     const newId = `snippet-${Date.now()}`;
     const snippets = editedItem.contextSnippets || [];
     setEditedItem({
@@ -1514,7 +1512,7 @@ function NavigationEditModal({
     });
   };
 
-  const handleRemoveSnippet = (index: number) => {
+  void function _handleRemoveSnippet(index: number) {
     if (index === 0) return; // Can't remove LLM Description
     const snippets = editedItem.contextSnippets || [];
     setEditedItem({
@@ -2702,7 +2700,7 @@ function OnboardingItemEditModal({
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Stack direction="row" alignItems="center" spacing={2}>
             <Typography variant="h6">
-              {item ? 'Edit Onboarding Item' : 'New Onboarding Item'}
+              {item ? 'Edit Completion Step' : 'New Completion Step'}
             </Typography>
             {editedItem.status && (
               <Chip
@@ -3384,13 +3382,13 @@ function OnboardingItemsManagementPage() {
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h5" fontWeight={600}>Onboarding Items</Typography>
+          <Typography variant="h5" fontWeight={600}>Completion Steps</Typography>
           <Typography variant="body2" color="text.secondary">
-            Centralized repository of onboarding tasks and actions
+            Centralized repository of steps for feature activation
           </Typography>
         </Box>
         <Button variant="contained" startIcon={<AddIcon />} disabled>
-          Add Item
+          Add Step
         </Button>
       </Stack>
 
@@ -3411,7 +3409,7 @@ function OnboardingItemsManagementPage() {
               <TableRow>
                 <TableCell colSpan={6}>
                   <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                    No onboarding items defined
+                    No completion steps defined
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -3697,7 +3695,7 @@ const adminPageToPlanningId: Record<AdminPage, string> = {
   features: 'page-hcp-context-features-index',
   navigation: 'page-hcp-context-navigation',
   calls: 'page-hcp-context-calls',
-  'onboarding-items': 'page-hcp-context-onboarding-items',
+  'completion-steps': 'page-hcp-context-completion-steps',
   tools: 'page-hcp-context-tools',
 };
 
@@ -3716,7 +3714,7 @@ export function AdminView() {
     { id: 'features', label: 'Features', icon: <CategoryIcon /> },
     { id: 'navigation', label: 'Navigation', icon: <LinkIcon /> },
     { id: 'calls', label: 'Calls', icon: <PhoneIcon /> },
-    { id: 'onboarding-items', label: 'Onboarding Items', icon: <ChecklistIcon /> },
+    { id: 'completion-steps', label: 'Completion Steps', icon: <ChecklistIcon /> },
     { id: 'tools', label: 'Tools', icon: <BuildIcon /> },
   ];
 
@@ -3728,7 +3726,7 @@ export function AdminView() {
         return <NavigationManagementPage />;
       case 'calls':
         return <CallsManagementPage />;
-      case 'onboarding-items':
+      case 'completion-steps':
         return <OnboardingItemsManagementPage />;
       case 'tools':
         return <ToolsManagementPage />;

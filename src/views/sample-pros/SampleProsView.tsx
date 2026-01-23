@@ -82,15 +82,13 @@ const palette = {
 const stageColors: Record<AdoptionStage, string> = {
   not_attached: palette.grey[400],
   attached: palette.warning,
-  activated: palette.primary,
-  engaged: palette.success,
+  activated: palette.success,
 };
 
 const stageLabels: Record<AdoptionStage, string> = {
   not_attached: 'Not Attached',
   attached: 'Attached',
   activated: 'Activated',
-  engaged: 'Engaged',
 };
 
 const allFeatureIds: FeatureId[] = [
@@ -106,7 +104,7 @@ const allFeatureIds: FeatureId[] = [
 const businessTypes: BusinessType[] = ['plumber', 'electrician', 'hvac', 'landscaper', 'cleaning', 'general'];
 const planTiers: PlanTier[] = ['basic', 'essentials', 'max'];
 const proGoals: ProGoal[] = ['growth', 'efficiency'];
-const stages: AdoptionStage[] = ['not_attached', 'attached', 'activated', 'engaged'];
+const stages: AdoptionStage[] = ['not_attached', 'attached', 'activated'];
 
 // Pro Data field options
 const billingStatuses: BillingStatus[] = ['trial_expired', 'enrolled', 'unknown', 'unenrolled', 'trial'];
@@ -180,10 +178,9 @@ function createAllFeatureStatuses(stage: AdoptionStage): Record<FeatureId, Featu
   const status: FeatureStatus = {
     stage,
     completedTasks: [],
-    usageCount: stage === 'engaged' ? 50 : stage === 'activated' ? 10 : 0,
+    usageCount: stage === 'activated' ? 10 : 0,
     ...(stage !== 'not_attached' && { attachedAt: now }),
-    ...((stage === 'activated' || stage === 'engaged') && { activatedAt: now }),
-    ...(stage === 'engaged' && { engagedAt: now }),
+    ...(stage === 'activated' && { activatedAt: now }),
   };
 
   return {
@@ -668,8 +665,7 @@ function FeaturesTab({ pro, features, onUpdate }: FeaturesTabProps) {
       ...current,
       stage,
       ...(stage !== 'not_attached' && !current.attachedAt && { attachedAt: now }),
-      ...((stage === 'activated' || stage === 'engaged') && !current.activatedAt && { activatedAt: now }),
-      ...(stage === 'engaged' && !current.engagedAt && { engagedAt: now }),
+      ...(stage === 'activated' && !current.activatedAt && { activatedAt: now }),
     };
 
     onUpdate({
@@ -787,11 +783,6 @@ function FeaturesTab({ pro, features, onUpdate }: FeaturesTabProps) {
                       {status.activatedAt && (
                         <Typography variant="caption" color="text.secondary">
                           Activated: {status.activatedAt}
-                        </Typography>
-                      )}
-                      {status.engagedAt && (
-                        <Typography variant="caption" color="text.secondary">
-                          Engaged: {status.engagedAt}
                         </Typography>
                       )}
                     </Stack>

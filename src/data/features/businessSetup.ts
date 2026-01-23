@@ -105,33 +105,5 @@ export const businessSetupFeature: Feature = {
       tools: [],
     },
 
-    engaged: {
-      accessConditions: {
-        operator: 'AND',
-        conditions: [
-          { variable: 'business.setup_complete', negated: false },
-          { variable: 'business.profile_updated', negated: false },
-        ],
-      },
-      onboardingItems: [],
-      contextSnippets: [
-        {
-          id: 'engaged',
-          title: 'Active User',
-          content: 'Pro actively maintains their business profile.',
-        },
-      ],
-      navigation: [
-        {
-          name: 'Company Settings',
-          description: 'Update your company information',
-          url: '/settings/company',
-          navigationType: 'hcp_navigate',
-        },
-      ],
-      calendlyTypes: [],
-      prompt: 'The pro is an active user. Help them with advanced configuration or questions.',
-      tools: [],
-    },
   },
 };

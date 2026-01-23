@@ -4,6 +4,7 @@ import {
   useState,
   useCallback,
   useMemo,
+  useEffect,
   type ReactNode,
 } from 'react';
 import type {
@@ -16,49 +17,21 @@ import type {
   OnboardingContextValue,
   WeeklyPlan,
   OnboardingItemDefinition,
+  CompletionStep,
   NavigationItem,
   CalendlyLink,
   McpTool,
 } from '../types';
-import { features as initialFeatures } from '../data/features';
-import { mockPros as initialPros } from '../data/mockPros';
-import { onboardingItems as initialOnboardingItems } from '../data/onboardingItems';
-import { navigationItems as initialNavigationItems } from '../data/navigation';
-
-// =============================================================================
-// LOCAL STORAGE PERSISTENCE
-// =============================================================================
-
-const STORAGE_KEYS = {
-  features: 'hcp-context-features',
-  onboardingItems: 'hcp-context-onboarding-items',
-  navigation: 'hcp-context-navigation',
-  calls: 'hcp-context-calls',
-  tools: 'hcp-context-tools',
-};
-
-/**
- * Load data from localStorage or fall back to initial data
- */
-function loadFromStorage<T>(key: string, fallback: T): T {
-  try {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-/**
- * Save data to localStorage
- */
-function saveToStorage<T>(key: string, data: T): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (e) {
-    console.warn('Failed to save to localStorage:', e);
-  }
-}
+import {
+  prosApi,
+  featuresApi,
+  itemsApi,
+  completionStepsApi,
+  navigationApi,
+  callsApi,
+  toolsApi,
+  healthCheck,
+} from '../services/onboardingApi';
 
 // =============================================================================
 // CONTEXT CREATION
@@ -76,36 +49,97 @@ interface OnboardingProviderProps {
 
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   // ---------------------------------------------------------------------------
-  // STATE
+  // LOADING & ERROR STATE
   // ---------------------------------------------------------------------------
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [features, setFeatures] = useState<Feature[]>(() =>
-    loadFromStorage(STORAGE_KEYS.features, initialFeatures)
-  );
-  const [onboardingItemsList, setOnboardingItemsList] = useState<OnboardingItemDefinition[]>(() =>
-    loadFromStorage(STORAGE_KEYS.onboardingItems, initialOnboardingItems)
-  );
-  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>(() =>
-    loadFromStorage(STORAGE_KEYS.navigation, initialNavigationItems)
-  );
-  const [callItems, setCallItems] = useState<CalendlyLink[]>(() =>
-    loadFromStorage(STORAGE_KEYS.calls, [])
-  );
-  const [toolItems, setToolItems] = useState<McpTool[]>(() =>
-    loadFromStorage(STORAGE_KEYS.tools, [])
-  );
-  const [pros, setPros] = useState<ProAccount[]>(initialPros);
+  // ---------------------------------------------------------------------------
+  // DATA STATE (fetched from API)
+  // ---------------------------------------------------------------------------
+  const [features, setFeatures] = useState<Feature[]>([]);
+  const [onboardingItemsList, setOnboardingItemsList] = useState<OnboardingItemDefinition[]>([]);
+  const [completionSteps, setCompletionSteps] = useState<CompletionStep[]>([]);
+  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
+  const [callItems, setCallItems] = useState<CalendlyLink[]>([]);
+  const [toolItems, setToolItems] = useState<McpTool[]>([]);
+  const [pros, setPros] = useState<ProAccount[]>([]);
+
+  // ---------------------------------------------------------------------------
+  // UI STATE
+  // ---------------------------------------------------------------------------
   const [currentView, setCurrentView] = useState<ViewType>('portal');
   const [selectedProId, setSelectedProId] = useState<string | null>(null);
   const [selectedFeatureId, setSelectedFeatureId] = useState<FeatureId | null>(null);
-  // The "logged in" pro for the Portal view - defaults to first pro
-  const [activeProId, setActiveProId] = useState<string>(initialPros[0]?.id ?? '');
-
-  // Chat integration - pending prompt to send when chat view opens
+  const [activeProId, setActiveProId] = useState<string>('');
   const [pendingChatPrompt, setPendingChatPrompt] = useState<string | null>(null);
-
-  // Chat drawer state
   const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
+
+  // ---------------------------------------------------------------------------
+  // LOAD DATA FROM API ON MOUNT
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadData() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // First check if backend is available
+        await healthCheck();
+
+        // Fetch all data in parallel
+        const [
+          prosData,
+          featuresData,
+          itemsData,
+          completionStepsData,
+          navData,
+          callsData,
+          toolsData,
+        ] = await Promise.all([
+          prosApi.getAll(),
+          featuresApi.getAll(),
+          itemsApi.getAll(),
+          completionStepsApi.getAll(),
+          navigationApi.getAll(),
+          callsApi.getAll(),
+          toolsApi.getAll(),
+        ]);
+
+        if (cancelled) return;
+
+        setPros(prosData);
+        setFeatures(featuresData);
+        setOnboardingItemsList(itemsData);
+        setCompletionSteps(completionStepsData);
+        setNavigationItems(navData);
+        setCallItems(callsData);
+        setToolItems(toolsData);
+
+        // Set active pro to first pro
+        if (prosData.length > 0) {
+          setActiveProId(prosData[0].id);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        setError(`Failed to connect to backend: ${message}. Ensure the backend server is running on port 3001.`);
+        console.error('Backend connection failed:', err);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // ---------------------------------------------------------------------------
   // NAVIGATION ACTIONS
@@ -215,11 +249,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
             ...(stage !== 'not_attached' && !currentStatus.attachedAt
               ? { attachedAt: now }
               : {}),
-            ...((stage === 'activated' || stage === 'engaged') && !currentStatus.activatedAt
+            ...(stage === 'activated' && !currentStatus.activatedAt
               ? { activatedAt: now }
-              : {}),
-            ...(stage === 'engaged' && !currentStatus.engagedAt
-              ? { engagedAt: now }
               : {}),
           };
 
@@ -264,159 +295,272 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   // FEATURE MUTATIONS (for Admin view)
   // ---------------------------------------------------------------------------
 
-  const updateFeature = useCallback((updatedFeature: Feature) => {
-    setFeatures((currentFeatures) => {
-      const newFeatures = currentFeatures.map((feature) =>
-        feature.id === updatedFeature.id ? updatedFeature : feature
+  const updateFeature = useCallback(async (updatedFeature: Feature) => {
+    try {
+      await featuresApi.update(updatedFeature.id, updatedFeature);
+      setFeatures((currentFeatures) =>
+        currentFeatures.map((feature) =>
+          feature.id === updatedFeature.id ? updatedFeature : feature
+        )
       );
-      saveToStorage(STORAGE_KEYS.features, newFeatures);
-      return newFeatures;
-    });
+    } catch (err) {
+      console.error('Failed to update feature:', err);
+      throw err;
+    }
   }, []);
 
-  const resetFeatures = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.features);
-    setFeatures(initialFeatures);
+  const resetFeatures = useCallback(async () => {
+    try {
+      const data = await featuresApi.getAll();
+      setFeatures(data);
+    } catch (err) {
+      console.error('Failed to reload features:', err);
+    }
   }, []);
 
   // ---------------------------------------------------------------------------
   // ONBOARDING ITEM MUTATIONS (for Admin view)
   // ---------------------------------------------------------------------------
 
-  const updateOnboardingItem = useCallback((updatedItem: OnboardingItemDefinition) => {
-    setOnboardingItemsList((current) => {
-      const newItems = current.map((item) =>
-        item.id === updatedItem.id ? updatedItem : item
+  const updateOnboardingItem = useCallback(async (updatedItem: OnboardingItemDefinition) => {
+    try {
+      await itemsApi.update(updatedItem.id, updatedItem);
+      setOnboardingItemsList((current) =>
+        current.map((item) =>
+          item.id === updatedItem.id ? updatedItem : item
+        )
       );
-      saveToStorage(STORAGE_KEYS.onboardingItems, newItems);
-      return newItems;
-    });
+    } catch (err) {
+      console.error('Failed to update onboarding item:', err);
+      throw err;
+    }
   }, []);
 
-  const addOnboardingItem = useCallback((newItem: OnboardingItemDefinition) => {
-    setOnboardingItemsList((current) => {
-      const newItems = [...current, newItem];
-      saveToStorage(STORAGE_KEYS.onboardingItems, newItems);
-      return newItems;
-    });
+  const addOnboardingItem = useCallback(async (newItem: OnboardingItemDefinition) => {
+    try {
+      await itemsApi.create(newItem);
+      setOnboardingItemsList((current) => [...current, newItem]);
+    } catch (err) {
+      console.error('Failed to add onboarding item:', err);
+      throw err;
+    }
   }, []);
 
-  const deleteOnboardingItem = useCallback((itemId: string) => {
-    setOnboardingItemsList((current) => {
-      const newItems = current.filter((item) => item.id !== itemId);
-      saveToStorage(STORAGE_KEYS.onboardingItems, newItems);
-      return newItems;
-    });
+  const deleteOnboardingItem = useCallback(async (itemId: string) => {
+    try {
+      await itemsApi.delete(itemId);
+      setOnboardingItemsList((current) =>
+        current.filter((item) => item.id !== itemId)
+      );
+    } catch (err) {
+      console.error('Failed to delete onboarding item:', err);
+      throw err;
+    }
   }, []);
 
-  const resetOnboardingItems = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.onboardingItems);
-    setOnboardingItemsList(initialOnboardingItems);
+  const resetOnboardingItems = useCallback(async () => {
+    try {
+      const data = await itemsApi.getAll();
+      setOnboardingItemsList(data);
+    } catch (err) {
+      console.error('Failed to reload onboarding items:', err);
+    }
+  }, []);
+
+  // ---------------------------------------------------------------------------
+  // HP-5118: COMPLETION STEP MUTATIONS (for Admin view)
+  // ---------------------------------------------------------------------------
+
+  const updateCompletionStep = useCallback(async (updatedStep: CompletionStep) => {
+    try {
+      await completionStepsApi.update(updatedStep.id, updatedStep);
+      setCompletionSteps((current) =>
+        current.map((step) =>
+          step.id === updatedStep.id ? updatedStep : step
+        )
+      );
+    } catch (err) {
+      console.error('Failed to update completion step:', err);
+      throw err;
+    }
+  }, []);
+
+  const addCompletionStep = useCallback(async (newStep: CompletionStep) => {
+    try {
+      await completionStepsApi.create(newStep);
+      setCompletionSteps((current) => [...current, newStep]);
+    } catch (err) {
+      console.error('Failed to add completion step:', err);
+      throw err;
+    }
+  }, []);
+
+  const deleteCompletionStep = useCallback(async (stepId: string) => {
+    try {
+      await completionStepsApi.delete(stepId);
+      setCompletionSteps((current) =>
+        current.filter((step) => step.id !== stepId)
+      );
+    } catch (err) {
+      console.error('Failed to delete completion step:', err);
+      throw err;
+    }
+  }, []);
+
+  const resetCompletionSteps = useCallback(async () => {
+    try {
+      const data = await completionStepsApi.getAll();
+      setCompletionSteps(data);
+    } catch (err) {
+      console.error('Failed to reload completion steps:', err);
+    }
   }, []);
 
   // ---------------------------------------------------------------------------
   // NAVIGATION MUTATIONS (for Admin view)
   // ---------------------------------------------------------------------------
 
-  const updateNavigationItem = useCallback((updatedItem: NavigationItem) => {
-    setNavigationItems((current) => {
-      const newItems = current.map((item) =>
-        item.slugId === updatedItem.slugId ? updatedItem : item
+  const updateNavigationItem = useCallback(async (updatedItem: NavigationItem) => {
+    try {
+      await navigationApi.update(updatedItem.slugId || updatedItem.name, updatedItem);
+      setNavigationItems((current) =>
+        current.map((item) =>
+          item.slugId === updatedItem.slugId ? updatedItem : item
+        )
       );
-      saveToStorage(STORAGE_KEYS.navigation, newItems);
-      return newItems;
-    });
+    } catch (err) {
+      console.error('Failed to update navigation item:', err);
+      throw err;
+    }
   }, []);
 
-  const addNavigationItem = useCallback((newItem: NavigationItem) => {
-    setNavigationItems((current) => {
-      const newItems = [...current, newItem];
-      saveToStorage(STORAGE_KEYS.navigation, newItems);
-      return newItems;
-    });
+  const addNavigationItem = useCallback(async (newItem: NavigationItem) => {
+    try {
+      await navigationApi.create(newItem);
+      setNavigationItems((current) => [...current, newItem]);
+    } catch (err) {
+      console.error('Failed to add navigation item:', err);
+      throw err;
+    }
   }, []);
 
-  const deleteNavigationItem = useCallback((itemId: string) => {
-    setNavigationItems((current) => {
-      const newItems = current.filter((item) => item.slugId !== itemId);
-      saveToStorage(STORAGE_KEYS.navigation, newItems);
-      return newItems;
-    });
+  const deleteNavigationItem = useCallback(async (itemId: string) => {
+    try {
+      await navigationApi.delete(itemId);
+      setNavigationItems((current) =>
+        current.filter((item) => item.slugId !== itemId)
+      );
+    } catch (err) {
+      console.error('Failed to delete navigation item:', err);
+      throw err;
+    }
   }, []);
 
-  const resetNavigation = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.navigation);
-    setNavigationItems(initialNavigationItems);
+  const resetNavigation = useCallback(async () => {
+    try {
+      const data = await navigationApi.getAll();
+      setNavigationItems(data);
+    } catch (err) {
+      console.error('Failed to reload navigation items:', err);
+    }
   }, []);
 
   // ---------------------------------------------------------------------------
   // CALLS MUTATIONS (for Admin view)
   // ---------------------------------------------------------------------------
 
-  const updateCallItem = useCallback((updatedItem: CalendlyLink) => {
-    setCallItems((current) => {
-      const newItems = current.map((item) =>
-        item.slugId === updatedItem.slugId ? updatedItem : item
+  const updateCallItem = useCallback(async (updatedItem: CalendlyLink) => {
+    try {
+      await callsApi.update(updatedItem.slugId || updatedItem.name, updatedItem);
+      setCallItems((current) =>
+        current.map((item) =>
+          item.slugId === updatedItem.slugId ? updatedItem : item
+        )
       );
-      saveToStorage(STORAGE_KEYS.calls, newItems);
-      return newItems;
-    });
+    } catch (err) {
+      console.error('Failed to update call item:', err);
+      throw err;
+    }
   }, []);
 
-  const addCallItem = useCallback((newItem: CalendlyLink) => {
-    setCallItems((current) => {
-      const newItems = [...current, newItem];
-      saveToStorage(STORAGE_KEYS.calls, newItems);
-      return newItems;
-    });
+  const addCallItem = useCallback(async (newItem: CalendlyLink) => {
+    try {
+      await callsApi.create(newItem);
+      setCallItems((current) => [...current, newItem]);
+    } catch (err) {
+      console.error('Failed to add call item:', err);
+      throw err;
+    }
   }, []);
 
-  const deleteCallItem = useCallback((itemId: string) => {
-    setCallItems((current) => {
-      const newItems = current.filter((item) => item.slugId !== itemId);
-      saveToStorage(STORAGE_KEYS.calls, newItems);
-      return newItems;
-    });
+  const deleteCallItem = useCallback(async (itemId: string) => {
+    try {
+      await callsApi.delete(itemId);
+      setCallItems((current) =>
+        current.filter((item) => item.slugId !== itemId)
+      );
+    } catch (err) {
+      console.error('Failed to delete call item:', err);
+      throw err;
+    }
   }, []);
 
-  const resetCalls = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.calls);
-    setCallItems([]);
+  const resetCalls = useCallback(async () => {
+    try {
+      const data = await callsApi.getAll();
+      setCallItems(data);
+    } catch (err) {
+      console.error('Failed to reload call items:', err);
+    }
   }, []);
 
   // ---------------------------------------------------------------------------
   // TOOLS MUTATIONS (for Admin view)
   // ---------------------------------------------------------------------------
 
-  const updateToolItem = useCallback((updatedItem: McpTool) => {
-    setToolItems((current) => {
-      const newItems = current.map((item) =>
-        item.name === updatedItem.name ? updatedItem : item
+  const updateToolItem = useCallback(async (updatedItem: McpTool) => {
+    try {
+      await toolsApi.update(updatedItem.name, updatedItem);
+      setToolItems((current) =>
+        current.map((item) =>
+          item.name === updatedItem.name ? updatedItem : item
+        )
       );
-      saveToStorage(STORAGE_KEYS.tools, newItems);
-      return newItems;
-    });
+    } catch (err) {
+      console.error('Failed to update tool item:', err);
+      throw err;
+    }
   }, []);
 
-  const addToolItem = useCallback((newItem: McpTool) => {
-    setToolItems((current) => {
-      const newItems = [...current, newItem];
-      saveToStorage(STORAGE_KEYS.tools, newItems);
-      return newItems;
-    });
+  const addToolItem = useCallback(async (newItem: McpTool) => {
+    try {
+      await toolsApi.create(newItem);
+      setToolItems((current) => [...current, newItem]);
+    } catch (err) {
+      console.error('Failed to add tool item:', err);
+      throw err;
+    }
   }, []);
 
-  const deleteToolItem = useCallback((itemId: string) => {
-    setToolItems((current) => {
-      const newItems = current.filter((item) => item.name !== itemId);
-      saveToStorage(STORAGE_KEYS.tools, newItems);
-      return newItems;
-    });
+  const deleteToolItem = useCallback(async (itemId: string) => {
+    try {
+      await toolsApi.delete(itemId);
+      setToolItems((current) =>
+        current.filter((item) => item.name !== itemId)
+      );
+    } catch (err) {
+      console.error('Failed to delete tool item:', err);
+      throw err;
+    }
   }, []);
 
-  const resetTools = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEYS.tools);
-    setToolItems([]);
+  const resetTools = useCallback(async () => {
+    try {
+      const data = await toolsApi.getAll();
+      setToolItems(data);
+    } catch (err) {
+      console.error('Failed to reload tool items:', err);
+    }
   }, []);
 
   // ---------------------------------------------------------------------------
@@ -427,12 +571,18 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     setPros((currentPros) => [...currentPros, pro]);
   }, []);
 
-  const updatePro = useCallback((updatedPro: ProAccount) => {
-    setPros((currentPros) =>
-      currentPros.map((pro) =>
-        pro.id === updatedPro.id ? updatedPro : pro
-      )
-    );
+  const updatePro = useCallback(async (updatedPro: ProAccount) => {
+    try {
+      await prosApi.update(updatedPro.id, updatedPro);
+      setPros((currentPros) =>
+        currentPros.map((pro) =>
+          pro.id === updatedPro.id ? updatedPro : pro
+        )
+      );
+    } catch (err) {
+      console.error('Failed to update pro:', err);
+      throw err;
+    }
   }, []);
 
   const deletePro = useCallback((proId: string) => {
@@ -469,12 +619,18 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   );
 
   const updateProCompletedItems = useCallback(
-    (proId: string, completedItems: string[]) => {
-      setPros((currentPros) =>
-        currentPros.map((pro) =>
-          pro.id === proId ? { ...pro, completedItems } : pro
-        )
-      );
+    async (proId: string, completedItems: string[]) => {
+      try {
+        await prosApi.update(proId, { completedItems } as Partial<ProAccount>);
+        setPros((currentPros) =>
+          currentPros.map((pro) =>
+            pro.id === proId ? { ...pro, completedItems } : pro
+          )
+        );
+      } catch (err) {
+        console.error('Failed to update pro completed items:', err);
+        throw err;
+      }
     },
     []
   );
@@ -514,7 +670,6 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         not_attached: 'notAttached',
         attached: 'attached',
         activated: 'activated',
-        engaged: 'engaged',
       };
 
       return feature.stages[stageMap[stage]];
@@ -528,6 +683,10 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
   const contextValue = useMemo<OnboardingContextValue>(
     () => ({
+      // Loading state
+      isLoading,
+      error,
+
       // State
       features,
       pros,
@@ -574,6 +733,13 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       deleteOnboardingItem,
       resetOnboardingItems,
 
+      // HP-5118: Completion steps mutations
+      completionSteps,
+      updateCompletionStep,
+      addCompletionStep,
+      deleteCompletionStep,
+      resetCompletionSteps,
+
       // Navigation mutations
       navigationItems,
       updateNavigationItem,
@@ -602,6 +768,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       getStageContext,
     }),
     [
+      isLoading,
+      error,
       features,
       pros,
       currentView,
@@ -634,6 +802,11 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       addOnboardingItem,
       deleteOnboardingItem,
       resetOnboardingItems,
+      completionSteps,
+      updateCompletionStep,
+      addCompletionStep,
+      deleteCompletionStep,
+      resetCompletionSteps,
       navigationItems,
       updateNavigationItem,
       addNavigationItem,
@@ -655,6 +828,89 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       getStageContext,
     ]
   );
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        gap: '16px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '3px solid #e5e7eb',
+          borderTopColor: '#3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <p style={{ color: '#6b7280' }}>Connecting to backend...</p>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        gap: '16px',
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        padding: '20px',
+        textAlign: 'center',
+      }}>
+        <div style={{
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          backgroundColor: '#fef2f2',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#dc2626',
+          fontSize: '24px',
+        }}>
+          !
+        </div>
+        <h2 style={{ color: '#dc2626', margin: 0 }}>Backend Connection Error</h2>
+        <p style={{ color: '#6b7280', maxWidth: '500px' }}>{error}</p>
+        <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <code style={{
+            backgroundColor: '#f3f4f6',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '14px',
+          }}>
+            cd backend && npm run dev
+          </code>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <OnboardingContext.Provider value={contextValue}>

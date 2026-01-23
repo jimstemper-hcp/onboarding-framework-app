@@ -38,7 +38,7 @@ export type FeatureId =
  */
 export type FeatureReleaseStatus = 'draft' | 'published' | 'archived';
 
-export type AdoptionStage = 'not_attached' | 'attached' | 'activated' | 'engaged';
+export type AdoptionStage = 'not_attached' | 'attached' | 'activated';
 
 // -----------------------------------------------------------------------------
 // ONBOARDING CATEGORY TYPES (for Frontline Onboarding Plan)
@@ -311,6 +311,35 @@ export interface OnboardingItemDefinition {
   description: string;         // LLM description
 }
 
+// =============================================================================
+// HP-5118 COMPLETION STEP
+// =============================================================================
+
+/**
+ * Completion Step - HP-5118 spec
+ * Represents a step in a feature's activation journey.
+ *
+ * Types:
+ * - one_off: Step is cached once completed
+ * - dynamic: Step completion is checked dynamically each time
+ */
+export interface CompletionStep {
+  id: string;
+  title: string;
+  description: string;
+  required: boolean;
+  type: 'one_off' | 'dynamic';
+  business_rule: string;
+  action?: {
+    type: 'navigate' | 'modal' | 'external';
+    url: string;
+  };
+  ai_context?: {
+    prompt: string;
+    tools: string[];
+  };
+}
+
 /**
  * When an onboarding item is assigned to a feature's stage.
  * This references the central item and adds stage-specific context.
@@ -386,7 +415,6 @@ export interface StageContext {
 export type NotAttachedContext = StageContext;
 export type AttachedContext = StageContext;
 export type ActivatedContext = StageContext;
-export type EngagedContext = StageContext;
 
 // -----------------------------------------------------------------------------
 // FEATURE DEFINITION
@@ -395,6 +423,14 @@ export type EngagedContext = StageContext;
 /**
  * A Feature represents a product capability that has its own onboarding journey.
  * Each feature has context for all four adoption stages.
+ *
+ * HP-5118 adds:
+ * - value_statement: Why this feature matters
+ * - feature_key: FAC key for access control
+ * - permissions_required: Required permissions
+ * - call_to_book_url: Calendly booking link
+ * - sell_page_url: Upsell page for not_attached state
+ * - completion_steps: Steps to activate feature
  */
 export interface Feature {
   id: FeatureId;
@@ -407,8 +443,14 @@ export interface Feature {
     notAttached: NotAttachedContext;
     attached: AttachedContext;
     activated: ActivatedContext;
-    engaged: EngagedContext;
   };
+  // HP-5118 new fields
+  value_statement?: string;
+  feature_key?: string;
+  permissions_required?: string[];
+  call_to_book_url?: string;
+  sell_page_url?: string;
+  completion_steps?: CompletionStep[];
 }
 
 // -----------------------------------------------------------------------------
@@ -629,7 +671,6 @@ export interface FeatureStatus {
   stage: AdoptionStage;
   attachedAt?: string;
   activatedAt?: string;
-  engagedAt?: string;
   completedTasks: string[]; // Task IDs
   usageCount: number;
   rank?: number; // Per-pro ranking (lower = higher priority)
@@ -740,12 +781,19 @@ export interface OnboardingContextActions {
   updateFeature: (feature: Feature) => void;
   resetFeatures: () => void;
 
-  // Onboarding item mutations (for Admin view)
+  // Onboarding item mutations (for Admin view) - legacy name
   onboardingItemsList: OnboardingItemDefinition[];
   updateOnboardingItem: (item: OnboardingItemDefinition) => void;
   addOnboardingItem: (item: OnboardingItemDefinition) => void;
   deleteOnboardingItem: (itemId: string) => void;
   resetOnboardingItems: () => void;
+
+  // HP-5118: Completion Steps mutations (for Admin view)
+  completionSteps: CompletionStep[];
+  updateCompletionStep: (step: CompletionStep) => void;
+  addCompletionStep: (step: CompletionStep) => void;
+  deleteCompletionStep: (stepId: string) => void;
+  resetCompletionSteps: () => void;
 
   // Navigation mutations (for Admin view)
   navigationItems: NavigationItem[];
@@ -775,7 +823,12 @@ export interface OnboardingContextActions {
   getStageContext: (
     featureId: FeatureId,
     stage: AdoptionStage
-  ) => NotAttachedContext | AttachedContext | ActivatedContext | EngagedContext | undefined;
+  ) => NotAttachedContext | AttachedContext | ActivatedContext | undefined;
 }
 
-export type OnboardingContextValue = OnboardingContextState & OnboardingContextActions;
+export interface OnboardingLoadingState {
+  isLoading: boolean;
+  error: string | null;
+}
+
+export type OnboardingContextValue = OnboardingContextState & OnboardingContextActions & OnboardingLoadingState;

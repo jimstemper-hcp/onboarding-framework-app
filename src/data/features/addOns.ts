@@ -111,25 +111,5 @@ export const addOnsFeature: Feature = {
       tools: [],
     },
 
-    engaged: {
-      accessConditions: {
-        operator: 'AND',
-        conditions: [
-          { variable: 'addons.regular_use', negated: false },
-        ],
-      },
-      onboardingItems: [],
-      contextSnippets: [
-        {
-          id: 'power-user',
-          title: 'Power User',
-          content: 'You\'re getting great value from your add-ons! Consider additional integrations.',
-        },
-      ],
-      navigation: [],
-      calendlyTypes: [],
-      prompt: 'Suggest additional add-ons that might benefit the pro based on their usage.',
-      tools: [],
-    },
   },
 };

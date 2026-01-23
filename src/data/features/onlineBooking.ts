@@ -111,32 +111,5 @@ export const onlineBookingFeature: Feature = {
       tools: [],
     },
 
-    engaged: {
-      accessConditions: {
-        operator: 'AND',
-        conditions: [
-          { variable: 'online_booking.first_booking', negated: false },
-        ],
-      },
-      onboardingItems: [],
-      contextSnippets: [
-        {
-          id: 'success',
-          title: 'Bookings Coming In',
-          content: 'Customers are booking online! Monitor your booking metrics and adjust availability as needed.',
-        },
-      ],
-      navigation: [
-        {
-          name: 'Booking Analytics',
-          description: 'View online booking metrics',
-          url: '/reports/online-booking',
-          navigationType: 'hcp_navigate',
-        },
-      ],
-      calendlyTypes: [],
-      prompt: 'Offer tips for optimizing online booking conversion and managing availability.',
-      tools: [],
-    },
   },
 };

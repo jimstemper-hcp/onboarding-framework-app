@@ -118,38 +118,5 @@ export const reportingFeature: Feature = {
       tools: [],
     },
 
-    engaged: {
-      accessConditions: {
-        operator: 'AND',
-        conditions: [
-          { variable: 'reporting.regular_use', negated: false },
-        ],
-      },
-      onboardingItems: [],
-      contextSnippets: [
-        {
-          id: 'power-user',
-          title: 'Data-Driven',
-          content: 'You\'re using data to drive decisions! Keep monitoring your KPIs.',
-        },
-      ],
-      navigation: [
-        {
-          name: 'Tech Leaderboard',
-          description: 'Track technician performance',
-          url: '/reports/tech-leaderboard',
-          navigationType: 'hcp_navigate',
-        },
-        {
-          name: 'Commissions',
-          description: 'Track sales commissions',
-          url: '/reports/commissions',
-          navigationType: 'hcp_navigate',
-        },
-      ],
-      calendlyTypes: [],
-      prompt: 'Offer advanced reporting tips and insights.',
-      tools: [],
-    },
   },
 };

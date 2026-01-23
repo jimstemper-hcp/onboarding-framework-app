@@ -122,32 +122,5 @@ export const servicePlansFeature: Feature = {
       tools: [],
     },
 
-    engaged: {
-      accessConditions: {
-        operator: 'AND',
-        conditions: [
-          { variable: 'service_plans.customers_enrolled', negated: false },
-        ],
-      },
-      onboardingItems: [],
-      contextSnippets: [
-        {
-          id: 'success',
-          title: 'Growing Recurring Revenue',
-          content: 'You\'re building recurring revenue with service plans! Keep enrolling customers.',
-        },
-      ],
-      navigation: [
-        {
-          name: 'Service Plan Report',
-          description: 'View service plan metrics',
-          url: '/reports/service-plans',
-          navigationType: 'hcp_navigate',
-        },
-      ],
-      calendlyTypes: [],
-      prompt: 'Offer tips for growing service plan enrollment and managing renewals.',
-      tools: [],
-    },
   },
 };

@@ -38,8 +38,7 @@ const createStatus = (
   completedTasks,
   usageCount,
   ...(stage !== 'not_attached' && { attachedAt: '2024-01-15' }),
-  ...(stage === 'activated' || stage === 'engaged' ? { activatedAt: '2024-01-20' } : {}),
-  ...(stage === 'engaged' ? { engagedAt: '2024-02-01' } : {}),
+  ...(stage === 'activated' ? { activatedAt: '2024-01-20' } : {}),
 });
 
 // Helper to create all feature statuses for a pro
@@ -127,10 +126,9 @@ export const mockPros: ProAccount[] = [
       },
       // Scheduling: Engaged - uses it daily
       scheduling: {
-        stage: 'engaged',
+        stage: 'activated',
         attachedAt: '2024-01-10',
         activatedAt: '2024-01-12',
-        engagedAt: '2024-01-25',
         completedTasks: [
           'scheduling-add-employee',
           'scheduling-set-hours',
@@ -310,10 +308,9 @@ export const mockPros: ProAccount[] = [
 
     featureStatus: createAllFeatureStatuses({
       invoicing: {
-        stage: 'engaged',
+        stage: 'activated',
         attachedAt: '2023-06-15',
         activatedAt: '2023-06-18',
-        engagedAt: '2023-07-01',
         completedTasks: [
           'invoicing-create-customer',
           'invoicing-create-job',
@@ -325,18 +322,16 @@ export const mockPros: ProAccount[] = [
         usageCount: 342,
       },
       payments: {
-        stage: 'engaged',
+        stage: 'activated',
         attachedAt: '2023-06-15',
         activatedAt: '2023-06-20',
-        engagedAt: '2023-07-15',
         completedTasks: ['payments-connect-stripe', 'payments-verify', 'payments-enable-tips'],
         usageCount: 289,
       },
       scheduling: {
-        stage: 'engaged',
+        stage: 'activated',
         attachedAt: '2023-06-15',
         activatedAt: '2023-06-17',
-        engagedAt: '2023-06-25',
         completedTasks: [
           'scheduling-add-employee',
           'scheduling-set-hours',
@@ -347,10 +342,9 @@ export const mockPros: ProAccount[] = [
         usageCount: 456,
       },
       'automated-comms': {
-        stage: 'engaged',
+        stage: 'activated',
         attachedAt: '2023-06-15',
         activatedAt: '2023-06-19',
-        engagedAt: '2023-07-01',
         completedTasks: [
           'comms-enable-otw',
           'comms-verify-number',
@@ -360,10 +354,9 @@ export const mockPros: ProAccount[] = [
         usageCount: 1205,
       },
       estimates: {
-        stage: 'engaged',
+        stage: 'activated',
         attachedAt: '2023-06-15',
         activatedAt: '2023-06-22',
-        engagedAt: '2023-07-10',
         completedTasks: [
           'estimates-price-book',
           'estimates-create-first',
@@ -384,10 +377,9 @@ export const mockPros: ProAccount[] = [
         usageCount: 23,
       },
       reviews: {
-        stage: 'engaged',
+        stage: 'activated',
         attachedAt: '2023-06-15',
         activatedAt: '2023-06-25',
-        engagedAt: '2023-08-01',
         completedTasks: [
           'reviews-connect-google',
           'reviews-enable-requests',

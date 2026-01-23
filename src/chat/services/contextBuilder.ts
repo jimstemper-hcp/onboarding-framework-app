@@ -339,7 +339,6 @@ export function buildDemoPrompt(context: DemoModeContext): string {
 - **Usage Count**: ${status.usageCount}
 ${status.attachedAt ? `- **Attached**: ${status.attachedAt}` : ''}
 ${status.activatedAt ? `- **Activated**: ${status.activatedAt}` : ''}
-${status.engagedAt ? `- **Engaged**: ${status.engagedAt}` : ''}
 
 **Context:**
 ${snippets}
@@ -373,12 +372,7 @@ Walk them through the onboarding items step by step. Be encouraging and celebrat
 Proactively check what tasks they've completed and suggest the next step.
 Offer to connect them with the onboarding team if they get stuck.`,
 
-    activated: `The pro has completed setup and is ready to use features.
-Encourage them to take the first real action (send an invoice, schedule a job, etc.).
-Share best practices and tips for getting the most value.
-Point out optional setup items that could improve their experience.`,
-
-    engaged: `The pro is actively using Housecall Pro - they're a power user!
+    activated: `The pro has completed setup and is actively using Housecall Pro.
 Help them optimize their workflow and discover advanced features.
 Answer technical questions and troubleshoot issues.
 Suggest related features that could help their business grow.`,

@@ -123,27 +123,19 @@ const palette = {
 const stageColors: Record<AdoptionStage, string> = {
   not_attached: palette.grey[400],
   attached: palette.warning,
-  activated: palette.primary,
-  engaged: palette.success,
+  activated: palette.success,
 };
 
 const stageLabels: Record<AdoptionStage, string> = {
   not_attached: 'Not Attached',
   attached: 'Attached',
   activated: 'Activated',
-  engaged: 'Engaged',
 };
 
 const categoryStatusColors: Record<CategoryStatus, string> = {
   'not-covered': palette.grey[400],
   'in-progress': palette.warning,
   'completed': palette.success,
-};
-
-const categoryStatusLabels: Record<CategoryStatus, string> = {
-  'not-covered': 'Not Covered',
-  'in-progress': 'In Progress',
-  'completed': 'Completed',
 };
 
 // =============================================================================
@@ -155,12 +147,11 @@ function FeatureIcon({ iconName, ...props }: { iconName: string } & Record<strin
   return <Icon {...props} />;
 }
 
-function getStageKey(stage: AdoptionStage): 'notAttached' | 'attached' | 'activated' | 'engaged' {
+function getStageKey(stage: AdoptionStage): 'notAttached' | 'attached' | 'activated' {
   switch (stage) {
     case 'not_attached': return 'notAttached';
     case 'attached': return 'attached';
     case 'activated': return 'activated';
-    case 'engaged': return 'engaged';
   }
 }
 
@@ -713,7 +704,6 @@ function _ProOverviewCard({ pro, features }: { pro: ProAccount; features: Featur
     not_attached: 0,
     attached: 0,
     activated: 0,
-    engaged: 0,
   };
 
   features.forEach((feature) => {
@@ -991,7 +981,6 @@ function OnboardingCategorySection({
   completedItemIds,
   onOpenItem,
   categoryStatus,
-  onStatusChange,
   expanded,
   onToggleExpanded,
 }: {
@@ -999,7 +988,6 @@ function OnboardingCategorySection({
   completedItemIds: string[];
   onOpenItem: (item: OnboardingItemDefinition) => void;
   categoryStatus: CategoryStatus;
-  onStatusChange: (status: CategoryStatus) => void;
   expanded: boolean;
   onToggleExpanded: () => void;
 }) {
@@ -1064,27 +1052,6 @@ function OnboardingCategorySection({
               />
             </Stack>
           </Box>
-          <FormControl
-            size="small"
-            sx={{ minWidth: 140 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Select
-              value={categoryStatus}
-              onChange={(e) => {
-                e.stopPropagation();
-                onStatusChange(e.target.value as CategoryStatus);
-              }}
-              sx={{
-                '& .MuiSelect-select': { py: 0.5, fontSize: '0.8rem' },
-                bgcolor: alpha(color, 0.08),
-              }}
-            >
-              <MenuItem value="not-covered">{categoryStatusLabels['not-covered']}</MenuItem>
-              <MenuItem value="in-progress">{categoryStatusLabels['in-progress']}</MenuItem>
-              <MenuItem value="completed">{categoryStatusLabels['completed']}</MenuItem>
-            </Select>
-          </FormControl>
         </Stack>
       </AccordionSummary>
 
@@ -1113,11 +1080,13 @@ function OnboardingCategorySection({
                 }}
               >
                 <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                  {/* Status indicator */}
-                  {isCompleted ? (
-                    <CheckCircleIcon sx={{ fontSize: 20, color: palette.success, mt: 0.25 }} />
-                  ) : (
-                    <RadioButtonUncheckedIcon sx={{ fontSize: 20, color: palette.grey[400], mt: 0.25 }} />
+                  {/* Status indicator - only show for rep_facing items */}
+                  {isRepFacing && (
+                    isCompleted ? (
+                      <CheckCircleIcon sx={{ fontSize: 20, color: palette.success, mt: 0.25 }} />
+                    ) : (
+                      <RadioButtonUncheckedIcon sx={{ fontSize: 20, color: palette.grey[400], mt: 0.25 }} />
+                    )
                   )}
 
                   <Box sx={{ flex: 1 }}>
@@ -1738,14 +1707,12 @@ function OnboardingPlanPage({
   completedItemIds,
   onToggleItem,
   categoryStatuses,
-  onCategoryStatusChange,
   onUpdateWeeklyPlan,
 }: {
   selectedPro: ProAccount | undefined;
   completedItemIds: string[];
   onToggleItem: (itemId: string) => void;
   categoryStatuses: Record<OnboardingCategoryId, CategoryStatus>;
-  onCategoryStatusChange: (categoryId: OnboardingCategoryId, status: CategoryStatus) => void;
   onUpdateWeeklyPlan: (plan: WeeklyPlan) => void;
 }) {
   const [expandedCategory, setExpandedCategory] = useState<OnboardingCategoryId | null>('account-setup');
@@ -1881,7 +1848,6 @@ function OnboardingPlanPage({
                 completedItemIds={completedItemIds}
                 onOpenItem={handleOpenItem}
                 categoryStatus={categoryStatuses[category.id]}
-                onStatusChange={(status) => onCategoryStatusChange(category.id, status)}
                 expanded={expandedCategory === category.id}
                 onToggleExpanded={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
               />
@@ -2494,7 +2460,6 @@ function FeaturesListPage({
     not_attached: [],
     attached: [],
     activated: [],
-    engaged: [],
   };
   activeFeatures.forEach((feature) => {
     const status = selectedPro.featureStatus[feature.id];
@@ -2538,7 +2503,7 @@ function FeaturesListPage({
   };
 
   // Stage order for display
-  const stageOrder: AdoptionStage[] = ['not_attached', 'attached', 'activated', 'engaged'];
+  const stageOrder: AdoptionStage[] = ['not_attached', 'attached', 'activated'];
 
   return (
     <Box>
@@ -3328,8 +3293,8 @@ export function FrontlineView() {
     }
   }, [isPlanningMode, currentPage, setPlanningPage]);
 
-  // Track category statuses (in a real app, this would be persisted per pro)
-  const [categoryStatuses, setCategoryStatuses] = useState<Record<OnboardingCategoryId, CategoryStatus>>({
+  // Track category statuses (read-only, dropdown removed)
+  const [categoryStatuses] = useState<Record<OnboardingCategoryId, CategoryStatus>>({
     'account-setup': 'not-covered',
     'the-basics': 'not-covered',
     'add-ons': 'not-covered',
@@ -3365,13 +3330,6 @@ export function FrontlineView() {
     );
   };
 
-  const handleCategoryStatusChange = (categoryId: OnboardingCategoryId, status: CategoryStatus) => {
-    setCategoryStatuses(prev => ({
-      ...prev,
-      [categoryId]: status,
-    }));
-  };
-
   const handleUpdateWeeklyPlan = (plan: WeeklyPlan) => {
     if (selectedPro) {
       updateProWeeklyPlan(selectedPro.id, plan);
@@ -3393,7 +3351,6 @@ export function FrontlineView() {
             completedItemIds={completedOnboardingItems}
             onToggleItem={handleToggleOnboardingItem}
             categoryStatuses={categoryStatuses}
-            onCategoryStatusChange={handleCategoryStatusChange}
             onUpdateWeeklyPlan={handleUpdateWeeklyPlan}
           />
         );

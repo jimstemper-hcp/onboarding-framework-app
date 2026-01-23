@@ -827,31 +827,6 @@ function generateActivatedResponse(detected: DetectedFeature, proName: string): 
 
   return response;
 }
-
-/**
- * Generate response for engaged stage.
- */
-function generateEngagedResponse(detected: DetectedFeature, proName: string): string {
-  const { feature } = detected;
-
-  let response = `You're using ${feature.name.toLowerCase()} like a pro, ${proName}! `;
-
-  // Advanced tips by feature
-  const advancedTips: Partial<Record<FeatureId, string>> = {
-    'invoicing': `Here are some power-user tips:\n\n📊 **Invoice Templates** - Create templates for common job types to save time\n🔄 **Recurring Invoices** - Set up automatic billing for maintenance contracts\n📈 **Aging Reports** - Track overdue invoices and optimize collection\n\nI can help you create a new invoice right here through conversation. Just tell me about the job - who's the customer and what work was done?`,
-    'payments': `Here are some advanced features:\n\n💳 **Financing Options** - Help customers afford larger jobs\n📱 **Tap to Pay** - Accept cards in the field with your phone\n📊 **Payment Analytics** - See your average payment times\n\nWould you like to explore financing options to increase your average ticket?`,
-    'automated-comms': `Here's how to level up:\n\n📣 **Marketing Campaigns** - Reach past customers with targeted messages\n🎯 **Segmentation** - Send different messages to different customer types\n📊 **Message Analytics** - See open and response rates\n\nWant me to help you create a marketing campaign to past customers?`,
-    'scheduling': `Advanced scheduling tips:\n\n🗺️ **Route Optimization** - Minimize drive time between jobs\n📍 **GPS Tracking** - See your team's location in real-time\n⏰ **Time Tracking** - Accurate records for every job\n\nWould you like to set up GPS tracking for your team?`,
-    'estimates': `Power-user features:\n\n📝 **Estimate Templates** - Customize for different job types\n💰 **Financing** - Help customers afford larger projects\n📊 **Conversion Analytics** - Track your win rate\n\nWant me to help you create an estimate template for your most common job type?`,
-    'csr-ai': `Optimization tips:\n\n🎓 **Custom Q&A Training** - Teach the AI about your specific services\n📊 **Call Analytics** - See what questions customers ask most\n🔧 **Escalation Rules** - Define when to route to a human\n\nWant to add some custom Q&A to improve your AI's responses?`,
-    'reviews': `Build your reputation further:\n\n📱 **Social Sharing** - Amplify positive reviews on social media\n⭐ **Review Responses** - Professional templates for any review\n📊 **Reputation Dashboard** - Track your ratings over time\n\nWant me to help you create response templates for reviews?`,
-  };
-
-  response += advancedTips[feature.id];
-
-  return response;
-}
-
 // -----------------------------------------------------------------------------
 // CONFIRMATION FLOW HANDLERS
 // -----------------------------------------------------------------------------
@@ -1495,8 +1470,6 @@ function generateFeatureResponse(detected: DetectedFeature, _message: string, co
       return generateAttachedResponse(detected, proName);
     case 'activated':
       return generateActivatedResponse(detected, proName);
-    case 'engaged':
-      return generateEngagedResponse(detected, proName);
     default:
       return generateGenericFeatureResponse(feature, stage);
   }
@@ -1509,8 +1482,7 @@ function generateGenericFeatureResponse(feature: Feature, stage: AdoptionStage):
   const stageResponses: Record<AdoptionStage, string> = {
     'not_attached': `Great question about ${feature.name}! This feature isn't currently included in your plan, but I'd be happy to explain how it could help your business. Would you like to learn more or talk to our team about adding it?`,
     'attached': `I see you have ${feature.name} available! It looks like you're still getting set up. Would you like me to walk you through the setup process?`,
-    'activated': `You're all set up with ${feature.name}! Ready to start using it? I can help you with any questions about how it works.`,
-    'engaged': `Great to see you're actively using ${feature.name}! Is there anything specific you'd like to optimize or any questions I can help with?`,
+    'activated': `You're all set up with ${feature.name}! Is there anything specific you'd like to optimize or any questions I can help with?`,
   };
 
   return stageResponses[stage];
