@@ -11,6 +11,7 @@ import {
   useState,
   useCallback,
   useMemo,
+  useRef,
   type ReactNode,
 } from 'react';
 import type {
@@ -22,6 +23,8 @@ import type {
   FileAttachment,
   AnthropicMessageContent,
   MessageDebugContext,
+  StreamingState,
+  ToolCall,
 } from '../types';
 import {
   sendToAnthropic,
@@ -29,6 +32,7 @@ import {
   setStoredApiKey,
   clearStoredApiKey,
 } from '../services/anthropicService';
+import { streamToAnthropic, mockStream, createStreamController } from '../services/streamingService';
 import {
   buildSystemPrompt,
   type PlanningModeContext,
@@ -61,6 +65,15 @@ export function ChatProvider({ children }: ChatProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [apiKeyConfig, setApiKeyConfigState] = useState<ApiKeyConfig>(getApiKeyConfig);
+
+  // Streaming state
+  const [streamingState, setStreamingState] = useState<StreamingState>({
+    isStreaming: false,
+    streamingContent: '',
+    thinkingContent: null,
+    activeToolCalls: [],
+  });
+  const streamControllerRef = useRef<AbortController | null>(null);
 
   // ---------------------------------------------------------------------------
   // EXTERNAL CONTEXTS
@@ -327,6 +340,306 @@ export function ChatProvider({ children }: ChatProviderProps) {
     await sendMessage(lastUserMessage.content);
   }, [messages, sendMessage]);
 
+  /**
+   * Cancel an ongoing stream.
+   */
+  const cancelStream = useCallback(() => {
+    if (streamControllerRef.current) {
+      streamControllerRef.current.abort();
+      streamControllerRef.current = null;
+    }
+    setStreamingState({
+      isStreaming: false,
+      streamingContent: '',
+      thinkingContent: null,
+      activeToolCalls: [],
+    });
+  }, []);
+
+  /**
+   * Send a message with streaming response.
+   */
+  const sendMessageStreaming = useCallback(async (content: string, attachments?: FileAttachment[]) => {
+    if (!content.trim() && (!attachments || attachments.length === 0)) return;
+
+    // Clear any previous error and cancel any ongoing stream
+    setError(null);
+    cancelStream();
+
+    // Add user message
+    const userMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: content.trim(),
+      timestamp: new Date().toISOString(),
+      attachments,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
+    // Initialize streaming state
+    setStreamingState({
+      isStreaming: true,
+      streamingContent: '',
+      thinkingContent: null,
+      activeToolCalls: [],
+    });
+
+    // Create abort controller for this stream
+    streamControllerRef.current = createStreamController();
+
+    const requestedAt = new Date().toISOString();
+
+    try {
+      let finalContent = '';
+      let thinkingContent: string | null = null;
+      const toolCalls: ToolCall[] = [];
+
+      // Use mock mode if no API key and in demo mode with an active pro
+      if (!apiKeyConfig.hasKey && mode === 'demo' && activePro) {
+        const mockContext: MockContext = {
+          activePro,
+          features,
+          getStageContext,
+        };
+
+        const mockResult: MockResponseResult = await generateMockResponse(content.trim(), mockContext, attachments);
+
+        // Simulate streaming for mock mode
+        await mockStream({
+          content: mockResult.content,
+          thinkingContent: mockResult.debugContext.toolCalls && mockResult.debugContext.toolCalls.length > 0
+            ? 'Analyzing the request and determining the best approach...'
+            : undefined,
+          callbacks: {
+            onToken: (token) => {
+              setStreamingState((prev) => ({
+                ...prev,
+                streamingContent: prev.streamingContent + token,
+              }));
+            },
+            onThinking: (thinking) => {
+              setStreamingState((prev) => ({
+                ...prev,
+                thinkingContent: (prev.thinkingContent || '') + thinking,
+              }));
+            },
+            onToolStart: (tool) => {
+              setStreamingState((prev) => ({
+                ...prev,
+                activeToolCalls: [...prev.activeToolCalls, tool],
+              }));
+            },
+            onToolUpdate: (toolId, update) => {
+              setStreamingState((prev) => ({
+                ...prev,
+                activeToolCalls: prev.activeToolCalls.map((t) =>
+                  t.id === toolId ? { ...t, ...update } : t
+                ),
+              }));
+            },
+            onComplete: (full) => {
+              finalContent = full;
+            },
+          },
+          delay: 15,
+        });
+
+        // Build debug context
+        const respondedAt = new Date().toISOString();
+        const systemPrompt = buildContext();
+
+        const debugContext: MessageDebugContext = {
+          pro: {
+            id: activePro.id,
+            companyName: activePro.companyName,
+            ownerName: activePro.ownerName,
+            plan: activePro.plan,
+            goal: activePro.goal,
+          },
+          feature: mockResult.debugContext.detectedFeature,
+          conversationState: mockResult.debugContext.conversationState,
+          systemPrompt: {
+            mode,
+            fullPrompt: systemPrompt,
+            promptLength: systemPrompt.length,
+          },
+          toolCalls: mockResult.debugContext.toolCalls,
+          timing: {
+            requestedAt,
+            respondedAt,
+            durationMs: new Date(respondedAt).getTime() - new Date(requestedAt).getTime(),
+          },
+          apiDetails: {
+            model: 'mock',
+            isMockMode: true,
+          },
+          stageContext: mockResult.debugContext.stageContext,
+        };
+
+        // Add assistant message
+        const assistantMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: mockResult.content,
+          timestamp: new Date().toISOString(),
+          debugContext,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else if (!apiKeyConfig.hasKey) {
+        throw new Error('No API key configured. Please add your Anthropic API key to use the chat.');
+      } else {
+        // Build conversation history
+        const conversationHistory: AnthropicMessage[] = [
+          ...messages.map((m) => ({
+            role: m.role as 'user' | 'assistant',
+            content: formatMessageForApi(m.content, m.attachments),
+          })),
+          { role: 'user', content: formatMessageForApi(content.trim(), attachments) },
+        ];
+
+        const systemPrompt = buildContext();
+
+        // Stream from Anthropic
+        finalContent = await streamToAnthropic({
+          messages: conversationHistory,
+          systemPrompt,
+          signal: streamControllerRef.current?.signal,
+          callbacks: {
+            onToken: (token) => {
+              setStreamingState((prev) => ({
+                ...prev,
+                streamingContent: prev.streamingContent + token,
+              }));
+            },
+            onThinking: (thinking) => {
+              thinkingContent = (thinkingContent || '') + thinking;
+              setStreamingState((prev) => ({
+                ...prev,
+                thinkingContent: (prev.thinkingContent || '') + thinking,
+              }));
+            },
+            onToolStart: (tool) => {
+              toolCalls.push(tool);
+              setStreamingState((prev) => ({
+                ...prev,
+                activeToolCalls: [...prev.activeToolCalls, tool],
+              }));
+            },
+            onToolUpdate: (toolId, update) => {
+              const idx = toolCalls.findIndex((t) => t.id === toolId);
+              if (idx >= 0) {
+                toolCalls[idx] = { ...toolCalls[idx], ...update };
+              }
+              setStreamingState((prev) => ({
+                ...prev,
+                activeToolCalls: prev.activeToolCalls.map((t) =>
+                  t.id === toolId ? { ...t, ...update } : t
+                ),
+              }));
+            },
+            onError: (err) => {
+              setError(err.message);
+            },
+          },
+        });
+
+        // Build debug context
+        const respondedAt = new Date().toISOString();
+
+        const debugContext: MessageDebugContext = {
+          pro: activePro ? {
+            id: activePro.id,
+            companyName: activePro.companyName,
+            ownerName: activePro.ownerName,
+            plan: activePro.plan,
+            goal: activePro.goal,
+          } : undefined,
+          systemPrompt: {
+            mode,
+            fullPrompt: systemPrompt,
+            promptLength: systemPrompt.length,
+          },
+          timing: {
+            requestedAt,
+            respondedAt,
+            durationMs: new Date(respondedAt).getTime() - new Date(requestedAt).getTime(),
+          },
+          apiDetails: {
+            model: 'claude-sonnet-4-20250514',
+            isMockMode: false,
+          },
+        };
+
+        // Add assistant message
+        const assistantMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: 'assistant',
+          content: finalContent,
+          timestamp: new Date().toISOString(),
+          debugContext,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        // Stream was cancelled, don't show error
+        return;
+      }
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+      setStreamingState({
+        isStreaming: false,
+        streamingContent: '',
+        thinkingContent: null,
+        activeToolCalls: [],
+      });
+      streamControllerRef.current = null;
+    }
+  }, [
+    messages,
+    buildContext,
+    apiKeyConfig.hasKey,
+    mode,
+    activePro,
+    features,
+    getStageContext,
+    formatMessageForApi,
+    cancelStream,
+  ]);
+
+  /**
+   * Regenerate a specific assistant message.
+   */
+  const regenerateResponse = useCallback(async (messageId: string) => {
+    // Find the message and the preceding user message
+    const messageIndex = messages.findIndex((m) => m.id === messageId);
+    if (messageIndex === -1) return;
+
+    // Find the preceding user message
+    let userMessageIndex = -1;
+    for (let i = messageIndex - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') {
+        userMessageIndex = i;
+        break;
+      }
+    }
+    if (userMessageIndex === -1) return;
+
+    const userMessage = messages[userMessageIndex];
+
+    // Remove all messages from the user message onwards
+    setMessages((prev) => prev.slice(0, userMessageIndex));
+
+    // Resend with streaming
+    await sendMessageStreaming(userMessage.content, userMessage.attachments);
+  }, [messages, sendMessageStreaming]);
+
   // ---------------------------------------------------------------------------
   // CONTEXT VALUE
   // ---------------------------------------------------------------------------
@@ -338,12 +651,16 @@ export function ChatProvider({ children }: ChatProviderProps) {
       error,
       mode,
       isMockMode,
+      streamingState,
       apiKeyConfig,
       sendMessage,
+      sendMessageStreaming,
       clearMessages,
       setApiKey,
       clearApiKey,
       retryLastMessage,
+      cancelStream,
+      regenerateResponse,
     }),
     [
       messages,
@@ -351,12 +668,16 @@ export function ChatProvider({ children }: ChatProviderProps) {
       error,
       mode,
       isMockMode,
+      streamingState,
       apiKeyConfig,
       sendMessage,
+      sendMessageStreaming,
       clearMessages,
       setApiKey,
       clearApiKey,
       retryLastMessage,
+      cancelStream,
+      regenerateResponse,
     ]
   );
 

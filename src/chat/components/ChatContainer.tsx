@@ -2,12 +2,13 @@
 // CHAT CONTAINER COMPONENT
 // =============================================================================
 // Main chat wrapper that composes all chat components.
-// Handles the overall layout and error display.
+// Enhanced with streaming support and AI Elements integration.
 // =============================================================================
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Paper, Alert, Button, AlertTitle } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import StopIcon from '@mui/icons-material/Stop';
 import { ChatHeader } from './ChatHeader';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
@@ -21,28 +22,70 @@ import { useChat } from '../hooks/useChat';
 interface ChatContainerProps {
   initialPrompt?: string | null;
   onPromptConsumed?: () => void;
+  /** Enable streaming mode (default: true) */
+  enableStreaming?: boolean;
+  /** Context-aware suggestions */
+  suggestions?: string[];
 }
+
+// -----------------------------------------------------------------------------
+// DEFAULT SUGGESTIONS
+// -----------------------------------------------------------------------------
+
+const defaultDemoSuggestions = [
+  'How do I get started?',
+  'What features are available?',
+  'Help me set up my first job',
+  'How do I add a customer?',
+];
+
+const defaultPlanningSuggestions = [
+  'What features are in this prototype?',
+  'Show me the current feedback',
+  'What is the onboarding flow?',
+  'Summarize the specs',
+];
 
 // -----------------------------------------------------------------------------
 // COMPONENT
 // -----------------------------------------------------------------------------
 
-export function ChatContainer({ initialPrompt, onPromptConsumed }: ChatContainerProps) {
+export function ChatContainer({
+  initialPrompt,
+  onPromptConsumed,
+  enableStreaming = true,
+  suggestions: externalSuggestions,
+}: ChatContainerProps) {
   const {
     messages,
     isLoading,
     error,
     mode,
     isMockMode,
+    streamingState,
     apiKeyConfig,
     sendMessage,
+    sendMessageStreaming,
     clearMessages,
     setApiKey,
     clearApiKey,
     retryLastMessage,
+    cancelStream,
+    regenerateResponse,
   } = useChat();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Use appropriate send function based on streaming preference
+  const send = enableStreaming ? sendMessageStreaming : sendMessage;
+
+  // Get suggestions based on mode
+  const suggestions = useMemo(() => {
+    if (externalSuggestions && externalSuggestions.length > 0) {
+      return externalSuggestions;
+    }
+    return mode === 'planning' ? defaultPlanningSuggestions : defaultDemoSuggestions;
+  }, [mode, externalSuggestions]);
 
   const handleSettingsOpen = useCallback(() => {
     setSettingsOpen(true);
@@ -54,9 +97,23 @@ export function ChatContainer({ initialPrompt, onPromptConsumed }: ChatContainer
 
   const handleSend = useCallback(
     (content: string) => {
-      sendMessage(content);
+      send(content);
     },
-    [sendMessage]
+    [send]
+  );
+
+  const handleSuggestionSelect = useCallback(
+    (suggestion: string) => {
+      send(suggestion);
+    },
+    [send]
+  );
+
+  const handleRegenerate = useCallback(
+    (messageId: string) => {
+      regenerateResponse(messageId);
+    },
+    [regenerateResponse]
   );
 
   // Track if we've already sent the initial prompt to prevent duplicate sends
@@ -66,10 +123,10 @@ export function ChatContainer({ initialPrompt, onPromptConsumed }: ChatContainer
   useEffect(() => {
     if (initialPrompt && !isLoading && !initialPromptSentRef.current) {
       initialPromptSentRef.current = true;
-      sendMessage(initialPrompt);
+      send(initialPrompt);
       onPromptConsumed?.();
     }
-  }, [initialPrompt, isLoading, sendMessage, onPromptConsumed]);
+  }, [initialPrompt, isLoading, send, onPromptConsumed]);
 
   // Reset the ref when initialPrompt changes to null
   useEffect(() => {
@@ -81,6 +138,7 @@ export function ChatContainer({ initialPrompt, onPromptConsumed }: ChatContainer
   // In demo mode, we can use mock responses without an API key
   // In planning mode, we need an API key
   const needsApiKey = mode === 'planning' && !apiKeyConfig.hasKey;
+  const isStreaming = streamingState?.isStreaming ?? false;
   const isDisabled = isLoading || needsApiKey;
 
   return (
@@ -128,14 +186,25 @@ export function ChatContainer({ initialPrompt, onPromptConsumed }: ChatContainer
           severity="error"
           sx={{ m: 2, mb: 0 }}
           action={
-            <Button
-              color="inherit"
-              size="small"
-              startIcon={<RefreshIcon />}
-              onClick={retryLastMessage}
-            >
-              Retry
-            </Button>
+            isStreaming ? (
+              <Button
+                color="inherit"
+                size="small"
+                startIcon={<StopIcon />}
+                onClick={cancelStream}
+              >
+                Stop
+              </Button>
+            ) : (
+              <Button
+                color="inherit"
+                size="small"
+                startIcon={<RefreshIcon />}
+                onClick={retryLastMessage}
+              >
+                Retry
+              </Button>
+            )
           }
         >
           {error}
@@ -143,7 +212,15 @@ export function ChatContainer({ initialPrompt, onPromptConsumed }: ChatContainer
       )}
 
       {/* Messages */}
-      <MessageList messages={messages} isLoading={isLoading} mode={mode} />
+      <MessageList
+        messages={messages}
+        isLoading={isLoading}
+        mode={mode}
+        streamingState={streamingState}
+        onRegenerate={handleRegenerate}
+        onSelectSuggestion={handleSuggestionSelect}
+        suggestions={suggestions}
+      />
 
       {/* Input */}
       <ChatInput

@@ -56,6 +56,8 @@ export interface ChatState {
   mode: ChatMode;
   /** True when using mock responses (no API key available) */
   isMockMode: boolean;
+  /** Streaming state for progressive response display */
+  streamingState: StreamingState;
 }
 
 /**
@@ -75,10 +77,13 @@ export interface ApiKeyConfig {
  */
 export interface ChatActions {
   sendMessage: (content: string, attachments?: FileAttachment[]) => Promise<void>;
+  sendMessageStreaming: (content: string, attachments?: FileAttachment[]) => Promise<void>;
   clearMessages: () => void;
   setApiKey: (key: string) => void;
   clearApiKey: () => void;
   retryLastMessage: () => Promise<void>;
+  cancelStream: () => void;
+  regenerateResponse: (messageId: string) => Promise<void>;
 }
 
 /**
@@ -160,6 +165,142 @@ export interface AnthropicError {
     type: string;
     message: string;
   };
+}
+
+// -----------------------------------------------------------------------------
+// STREAMING & AI ELEMENTS TYPES
+// -----------------------------------------------------------------------------
+
+/**
+ * Status of a tool call during streaming.
+ */
+export type ToolCallStatus = 'pending' | 'running' | 'completed' | 'error';
+
+/**
+ * Tool call information for visualization.
+ */
+export interface ToolCall {
+  id: string;
+  name: string;
+  parameters: Record<string, unknown>;
+  status: ToolCallStatus;
+  result?: unknown;
+  error?: string;
+}
+
+/**
+ * Thinking/reasoning block from extended thinking.
+ */
+export interface ThinkingBlock {
+  type: 'thinking';
+  content: string;
+  isStreaming: boolean;
+}
+
+/**
+ * State for streaming responses.
+ */
+export interface StreamingState {
+  isStreaming: boolean;
+  streamingContent: string;
+  thinkingContent: string | null;
+  activeToolCalls: ToolCall[];
+}
+
+/**
+ * Source/citation reference for AI responses.
+ */
+export interface Source {
+  id: string;
+  title: string;
+  url?: string;
+  snippet?: string;
+}
+
+/**
+ * Plan step for multi-step visualization.
+ */
+export interface PlanStep {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'error';
+}
+
+/**
+ * Response branch for message versioning.
+ */
+export interface ResponseBranch {
+  id: string;
+  content: string;
+  timestamp: string;
+  isActive: boolean;
+}
+
+/**
+ * Streaming event types from SSE.
+ */
+export type StreamEventType =
+  | 'message_start'
+  | 'content_block_start'
+  | 'content_block_delta'
+  | 'content_block_stop'
+  | 'message_delta'
+  | 'message_stop'
+  | 'ping'
+  | 'error';
+
+/**
+ * SSE streaming event.
+ */
+export interface StreamEvent {
+  type: StreamEventType;
+  index?: number;
+  content_block?: {
+    type: 'text' | 'thinking' | 'tool_use';
+    text?: string;
+    thinking?: string;
+    id?: string;
+    name?: string;
+    input?: Record<string, unknown>;
+  };
+  delta?: {
+    type: 'text_delta' | 'thinking_delta' | 'input_json_delta';
+    text?: string;
+    thinking?: string;
+    partial_json?: string;
+  };
+  message?: {
+    id: string;
+    type: string;
+    role: string;
+    model: string;
+    stop_reason?: string;
+    stop_sequence?: string | null;
+    usage?: {
+      input_tokens: number;
+      output_tokens: number;
+    };
+  };
+  usage?: {
+    output_tokens: number;
+  };
+  error?: {
+    type: string;
+    message: string;
+  };
+}
+
+/**
+ * Callbacks for streaming events.
+ */
+export interface StreamCallbacks {
+  onToken?: (token: string) => void;
+  onThinking?: (thinking: string) => void;
+  onToolStart?: (tool: ToolCall) => void;
+  onToolUpdate?: (toolId: string, update: Partial<ToolCall>) => void;
+  onComplete?: (fullContent: string) => void;
+  onError?: (error: Error) => void;
 }
 
 // -----------------------------------------------------------------------------
