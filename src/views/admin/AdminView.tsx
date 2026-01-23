@@ -51,6 +51,7 @@ import { useOnboarding } from '../../context';
 import { onboardingItems, onboardingCategories } from '../../data';
 import { PlanningWrapper, usePlanningMode, PlanningInfoButton, getItemPlannableId } from '../../planning';
 import { PlanningAwareDialog } from '../../components/common/PlanningAwareDialog';
+import { AiManagerTab } from './components/ai-manager';
 import type {
   Feature,
   FeatureReleaseStatus,
@@ -107,7 +108,7 @@ const stageCompletionDescriptions: Record<StageKey, string> = {
   activated: "To be considered 'Activated' the Pro has completed setup and is actively using the feature",
 };
 
-type AdminPage = 'features' | 'navigation' | 'calls' | 'completion-steps' | 'tools';
+type AdminPage = 'features' | 'navigation' | 'calls' | 'completion-steps' | 'ai-manager';
 
 const navigationTypes: { value: NavigationType; label: string; description: string }[] = [
   { value: 'hcp_navigate', label: 'Page Navigation', description: 'Navigate to a page path in the product' },
@@ -705,7 +706,7 @@ function SimplifiedStageEditor({
         </Typography>
         <ReferenceTable
           items={toolsTableItems}
-          onNavigate={() => onNavigateToPage('tools')}
+          onNavigate={() => onNavigateToPage('ai-manager')}
           onRemove={handleRemoveTool}
           emptyMessage="No tools"
         />
@@ -3514,178 +3515,6 @@ function OnboardingItemsManagementPage() {
 }
 
 // =============================================================================
-// TOOLS MANAGEMENT PAGE
-// =============================================================================
-
-function ToolsManagementPage() {
-  const { toolItems, addToolItem, updateToolItem, deleteToolItem } = useOnboarding();
-  const [selectedItem, setSelectedItem] = useState<McpTool | null>(null);
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-
-  const handleCreate = () => {
-    const newItem: McpTool = {
-      name: '',
-      description: '',
-      parameters: {},
-    };
-    setSelectedItem(newItem);
-    setIsCreating(true);
-    setEditorOpen(true);
-  };
-
-  const handleEdit = (item: McpTool) => {
-    setSelectedItem(item);
-    setIsCreating(false);
-    setEditorOpen(true);
-  };
-
-  const handleDelete = (item: McpTool) => {
-    if (!window.confirm(`Delete "${item.name}"?`)) return;
-    deleteToolItem(item.name);
-  };
-
-  const handleSave = (updatedItem: McpTool) => {
-    if (isCreating) {
-      addToolItem(updatedItem);
-    } else {
-      updateToolItem(updatedItem);
-    }
-    setSelectedItem(null);
-    setIsCreating(false);
-    setEditorOpen(false);
-  };
-
-  return (
-    <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Box>
-          <Typography variant="h5" fontWeight={600}>Tools</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Manage MCP tools available to the AI assistant
-          </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>Add Tool</Button>
-      </Stack>
-
-      <TableContainer component={Paper} sx={{ boxShadow: 'none', border: 1, borderColor: 'divider' }}>
-        <Table>
-          <TableHead>
-            <TableRow sx={{ bgcolor: palette.grey[50] }}>
-              <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Description</TableCell>
-              <TableCell sx={{ fontWeight: 600 }}>Parameters</TableCell>
-              <TableCell sx={{ fontWeight: 600 }} align="right">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {toolItems.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4}>
-                  <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                    No tools defined yet. Click "Add Tool" to create one.
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              toolItems.map((item) => (
-                <TableRow key={item.name} hover>
-                  <TableCell>
-                    <Typography fontWeight={500} sx={{ fontFamily: 'monospace' }}>{item.name}</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.description}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {Object.keys(item.parameters || {}).length} parameters
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={() => handleEdit(item)} sx={{ color: palette.primary }}>
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small" onClick={() => handleDelete(item)} sx={{ color: palette.error }}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Simple Tool Edit Dialog */}
-      <PlanningAwareDialog
-        open={editorOpen}
-        onClose={() => {
-          setEditorOpen(false);
-          setSelectedItem(null);
-          setIsCreating(false);
-        }}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{isCreating ? 'Add Tool' : 'Edit Tool'}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
-              label="Tool Name"
-              value={selectedItem?.name || ''}
-              onChange={(e) => setSelectedItem(selectedItem ? { ...selectedItem, name: e.target.value } : null)}
-              fullWidth
-              size="small"
-              placeholder="e.g., hcp_create_customer"
-            />
-            <TextField
-              label="Description"
-              value={selectedItem?.description || ''}
-              onChange={(e) => setSelectedItem(selectedItem ? { ...selectedItem, description: e.target.value } : null)}
-              fullWidth
-              multiline
-              rows={3}
-              size="small"
-              placeholder="Describe what this tool does..."
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          {!isCreating && (
-            <Button
-              color="error"
-              onClick={() => {
-                if (selectedItem && window.confirm(`Delete "${selectedItem.name}"?`)) {
-                  deleteToolItem(selectedItem.name);
-                  setEditorOpen(false);
-                  setSelectedItem(null);
-                }
-              }}
-            >
-              Delete
-            </Button>
-          )}
-          <Box sx={{ flex: 1 }} />
-          <Button onClick={() => {
-            setEditorOpen(false);
-            setSelectedItem(null);
-            setIsCreating(false);
-          }}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={() => selectedItem && handleSave(selectedItem)}
-            disabled={!selectedItem?.name}
-          >
-            {isCreating ? 'Add Tool' : 'Save Changes'}
-          </Button>
-        </DialogActions>
-      </PlanningAwareDialog>
-    </Box>
-  );
-}
-
 // =============================================================================
 // MAIN ADMIN VIEW WITH SIDEBAR
 // =============================================================================
@@ -3696,7 +3525,7 @@ const adminPageToPlanningId: Record<AdminPage, string> = {
   navigation: 'page-hcp-context-navigation',
   calls: 'page-hcp-context-calls',
   'completion-steps': 'page-hcp-context-completion-steps',
-  tools: 'page-hcp-context-tools',
+  'ai-manager': 'page-hcp-context-ai-manager',
 };
 
 export function AdminView() {
@@ -3715,7 +3544,7 @@ export function AdminView() {
     { id: 'navigation', label: 'Navigation', icon: <LinkIcon /> },
     { id: 'calls', label: 'Calls', icon: <PhoneIcon /> },
     { id: 'completion-steps', label: 'Completion Steps', icon: <ChecklistIcon /> },
-    { id: 'tools', label: 'Tools', icon: <BuildIcon /> },
+    { id: 'ai-manager', label: 'AI Manager', icon: <SmartToyIcon /> },
   ];
 
   const renderPage = () => {
@@ -3728,8 +3557,8 @@ export function AdminView() {
         return <CallsManagementPage />;
       case 'completion-steps':
         return <OnboardingItemsManagementPage />;
-      case 'tools':
-        return <ToolsManagementPage />;
+      case 'ai-manager':
+        return <AiManagerTab />;
       default:
         return <FeatureManagementPage onNavigateToPage={setCurrentPage} />;
     }
